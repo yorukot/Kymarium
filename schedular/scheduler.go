@@ -1,15 +1,13 @@
 package schedular
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yorukot/knocker/helpers/config"
 	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/repository"
+	"github.com/yorukot/knocker/utils/config"
 	"github.com/yorukot/knocker/worker/tasks"
 	"go.uber.org/zap"
 )
@@ -35,13 +33,14 @@ func Run(pgsql *pgxpool.Pool) {
 
 // loop handles a single iteration of fetching and scheduling monitors
 func loop(pgsql *pgxpool.Pool, asynqClient *asynq.Client) {
-	ctx := context.Background()
+	// ctx := context.Background()
 	// first we need to fetch all monitors that need to be pinged
-	monitors, err := repository.FetchMonitor(ctx, pgsql)
-	if err != nil {
-		zap.L().Error("Failed to fetch monitors", zap.Error(err))
-		return
-	}
+	monitors := []models.Monitor{}
+	// monitors, err := repository.FetchMonitor(ctx, pgsql)
+	// if err != nil {
+		// zap.L().Error("Failed to fetch monitors", zap.Error(err))
+		// return
+	// }
 	zap.L().Info("Fetched monitors", zap.Int("count", len(monitors)))
 
 	// In this we need to saparate the monitors to the different goroutines it should be 100-200 monitor per goroutine

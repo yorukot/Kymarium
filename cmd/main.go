@@ -8,15 +8,34 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/yorukot/knocker/api"
 	"github.com/yorukot/knocker/db"
-	"github.com/yorukot/knocker/helpers/config"
-	"github.com/yorukot/knocker/helpers/logger"
 	"github.com/yorukot/knocker/schedular"
+	"github.com/yorukot/knocker/utils/config"
+	"github.com/yorukot/knocker/utils/id"
+	"github.com/yorukot/knocker/utils/logger"
 	"github.com/yorukot/knocker/worker"
 	"go.uber.org/zap"
 )
 
-// main is the entry point of the application. It checks command-line arguments to determine which components to run:
-// API server, worker, scheduler, or all of them if no specific argument is provided.
+// @title Ridash API
+// @version 1.0
+// @description This is the Ridash API server for user authentication and management
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /api
+// @schemes http https
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
 	// initialize logger
 	logger.InitLogger()
@@ -25,6 +44,12 @@ func main() {
 	_, err := config.InitConfig()
 	if err != nil {
 		zap.L().Fatal("Error initializing config", zap.Error(err))
+	}
+
+	// Initialize sonyflake
+	err = id.Init()
+	if err != nil {
+		zap.L().Fatal("Error initializing snoyflake", zap.Error(err))	
 	}
 
 	runAll := len(os.Args) < 2 || os.Args[1] == "all"

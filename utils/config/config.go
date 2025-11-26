@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/caarlos0/env/v10"
-	"go.uber.org/zap"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 type AppEnv string
@@ -16,6 +16,14 @@ const (
 
 // EnvConfig holds all environment variables for the application
 type EnvConfig struct {
+	AppEnv       AppEnv `env:"APP_ENV" envDefault:"prod"`
+	AppName      string `env:"APP_NAME" envDefault:"knocker"`
+	AppMachineID int16  `env:"APP_MACHINE_ID" envDefault:"1"`
+	AppPort      string `env:"APP_PORT" envDefault:"8080"`
+
+	JWTSecretKey   string `env:"JWT_SECRET_KEY,required" envDefault:"change_me_to_a_secure_key"`
+	FrontendDomain string `env:"FRONTEND_DOMAIN" envDefault:"localhost"`
+
 	// PostgreSQL Settings
 	DBHost     string `env:"DB_HOST,required"`
 	DBPort     string `env:"DB_PORT,required"`
@@ -29,9 +37,16 @@ type EnvConfig struct {
 	RedisPort     string `env:"REDIS_PORT" envDefault:"6379"`
 	RedisPassword string `env:"REDIS_PASSWORD" envDefault:""`
 
-	AppEnv       AppEnv `env:"APP_ENV" envDefault:"prod"`
-	AppName      string `env:"APP_NAME" envDefault:"knocker"`
-	AppMachineID int16    `env:"APP_MACHINE_ID" envDefault:"0"`
+	// Optional Settings
+	OAuthStateExpiresAt   int `env:"OAUTH_STATE_EXPIRES_AT" envDefault:"600"`        // 10 minutes
+	AccessTokenExpiresAt  int `env:"ACCESS_TOKEN_EXPIRES_AT" envDefault:"900"`       // 15 minutes
+	RefreshTokenExpiresAt int `env:"REFRESH_TOKEN_EXPIRES_AT" envDefault:"31536000"` // 365 days
+
+	GoogleClientID     string `env:"GOOGLE_CLIENT_ID,required"`
+	GoogleClientSecret string `env:"GOOGLE_CLIENT_SECRET,required"`
+	GoogleRedirectURL  string `env:"GOOGLE_REDIRECT_URL,required"`
+
+
 }
 
 var (
@@ -53,7 +68,6 @@ func InitConfig() (*EnvConfig, error) {
 	var err error
 	once.Do(func() {
 		appConfig, err = loadConfig()
-		zap.L().Info("Config loaded")
 	})
 	return appConfig, err
 }
@@ -61,7 +75,7 @@ func InitConfig() (*EnvConfig, error) {
 // Env returns the config. Panics if not initialized.
 func Env() *EnvConfig {
 	if appConfig == nil {
-		zap.L().Panic("config not initialized — call InitConfig() first")
+		panic("config not initialized — call InitConfig() first")
 	}
 	return appConfig
 }

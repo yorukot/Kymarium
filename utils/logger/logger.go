@@ -3,10 +3,9 @@ package logger
 import (
 	"os"
 
+	"github.com/yorukot/knocker/utils/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
-	"github.com/yorukot/knocker/helpers/config"
 )
 
 // InitLogger initialize the logger

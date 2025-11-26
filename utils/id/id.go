@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/sony/sonyflake/v2"
-	"github.com/yorukot/knocker/helpers/config"
+	"github.com/yorukot/knocker/utils/config"
 	"go.uber.org/zap"
 )
 
@@ -46,7 +46,7 @@ func Init() error {
 
 // GetID generates a new unique ID
 // Returns the ID as uint64 or an error if generation fails
-func GetID() (uint64, error) {
+func GetID() (int64, error) {
 	if sf == nil {
 		return 0, fmt.Errorf("sonyflake not initialized, call Init() first")
 	}
@@ -56,8 +56,5 @@ func GetID() (uint64, error) {
 		return 0, fmt.Errorf("failed to generate ID: %w", err)
 	}
 	
-	// Covert to uint64 and return
-	uint64ID := uint64(id)
-	
-	return uint64ID, nil
+	return id, nil
 }

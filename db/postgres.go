@@ -11,9 +11,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/yorukot/knocker/utils/config"
 	"go.uber.org/zap"
-
-	"github.com/yorukot/knocker/helpers/config"
 )
 
 // InitDatabase initialize the database connection pool and return the pool and also migrate the database

@@ -5,7 +5,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yorukot/knocker/helpers/config"
+	"github.com/yorukot/knocker/utils/config"
 	"github.com/yorukot/knocker/worker/handler"
 	"github.com/yorukot/knocker/worker/tasks"
 	"go.uber.org/zap"

@@ -10,3 +10,4 @@ type Monitor struct {
 	LastCheck time.Time `json:"last_check" db:"last_check"`
 	NextCheck time.Time `json:"next_check" db:"next_check"`
 }
+
