@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -21,26 +22,66 @@ const (
 	NotificationTypeEmail    NotificationType = "email"
 )
 
-// Monitor represents a monitor entity in the database
+// Monitor represents a monitor entity in the database.
+// Fields are ordered by importance: identity, configuration, scheduling, notifications, metadata.
 type Monitor struct {
-	ID              int64           `json:"id,string" db:"id"`
-	TeamID          int64           `json:"team_id,string" db:"team_id"`
-	Name            string          `json:"name" db:"name"`
-	Type            MonitorType     `json:"type" db:"type"`
-	Interval        int             `json:"interval" db:"interval"`
-	Config          json.RawMessage `json:"config" db:"config"`
-	LastChecked     time.Time       `json:"last_checked" db:"last_checked"`
-	NextCheck       time.Time       `json:"next_check" db:"next_check"`
-	NotificationIDs []int64         `json:"notification" db:"notification"`
-	UpdatedAt       time.Time       `json:"updated_at" db:"updated_at"`
-	CreatedAt       time.Time       `json:"created_at" db:"creted_at"`
-	GroupID         *int64          `json:"group,omitempty" db:"group"`
+	// Identity fields
+	ID     int64 `json:"id,string" db:"id"`
+	TeamID int64 `json:"team_id,string" db:"team_id"`
+
+	// Core configuration
+	Name     string          `json:"name" db:"name"`
+	Type     MonitorType     `json:"type" db:"type"`
+	Config   json.RawMessage `json:"config" db:"config"`
+	Interval int             `json:"interval" db:"interval"`
+
+	// Scheduling
+	LastChecked time.Time `json:"last_checked" db:"last_checked"`
+	NextCheck   time.Time `json:"next_check" db:"next_check"`
+
+	// Notifications
+	NotificationIDs []int64 `json:"notification" db:"notification"`
+
+	// Metadata
+	GroupID   *int64    `json:"group,omitempty" db:"group"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
+type HTTPMethod string
+
+const (
+    MethodGet     HTTPMethod = http.MethodGet
+    MethodPost    HTTPMethod = http.MethodPost
+    MethodPut     HTTPMethod = http.MethodPut
+    MethodDelete  HTTPMethod = http.MethodDelete
+    MethodPatch   HTTPMethod = http.MethodPatch
+    MethodHead    HTTPMethod = http.MethodHead
+    MethodOptions HTTPMethod = http.MethodOptions
+)
+
 // HTTPMonitorConfig represents the expected config shape for HTTP monitors.
+// Fields are ordered by importance and functional grouping.
 type HTTPMonitorConfig struct {
-	URL    string `json:"url"`
-	Method string `json:"method,omitempty"`
+	// Core request configuration
+	URL       string `json:"url"`
+	Method    HTTPMethod `json:"method"`
+	MaxRedirs int    `json:"max_redirects"`
+
+	// Request options
+	RequestTimeout int               `json:"request_timeout"`
+	Headers        map[string]string `json:"headers,omitempty"`
+	BodyEncoding   string            `json:"body_encoding,omitempty"`
+	Body           string            `json:"body,omitempty"`
+
+	// Response validation
+	UpSideDownMode                bool   `json:"upside_down_mode"`
+	CertificateExpiryNotification bool   `json:"certificate_expiry_notification"`
+	IgnoreTLSError                bool   `json:"ignore_tls_error"`
+	AcceptedStatusCodes           []int  `json:"accepted_status_codes"`
+
+	// Notification options
+	ResendThreshold int `json:"resend_threshold"`
 }
 
 // HTTPConfig decodes the monitor config into an HTTPMonitorConfig.
