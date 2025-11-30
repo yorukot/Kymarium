@@ -77,7 +77,7 @@ func generateRefreshToken(userID int64, userAgent string, ip string) (models.Ref
 		// Successfully split, use the host part
 		ipStr = host
 	}
-	// If SplitHostPort fails, ip is already just an IP address without port
+	parsedIP := net.ParseIP(ipStr)
 
 	refreshToken, err := encrypt.GenerateSecureRefreshToken()
 	if err != nil {
@@ -89,7 +89,7 @@ func generateRefreshToken(userID int64, userAgent string, ip string) (models.Ref
 		UserID:    userID,
 		Token:     refreshToken,
 		UserAgent: &userAgent,
-		IP:        &ipStr,
+		IP:        parsedIP,
 		UsedAt:    nil,
 		CreatedAt: time.Now(),
 	}, nil

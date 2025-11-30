@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"net"
+	"time"
+)
 
 // CookieName constants
 const (
@@ -8,15 +11,14 @@ const (
 	CookieNameRefreshToken = "refresh_token"
 )
 
-// RefreshToken represents a refresh token for user authentication
 type RefreshToken struct {
-	ID        int64      `json:"id,string" example:"175928847299117063"`                                            // Unique identifier for the refresh token
-	UserID    int64      `json:"user_id,string" example:"175928847299117063"`                                       // User ID associated with this token
-	Token     string     `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`                           // The actual refresh token
-	UserAgent *string    `json:"user_agent" example:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"` // User agent string from the client
-	IP        *string    `json:"ip" example:"192.168.1.100"`                                                        // IP address of the client
-	UsedAt    *time.Time `json:"used_at,omitempty" example:"2023-01-01T12:00:00Z"`                                  // Timestamp when the token was last used
-	CreatedAt time.Time  `json:"created_at" example:"2023-01-01T12:00:00Z"`                                         // Timestamp when the token was created
+	ID        int64      `json:"id,string" db:"id" example:"175928847299117063"`
+	UserID    int64      `json:"user_id,string" db:"user_id" example:"175928847299117063"`
+	Token     string     `json:"token" db:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	UserAgent *string    `json:"user_agent" db:"user_agent" example:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"`
+	IP        net.IP     `json:"ip" db:"ip" example:"192.168.1.100"`
+	UsedAt    *time.Time `json:"used_at,omitempty" db:"used_at" example:"2023-01-01T12:00:00Z"`
+	CreatedAt time.Time  `json:"created_at" db:"created_at" example:"2023-01-01T12:00:00Z"`
 }
 
 // Provider represents the authentication provider type

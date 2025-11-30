@@ -49,6 +49,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	// Begin the transaction
 	tx, err := repository.StartTransaction(h.DB, c.Request().Context())
 	if err != nil {
+		zap.L().Error("Failed to begin transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction", err)
 	}
 	defer repository.DeferRollback(tx, c.Request().Context())
@@ -56,6 +57,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	// Get the user by email
 	user, err := repository.GetUserByEmail(c.Request().Context(), tx, loginRequest.Email)
 	if err != nil {
+		zap.L().Error("Failed to get user by email", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get user by email", err)
 	}
 

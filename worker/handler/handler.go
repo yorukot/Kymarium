@@ -14,6 +14,6 @@ type Handler struct {
 // NewHandler creates a new Handler with the given dependencies.
 func NewHandler(db *pgxpool.Pool) *Handler {
 	return &Handler{
-		db:    db,
+		db: db,
 	}
 }

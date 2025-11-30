@@ -38,8 +38,8 @@ func loop(pgsql *pgxpool.Pool, asynqClient *asynq.Client) {
 	monitors := []models.Monitor{}
 	// monitors, err := repository.FetchMonitor(ctx, pgsql)
 	// if err != nil {
-		// zap.L().Error("Failed to fetch monitors", zap.Error(err))
-		// return
+	// zap.L().Error("Failed to fetch monitors", zap.Error(err))
+	// return
 	// }
 	zap.L().Info("Fetched monitors", zap.Int("count", len(monitors)))
 
@@ -60,22 +60,36 @@ func loop(pgsql *pgxpool.Pool, asynqClient *asynq.Client) {
 // Detail: This basically going insert the monitor task into asynq queue
 func scheduleMonitors(monitors []models.Monitor, asynqClient *asynq.Client) {
 	for _, monitor := range monitors {
+		cfg, err := monitor.HTTPConfig()
+		if err != nil {
+			zap.L().Error("Skipping monitor with invalid config",
+				zap.Int64("monitor_id", monitor.ID),
+				zap.Error(err))
+			continue
+		}
+
 		// Create asynq task
 		task, err := tasks.NewMonitorPing(monitor)
+		if err != nil {
+			zap.L().Error("Failed to create monitor task payload",
+				zap.Int64("monitor_id", monitor.ID),
+				zap.Error(err))
+			continue
+		}
 
 		// Enqueue the task
 		info, err := asynqClient.Enqueue(task)
 		if err != nil {
 			zap.L().Error("Failed to enqueue monitor task",
 				zap.Int64("monitor_id", monitor.ID),
-				zap.String("url", monitor.URL),
+				zap.String("url", cfg.URL),
 				zap.Error(err))
 			continue
 		}
 
 		zap.L().Debug("Enqueued monitor task",
 			zap.Int64("monitor_id", monitor.ID),
-			zap.String("url", monitor.URL),
+			zap.String("url", cfg.URL),
 			zap.String("task_id", info.ID))
 	}
 }

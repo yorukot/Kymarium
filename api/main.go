@@ -1,13 +1,16 @@
 package api
 
 import (
+	"net/http"
+
+	scalar "github.com/MarceloPetrucio/go-scalar-api-reference"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/yorukot/knocker/api/middleware"
 	"github.com/yorukot/knocker/api/router"
-	_ "github.com/yorukot/knocker/docs"
+	swaggerDocs "github.com/yorukot/knocker/docs"
 	"github.com/yorukot/knocker/utils/config"
 	"go.uber.org/zap"
 )
@@ -31,12 +34,34 @@ func Run(db *pgxpool.Pool) {
 
 // routes sets up the API routes
 func routes(e *echo.Echo, db *pgxpool.Pool) {
+	// Development-only routes
 	if config.Env().AppEnv == config.AppEnvDev {
 		// Swagger documentation route
 		e.GET("/swagger/*", echoSwagger.WrapHandler)
+		// Scalar API reference route for the generated Swagger spec
+		e.GET("/reference", scalarDocsHandler())
 	}
 
 	// User routes
 	api := e.Group("/api")
 	router.AuthRouter(api, db)
+}
+
+func scalarDocsHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		html, err := scalar.ApiReferenceHTML(&scalar.Options{
+			// Use generated swagger spec as inline content to avoid filesystem lookups
+			SpecContent: swaggerDocs.SwaggerInfo.ReadDoc(),
+			CustomOptions: scalar.CustomOptions{
+				PageTitle: "Ridash API Reference",
+			},
+			DarkMode: true,
+		})
+		if err != nil {
+			zap.L().Error("failed to generate Scalar docs", zap.Error(err))
+			return c.String(http.StatusInternalServerError, "could not render API reference")
+		}
+
+		return c.HTML(http.StatusOK, html)
+	}
 }

@@ -87,6 +87,7 @@ func (h *AuthHandler) OAuthCallback(c echo.Context) error {
 	// Get the raw ID token
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
+		zap.L().Error("Failed to get id token from oauth response", zap.Any("token", token))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get id token")
 	}
 
@@ -196,6 +197,7 @@ func (h *AuthHandler) OAuthCallback(c echo.Context) error {
 
 	// Commit the transaction
 	if err := repository.CommitTransaction(tx, c.Request().Context()); err != nil {
+		zap.L().Error("Failed to commit transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 

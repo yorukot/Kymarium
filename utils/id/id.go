@@ -27,8 +27,8 @@ func Init() error {
 	}
 
 	settings := sonyflake.Settings{
-		StartTime: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
-		MachineID: machineIDFunc,
+		StartTime:      time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+		MachineID:      machineIDFunc,
 		CheckMachineID: nil,
 		BitsSequence:   10,                   // 1024 id per ms per machine
 		BitsMachineID:  10,                   // 1024 machines
@@ -55,6 +55,6 @@ func GetID() (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to generate ID: %w", err)
 	}
-	
+
 	return id, nil
 }

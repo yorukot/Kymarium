@@ -6,6 +6,6 @@ import (
 )
 
 type AuthHandler struct {
-	DB *pgxpool.Pool
+	DB          *pgxpool.Pool
 	OAuthConfig *config.OAuthConfig
 }

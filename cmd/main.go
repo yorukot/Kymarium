@@ -49,7 +49,7 @@ func main() {
 	// Initialize sonyflake
 	err = id.Init()
 	if err != nil {
-		zap.L().Fatal("Error initializing snoyflake", zap.Error(err))	
+		zap.L().Fatal("Error initializing snoyflake", zap.Error(err))
 	}
 
 	runAll := len(os.Args) < 2 || os.Args[1] == "all"

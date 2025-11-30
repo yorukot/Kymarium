@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/yorukot/knocker/utils/config"
 	"github.com/yorukot/knocker/utils/encrypt"
+	"go.uber.org/zap"
 )
 
 // authMiddlewareLogic is the logic for the auth middleware
@@ -19,6 +20,7 @@ func authMiddlewareLogic(token string) (*encrypt.AccessTokenClaims, error) {
 
 	valid, claims, err := JWTSecret.ValidateAccessTokenAndGetClaims(token)
 	if err != nil {
+		zap.L().Error("Failed to validate access token", zap.Error(err))
 		return nil, echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
 	}
 

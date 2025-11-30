@@ -1,10 +1,23 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
+
+type PingStatus string
+
+const (
+	PingStatusSuccessful PingStatus = "successful"
+	PingStatusFailed     PingStatus = "failed"
+	PingStatusTimeout    PingStatus = "timeout"
+)
 
 // Ping represents a ping record in the database
 type Ping struct {
-	Time      time.Time `json:"time" db:"time"`
-	MonitorID int64     `json:"monitor_id" db:"monitor_id"`
-	Latency   int16     `json:"latency" db:"latency"`
+	Time      time.Time       `json:"time" db:"time"`
+	MonitorID int64           `json:"monitor_id,string" db:"monitor_id"`
+	Latency   int16           `json:"latency" db:"latency"`
+	Status    PingStatus      `json:"status" db:"status"`
+	Data      json.RawMessage `json:"data,omitempty" db:"data"`
 }

@@ -45,8 +45,6 @@ type EnvConfig struct {
 	GoogleClientID     string `env:"GOOGLE_CLIENT_ID,required"`
 	GoogleClientSecret string `env:"GOOGLE_CLIENT_SECRET,required"`
 	GoogleRedirectURL  string `env:"GOOGLE_REDIRECT_URL,required"`
-
-
 }
 
 var (
