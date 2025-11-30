@@ -45,6 +45,8 @@ func routes(e *echo.Echo, db *pgxpool.Pool) {
 	// User routes
 	api := e.Group("/api")
 	router.AuthRouter(api, db)
+	router.TeamRouter(api, db)
+	router.NotificationRouter(api, db)
 }
 
 func scalarDocsHandler() echo.HandlerFunc {

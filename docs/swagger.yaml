@@ -48,6 +48,24 @@ definitions:
         example: Operation successful
         type: string
     type: object
+  team.createTeamRequest:
+    properties:
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  team.updateTeamRequest:
+    properties:
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
 host: localhost:8000
 info:
   contact:
@@ -66,8 +84,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticates a user with email and password, returns a refresh
-        token cookie
+      description: Authenticates a user with email and password, sets refresh/access
+        token cookies
       parameters:
       - description: Login request with email and password
         in: body
@@ -171,8 +189,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Refreshes the access token using the refresh token cookie, returns
-        a new access token and refresh token cookie
+      description: Refreshes the access token using the refresh token cookie and issues
+        new access/refresh token cookies
       produces:
       - application/json
       responses:
@@ -223,6 +241,179 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /teams:
+    get:
+      description: Lists teams the authenticated user is a member of
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Teams retrieved successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List teams
+      tags:
+      - teams
+    post:
+      consumes:
+      - application/json
+      description: Creates a new team and assigns the requesting user as owner
+      parameters:
+      - description: Team create request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/team.createTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team created successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Create a team
+      tags:
+      - teams
+  /teams/{id}:
+    delete:
+      description: Deletes a team (owner only)
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team deleted successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid team ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Team not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Delete a team
+      tags:
+      - teams
+    get:
+      description: Retrieves a single team the authenticated user belongs to
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team retrieved successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid team ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Team not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get a team
+      tags:
+      - teams
+    put:
+      consumes:
+      - application/json
+      description: Updates a team name (owner or admin only)
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Team update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/team.updateTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team updated successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid request body or team ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Team not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Update a team
+      tags:
+      - teams
 schemes:
 - http
 - https
