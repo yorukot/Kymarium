@@ -19,4 +19,5 @@ func NotificationRouter(api *echo.Group, db *pgxpool.Pool) {
 	r.GET("/:id", notificationHandler.GetNotification)
 	r.PATCH("/:id", notificationHandler.UpdateNotification)
 	r.DELETE("/:id", notificationHandler.DeleteNotification)
+	r.POST("/:id/test", notificationHandler.TestNotification)
 }
