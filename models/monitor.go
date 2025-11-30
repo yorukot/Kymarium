@@ -2,10 +2,11 @@ package models
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/yorukot/knocker/models/monitorm"
 )
 
 type MonitorType string
@@ -41,6 +42,7 @@ type Monitor struct {
 
 	// Notifications
 	NotificationIDs []int64 `json:"notification" db:"notification"`
+	ResendThreshold int `json:"resend_threshold" validate:"gte=0,lte=100"`
 
 	// Metadata
 	GroupID   *int64    `json:"group,omitempty" db:"group"`
@@ -48,56 +50,16 @@ type Monitor struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
-type HTTPMethod string
-
-const (
-    MethodGet     HTTPMethod = http.MethodGet
-    MethodPost    HTTPMethod = http.MethodPost
-    MethodPut     HTTPMethod = http.MethodPut
-    MethodDelete  HTTPMethod = http.MethodDelete
-    MethodPatch   HTTPMethod = http.MethodPatch
-    MethodHead    HTTPMethod = http.MethodHead
-    MethodOptions HTTPMethod = http.MethodOptions
-)
-
-// HTTPMonitorConfig represents the expected config shape for HTTP monitors.
-// Fields are ordered by importance and functional grouping.
-type HTTPMonitorConfig struct {
-	// Core request configuration
-	URL       string `json:"url"`
-	Method    HTTPMethod `json:"method"`
-	MaxRedirs int    `json:"max_redirects"`
-
-	// Request options
-	RequestTimeout int               `json:"request_timeout"`
-	Headers        map[string]string `json:"headers,omitempty"`
-	BodyEncoding   string            `json:"body_encoding,omitempty"`
-	Body           string            `json:"body,omitempty"`
-
-	// Response validation
-	UpSideDownMode                bool   `json:"upside_down_mode"`
-	CertificateExpiryNotification bool   `json:"certificate_expiry_notification"`
-	IgnoreTLSError                bool   `json:"ignore_tls_error"`
-	AcceptedStatusCodes           []int  `json:"accepted_status_codes"`
-
-	// Notification options
-	ResendThreshold int `json:"resend_threshold"`
-}
-
 // HTTPConfig decodes the monitor config into an HTTPMonitorConfig.
-func (m Monitor) HTTPConfig() (*HTTPMonitorConfig, error) {
+func (m Monitor) HTTPConfig() (*monitorm.HTTPMonitorConfig, error) {
 	if m.Type != MonitorTypeHTTP {
 		return nil, fmt.Errorf("unsupported monitor type %q", m.Type)
 	}
 
-	var cfg HTTPMonitorConfig
+	var cfg monitorm.HTTPMonitorConfig
 	if err := json.Unmarshal(m.Config, &cfg); err != nil {
 		return nil, fmt.Errorf("decode http monitor config: %w", err)
 	}
 
-	if cfg.URL == "" {
-		return nil, errors.New("http monitor config missing url")
-	}
-
-	return &cfg, nil
+	return &cfg, validator.New().Struct(cfg)
 }
