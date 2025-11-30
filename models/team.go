@@ -35,3 +35,9 @@ type TeamInvite struct {
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
+
+// TeamWithRole represents a team along with the current member's role.
+type TeamWithRole struct {
+	Team
+	Role MemberRole `json:"role" db:"role"`
+}
