@@ -121,6 +121,7 @@ CREATE TABLE "public"."notifications" (
 CREATE TABLE "public"."pings" (
     "time" timestamp NOT NULL,
     "monitor_id" bigint NOT NULL,
+    "region" text NOT NULL,
     "latency" smallint NOT NULL,
     "status" ping_status NOT NULL,
     "data" jsonb,
