@@ -28,7 +28,7 @@ const (
 type HTTPMonitorConfig struct {
 	// Core request configuration
 	URL       string     `json:"url" validate:"required,url"`
-	Method    HTTPMethod `json:"method" validate:"omitempty,oneof=GET POST PUT DELETE PATCH HEAD OPTIONS"`
+	Method    HTTPMethod `json:"method" validate:"oneof=GET POST PUT DELETE PATCH HEAD OPTIONS"`
 	MaxRedirs int        `json:"max_redirects" validate:"gte=0,lte=1000"`
 
 	// Request options

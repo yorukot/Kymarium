@@ -11,10 +11,10 @@ import (
 
 // Result captures the outcome of running a monitor.
 type Result struct {
-	Success    bool
-	Duration   time.Duration
-	StatusCode models.PingStatus
-	Data       any
+	Success  bool
+	Duration time.Duration
+	Status   models.PingStatus
+	Data     any
 }
 
 // Run executes a monitor using the default HTTP client.

@@ -3,8 +3,10 @@ package monitor
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"slices"
 	"strings"
@@ -22,9 +24,6 @@ func RunHTTP(ctx context.Context, baseClient *http.Client, monitor models.Monito
 	}
 
 	method := string(cfg.Method)
-	if method == "" {
-		method = http.MethodGet
-	}
 
 	req, err := http.NewRequestWithContext(ctx, method, cfg.URL, strings.NewReader(cfg.Body))
 	if err != nil {
@@ -50,18 +49,15 @@ func RunHTTP(ctx context.Context, baseClient *http.Client, monitor models.Monito
 	resp, err := client.Do(req)
 	duration := time.Since(start)
 	if err != nil {
-		status := models.PingStatusFailed
-		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
-			status = models.PingStatusTimeout
-		}
+		status, message := classifyHTTPError(err)
 		return &Result{
-			Success:    false,
-			Duration:   duration,
-			StatusCode: status,
+			Success:  false,
+			Duration: duration,
+			Status:   status,
 			Data: map[string]any{
-				"error": err.Error(),
+				"error": message,
 			},
-		}, fmt.Errorf("perform http request: %w", err)
+		}, fmt.Errorf("%s: %w", message, err)
 	}
 	defer resp.Body.Close()
 
@@ -76,14 +72,19 @@ func RunHTTP(ctx context.Context, baseClient *http.Client, monitor models.Monito
 		status = models.PingStatusSuccessful
 	}
 
+	data := map[string]any{
+		"http_status_code": resp.StatusCode,
+	}
+	if !success {
+		data["error"] = statusErrorMessage(resp.StatusCode, cfg.UpSideDownMode)
+	}
+
 	return &Result{
-		Success:    success,
-		Duration:   duration,
-		StatusCode: status,
-		Data: map[string]any{
-			"http_status_code": resp.StatusCode,
-		},
-	}, nil
+		Success:  success,
+		Duration: duration,
+		Status:   status,
+		Data:     data,
+	}, fmt.Errorf("%s", data["error"])
 }
 
 func prepareHTTPClient(base *http.Client, cfg *monitorm.HTTPMonitorConfig) *http.Client {
@@ -151,4 +152,67 @@ func acceptedStatus(accepted []int, status int) bool {
 	}
 
 	return slices.Contains(accepted, status)
+}
+
+func classifyHTTPError(err error) (models.PingStatus, string) {
+	if err == nil {
+		return models.PingStatusFailed, ""
+	}
+
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return models.PingStatusTimeout, "request timed out"
+	}
+
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return models.PingStatusTimeout, "request timed out"
+	}
+
+	if tlsMsg, ok := tlsErrorMessage(err); ok {
+		return models.PingStatusFailed, tlsMsg
+	}
+
+	return models.PingStatusFailed, err.Error()
+}
+
+func tlsErrorMessage(err error) (string, bool) {
+	var certInvalid *x509.CertificateInvalidError
+	if errors.As(err, &certInvalid) {
+		return fmt.Sprintf("tls certificate invalid: %v", certInvalid), true
+	}
+
+	var unknownAuth x509.UnknownAuthorityError
+	if errors.As(err, &unknownAuth) {
+		return fmt.Sprintf("tls unknown authority: %v", unknownAuth), true
+	}
+
+	var hostnameErr x509.HostnameError
+	if errors.As(err, &hostnameErr) {
+		return fmt.Sprintf("tls hostname mismatch: %v", hostnameErr), true
+	}
+
+	var systemErr x509.SystemRootsError
+	if errors.As(err, &systemErr) {
+		return fmt.Sprintf("tls root validation failed: %v", systemErr), true
+	}
+
+	var recordErr *tls.RecordHeaderError
+	if errors.As(err, &recordErr) {
+		return fmt.Sprintf("tls handshake failed: %v", recordErr), true
+	}
+
+	return "", false
+}
+
+func statusErrorMessage(statusCode int, upsideDown bool) string {
+	statusText := http.StatusText(statusCode)
+	if statusText != "" {
+		statusText = " " + statusText
+	}
+
+	if upsideDown {
+		return fmt.Sprintf("upside_down_mode: received HTTP %d%s which counts as failure", statusCode, statusText)
+	}
+
+	return fmt.Sprintf("received HTTP %d%s", statusCode, statusText)
 }

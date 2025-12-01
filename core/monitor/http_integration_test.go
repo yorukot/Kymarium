@@ -91,8 +91,8 @@ func TestRunHTTP_Integration(t *testing.T) {
 				t.Fatalf("RunHTTP returned error: %v", err)
 			}
 
-			if res.StatusCode != tt.wantStatus {
-				t.Fatalf("expected status %s, got %s (success=%v)", tt.wantStatus, res.StatusCode, res.Success)
+			if res.Status != tt.wantStatus {
+				t.Fatalf("expected status %s, got %s (success=%v)", tt.wantStatus, res.Status, res.Success)
 			}
 
 			if res.Success != tt.wantSuccess {

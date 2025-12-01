@@ -44,16 +44,19 @@ func (h *Handler) pingMonitor(ctx context.Context, monitor models.Monitor, regio
 	ping := models.Ping{
 		Time:      time.Now().UTC(),
 		MonitorID: monitor.ID,
+		Region:    region,
 		Status:    models.PingStatusFailed,
+		Latency:   0,
 	}
 
 	if result != nil {
-		ping.Status = result.StatusCode
+		ping.Status = result.Status
 		ping.Latency = int16(clampLatencyMs(result.Duration))
-		ping.Data = marshalPingData(region, result.Data)
+		ping.Data = marshalPingData(result.Data)
 	} else {
-		ping.Data = marshalPingData(region, map[string]any{"error": err.Error()})
+		ping.Data = marshalPingData(map[string]any{"error": err.Error()})
 	}
+
 	return ping, err
 }
 
@@ -63,12 +66,12 @@ func (h *Handler) enqueueNotificationTasks(monitor models.Monitor, ping models.P
 	}
 
 	for _, notificationID := range monitor.NotificationIDs {
+
 		payload := tasks.NotificationPayload{
 			MonitorID:      monitor.ID,
 			NotificationID: notificationID,
 			Region:         region,
-			Status:         ping.Status,
-			PingAt:         ping.Time,
+			Ping:           ping,
 		}
 
 		task, err := tasks.NewNotificationDispatch(payload)
@@ -89,13 +92,8 @@ func (h *Handler) enqueueNotificationTasks(monitor models.Monitor, ping models.P
 	}
 }
 
-func marshalPingData(region string, data any) json.RawMessage {
-	payload := map[string]any{
-		"region": region,
-		"data":   data,
-	}
-
-	encoded, _ := json.Marshal(payload)
+func marshalPingData(data any) json.RawMessage {
+	encoded, _ := json.Marshal(data)
 	return encoded
 }
 
