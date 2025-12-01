@@ -20,6 +20,7 @@ func (r *PGRepository) BatchInsertPings(ctx context.Context, tx pgx.Tx, pings []
 		rows = append(rows, []any{
 			ping.Time,
 			ping.MonitorID,
+			ping.Region,
 			ping.Latency,
 			ping.Status,
 			ping.Data,
@@ -30,7 +31,7 @@ func (r *PGRepository) BatchInsertPings(ctx context.Context, tx pgx.Tx, pings []
 	copied, err := tx.CopyFrom(
 		ctx,
 		pgx.Identifier{"pings"},
-		[]string{"time", "monitor_id", "latency", "status", "data"},
+		[]string{"time", "monitor_id", "region", "latency", "status", "data"},
 		pgx.CopyFromRows(rows),
 	)
 	if err != nil {

@@ -14,8 +14,8 @@ func NotificationRouter(api *echo.Group, repo repository.Repository) {
 	}
 	r := api.Group("/teams/:teamID/notifications", middleware.AuthRequiredMiddleware)
 
-	r.POST("/", notificationHandler.New)
-	r.GET("/", notificationHandler.ListNotifications)
+	r.POST("", notificationHandler.New)
+	r.GET("", notificationHandler.ListNotifications)
 	r.GET("/:id", notificationHandler.GetNotification)
 	r.PATCH("/:id", notificationHandler.UpdateNotification)
 	r.DELETE("/:id", notificationHandler.DeleteNotification)

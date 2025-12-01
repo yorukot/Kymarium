@@ -84,7 +84,7 @@ func RunHTTP(ctx context.Context, baseClient *http.Client, monitor models.Monito
 		Duration: duration,
 		Status:   status,
 		Data:     data,
-	}, fmt.Errorf("%s", data["error"])
+	}, nil
 }
 
 func prepareHTTPClient(base *http.Client, cfg *monitorm.HTTPMonitorConfig) *http.Client {

@@ -14,8 +14,8 @@ func MonitorRouter(api *echo.Group, repo repository.Repository) {
 	}
 
 	r := api.Group("/teams/:teamID/monitors", middleware.AuthRequiredMiddleware)
-	r.POST("/", monitorHandler.CreateMonitor)
-	r.GET("/", monitorHandler.ListMonitors)
+	r.POST("", monitorHandler.CreateMonitor)
+	r.GET("", monitorHandler.ListMonitors)
 	r.GET("/:id", monitorHandler.GetMonitor)
 	r.PUT("/:id", monitorHandler.UpdateMonitor)
 	r.DELETE("/:id", monitorHandler.DeleteMonitor)
