@@ -16,11 +16,13 @@ import (
 )
 
 type createMonitorRequest struct {
-	Name            string             `json:"name" validate:"required,min=1,max=255"`
-	Type            models.MonitorType `json:"type" validate:"required,oneof=http ping"`
-	Interval        int                `json:"interval" validate:"required,gt=0"`
-	Config          json.RawMessage    `json:"config" validate:"required"`
-	NotificationIDs []int64            `json:"notification"`
+	Name              string             `json:"name" validate:"required,min=1,max=255"`
+	Type              models.MonitorType `json:"type" validate:"required,oneof=http ping"`
+	Interval          int                `json:"interval" validate:"required,gt=0"`
+	Config            json.RawMessage    `json:"config" validate:"required"`
+	FailureThreshold  int16              `json:"failure_threshold" validate:"required,gt=0"`
+	RecoveryThreshold int16              `json:"recovery_threshold" validate:"required,gt=0"`
+	NotificationIDs   []int64            `json:"notification"`
 }
 
 // CreateMonitor godocit
@@ -96,16 +98,18 @@ func (h *MonitorHandler) CreateMonitor(c echo.Context) error {
 
 	now := time.Now()
 	monitor := models.Monitor{
-		ID:          monitorID,
-		TeamID:      teamID,
-		Name:        req.Name,
-		Type:        req.Type,
-		Interval:    req.Interval,
-		Config:      req.Config,
-		LastChecked: now,
-		NextCheck:   now.Add(time.Duration(req.Interval) * time.Second),
-		UpdatedAt:   now,
-		CreatedAt:   now,
+		ID:                monitorID,
+		TeamID:            teamID,
+		Name:              req.Name,
+		Type:              req.Type,
+		Interval:          req.Interval,
+		Config:            req.Config,
+		LastChecked:       now,
+		NextCheck:         now.Add(time.Duration(req.Interval) * time.Second),
+		FailureThreshold:  req.FailureThreshold,
+		RecoveryThreshold: req.RecoveryThreshold,
+		UpdatedAt:         now,
+		CreatedAt:         now,
 	}
 
 	if err := h.Repo.CreateMonitor(c.Request().Context(), tx, monitor); err != nil {
@@ -124,6 +128,8 @@ func (h *MonitorHandler) CreateMonitor(c echo.Context) error {
 	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
+
+	monitor.NotificationIDs = req.NotificationIDs
 
 	return c.JSON(http.StatusOK, response.Success("Monitor created successfully", monitor))
 }

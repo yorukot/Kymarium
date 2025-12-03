@@ -24,7 +24,8 @@ func TestRunHTTP_Integration(t *testing.T) {
 		{
 			name: "httpbin 200",
 			cfg: monitorm.HTTPMonitorConfig{
-				URL: "https://httpbin.org/status/200",
+				URL:    "https://httpbin.org/status/200",
+				Method: monitorm.MethodGet,
 			},
 			wantSuccess: true,
 			wantStatus:  models.PingStatusSuccessful,
@@ -32,7 +33,8 @@ func TestRunHTTP_Integration(t *testing.T) {
 		{
 			name: "httpbin 503",
 			cfg: monitorm.HTTPMonitorConfig{
-				URL: "https://httpbin.org/status/503",
+				URL:    "https://httpbin.org/status/503",
+				Method: monitorm.MethodGet,
 			},
 			wantSuccess: false,
 			wantStatus:  models.PingStatusFailed,
@@ -41,6 +43,7 @@ func TestRunHTTP_Integration(t *testing.T) {
 			name: "httpbin delay timeout",
 			cfg: monitorm.HTTPMonitorConfig{
 				URL:            "https://httpbin.org/delay/5",
+				Method:         monitorm.MethodGet,
 				RequestTimeout: 1,
 			},
 			wantSuccess: false,
@@ -50,6 +53,7 @@ func TestRunHTTP_Integration(t *testing.T) {
 			name: "httpbin redirect limited",
 			cfg: monitorm.HTTPMonitorConfig{
 				URL:       "https://httpbin.org/redirect/3",
+				Method:    monitorm.MethodGet,
 				MaxRedirs: 1,
 			},
 			wantSuccess: false,
@@ -59,6 +63,7 @@ func TestRunHTTP_Integration(t *testing.T) {
 			name: "badssl self-signed allowed",
 			cfg: monitorm.HTTPMonitorConfig{
 				URL:            "https://self-signed.badssl.com/",
+				Method:         monitorm.MethodGet,
 				IgnoreTLSError: true,
 			},
 			wantSuccess: true,
@@ -87,8 +92,13 @@ func TestRunHTTP_Integration(t *testing.T) {
 			}
 
 			res, err := RunHTTP(runCtx, http.DefaultClient, monitor)
-			if err != nil && tt.wantStatus != models.PingStatusTimeout {
-				t.Fatalf("RunHTTP returned error: %v", err)
+			// Timeout errors are expected and returned alongside a result
+			if err != nil && res == nil {
+				t.Fatalf("RunHTTP returned error with no result: %v", err)
+			}
+
+			if res == nil {
+				t.Fatalf("RunHTTP returned nil result")
 			}
 
 			if res.Status != tt.wantStatus {

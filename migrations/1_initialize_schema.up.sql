@@ -102,6 +102,8 @@ CREATE TABLE "public"."monitors" (
     "config" jsonb NOT NULL,
     "last_checked" timestamp NOT NULL,
     "next_check" timestamp NOT NULL,
+    "failure_threshold" smallint NOT NULL,
+    "recovery_threshold" smallint NOT NULL,
     "updated_at" timestamp NOT NULL,
     "created_at" timestamp NOT NULL,
     CONSTRAINT "pk_monitors_id" PRIMARY KEY ("id")
@@ -124,7 +126,6 @@ CREATE TABLE "public"."pings" (
     "region" text NOT NULL,
     "latency" integer NOT NULL,
     "status" ping_status NOT NULL,
-    "data" jsonb,
     CONSTRAINT "pk_table_9_id" PRIMARY KEY ("time", "monitor_id")
 );
 
@@ -142,6 +143,7 @@ CREATE TABLE "public"."incidents" (
 CREATE TABLE "public"."incident_events" (
     "id" bigint NOT NULL,
     "incident_id" bigint NOT NULL,
+    "created_by" bigint,
     "message" text NOT NULL,
     "event_type" incident_event_type NOT NULL,
     "public" boolean NOT NULL,
@@ -150,7 +152,7 @@ CREATE TABLE "public"."incident_events" (
     CONSTRAINT "pk_table_12_id" PRIMARY KEY ("id")
 );
 
-CREATE TABLE "public"."monitor_notificaiton" (
+CREATE TABLE "public"."monitor_notifications" (
     "id" bigint NOT NULL,
     "monitor_id" bigint NOT NULL,
     "notification_id" bigint NOT NULL,
@@ -172,5 +174,6 @@ ALTER TABLE "public"."team_members" ADD CONSTRAINT "fk_team_members_user_id_user
 ALTER TABLE "public"."monitors" ADD CONSTRAINT "fk_monitors_team_id_teams_id" FOREIGN KEY("team_id") REFERENCES "public"."teams"("id");
 ALTER TABLE "public"."incident_events" ADD CONSTRAINT "fk_incident_events_incident_id_incidents_id" FOREIGN KEY("incident_id") REFERENCES "public"."incidents"("id");
 ALTER TABLE "public"."incidents" ADD CONSTRAINT "fk_incidents_monitor_id_monitors_id" FOREIGN KEY("monitor_id") REFERENCES "public"."monitors"("id");
-ALTER TABLE "public"."monitor_notificaiton" ADD CONSTRAINT "fk_monitor_notificaiton_monitor_id_monitors_id" FOREIGN KEY("monitor_id") REFERENCES "public"."monitors"("id");
-ALTER TABLE "public"."monitor_notificaiton" ADD CONSTRAINT "fk_monitor_notificaiton_notification_id_notifications_id" FOREIGN KEY("notification_id") REFERENCES "public"."notifications"("id");
+ALTER TABLE "public"."monitor_notifications" ADD CONSTRAINT "fk_monitor_notifications_monitor_id_monitors_id" FOREIGN KEY("monitor_id") REFERENCES "public"."monitors"("id");
+ALTER TABLE "public"."monitor_notifications" ADD CONSTRAINT "fk_monitor_notifications_notification_id_notifications_id" FOREIGN KEY("notification_id") REFERENCES "public"."notifications"("id");
+ALTER TABLE "public"."incident_events" ADD CONSTRAINT "fk_incident_events_created_by_users_id" FOREIGN KEY("created_by") REFERENCES "public"."users"("id");

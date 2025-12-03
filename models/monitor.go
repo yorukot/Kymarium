@@ -41,6 +41,13 @@ type Monitor struct {
 	LastChecked time.Time `json:"last_checked" db:"last_checked"`
 	NextCheck   time.Time `json:"next_check" db:"next_check"`
 
+	// Thresholds
+	FailureThreshold  int16 `json:"failure_threshold" db:"failure_threshold"`
+	RecoveryThreshold int16 `json:"recovery_threshold" db:"recovery_threshold"`
+
+	// Notifications
+	NotificationIDs []int64 `json:"notification" db:"notification_ids"`
+
 	// Metadata
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`

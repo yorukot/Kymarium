@@ -30,6 +30,8 @@ func (h *Handler) HandleStartServiceTask(ctx context.Context, t *asynq.Task) err
 
 	h.pingBuffer.Record(ctx, ping)
 
+	// Before enqueueing notifications, check if the ping was unsuccessful. and if this is the first time
+
 	if ping.Status != models.PingStatusSuccessful {
 		h.enqueueNotificationTasks(payload.Monitor, ping, payload.Region)
 	}
@@ -133,8 +135,10 @@ func clampLatencyMs(duration time.Duration) int64 {
 	if ms < 0 {
 		return 0
 	}
-	if ms > math.MaxInt16 {
-		return math.MaxInt16
+
+	const maxLatencyMs = int64(math.MaxInt32)
+	if ms > maxLatencyMs {
+		return maxLatencyMs
 	}
 	return ms
 }
