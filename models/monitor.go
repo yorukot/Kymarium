@@ -41,11 +41,7 @@ type Monitor struct {
 	LastChecked time.Time `json:"last_checked" db:"last_checked"`
 	NextCheck   time.Time `json:"next_check" db:"next_check"`
 
-	// Notifications
-	NotificationIDs []int64 `json:"notification" db:"notification"`
-
 	// Metadata
-	GroupID   *int64    `json:"group,omitempty" db:"group"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }

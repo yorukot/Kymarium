@@ -14,7 +14,7 @@ type MessageInput struct {
 	MonitorName string
 	Status      models.PingStatus
 	Region      string
-	LatencyMs   int16
+	LatencyMs   int
 	CheckedAt   time.Time
 	Detail      string
 }

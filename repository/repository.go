@@ -52,6 +52,11 @@ type Repository interface {
 	ListMonitorsDueForCheck(ctx context.Context, tx pgx.Tx) ([]models.Monitor, error)
 	BatchUpdateMonitorsLastChecked(ctx context.Context, tx pgx.Tx, monitorIDs []int64, nextChecks []time.Time, lastChecked time.Time) error
 
+	// Monitor-Notification junction table
+	CreateMonitorNotifications(ctx context.Context, tx pgx.Tx, monitorID int64, notificationIDs []int64) error
+	DeleteMonitorNotifications(ctx context.Context, tx pgx.Tx, monitorID int64) error
+	GetNotificationIDsByMonitorID(ctx context.Context, tx pgx.Tx, monitorID int64) ([]int64, error)
+
 	// Pings
 	BatchInsertPings(ctx context.Context, tx pgx.Tx, pings []models.Ping) error
 }

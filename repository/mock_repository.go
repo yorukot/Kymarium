@@ -189,3 +189,19 @@ func (m *MockRepository) BatchInsertPings(ctx context.Context, tx pgx.Tx, pings 
 	args := m.Called(ctx, tx, pings)
 	return args.Error(0)
 }
+
+func (m *MockRepository) CreateMonitorNotifications(ctx context.Context, tx pgx.Tx, monitorID int64, notificationIDs []int64) error {
+	args := m.Called(ctx, tx, monitorID, notificationIDs)
+	return args.Error(0)
+}
+
+func (m *MockRepository) DeleteMonitorNotifications(ctx context.Context, tx pgx.Tx, monitorID int64) error {
+	args := m.Called(ctx, tx, monitorID)
+	return args.Error(0)
+}
+
+func (m *MockRepository) GetNotificationIDsByMonitorID(ctx context.Context, tx pgx.Tx, monitorID int64) ([]int64, error) {
+	args := m.Called(ctx, tx, monitorID)
+	notificationIDs, _ := args.Get(0).([]int64)
+	return notificationIDs, args.Error(1)
+}

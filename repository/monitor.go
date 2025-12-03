@@ -8,13 +8,14 @@ import (
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
 	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/knocker/utils/id"
 )
 
 // CreateMonitor inserts a monitor record.
 func (r *PGRepository) CreateMonitor(ctx context.Context, tx pgx.Tx, monitor models.Monitor) error {
 	query := `
-		INSERT INTO monitors (id, team_id, name, type, interval, config, last_checked, next_check, notification, updated_at, created_at, "group")
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		INSERT INTO monitors (id, team_id, name, type, interval, config, last_checked, next_check, updated_at, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
 	_, err := tx.Exec(ctx, query,
@@ -26,10 +27,8 @@ func (r *PGRepository) CreateMonitor(ctx context.Context, tx pgx.Tx, monitor mod
 		monitor.Config,
 		monitor.LastChecked,
 		monitor.NextCheck,
-		monitor.NotificationIDs,
 		monitor.UpdatedAt,
 		monitor.CreatedAt,
-		monitor.GroupID,
 	)
 	return err
 }
@@ -37,7 +36,7 @@ func (r *PGRepository) CreateMonitor(ctx context.Context, tx pgx.Tx, monitor mod
 // ListMonitorsByTeamID returns monitors belonging to a team.
 func (r *PGRepository) ListMonitorsByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.Monitor, error) {
 	query := `
-		SELECT id, team_id, name, type, interval, config, last_checked, next_check, notification, updated_at, created_at, "group"
+		SELECT id, team_id, name, type, interval, config, last_checked, next_check, updated_at, created_at
 		FROM monitors
 		WHERE team_id = $1
 		ORDER BY created_at DESC
@@ -54,7 +53,7 @@ func (r *PGRepository) ListMonitorsByTeamID(ctx context.Context, tx pgx.Tx, team
 // GetMonitorByID fetches a monitor ensuring it belongs to the provided team.
 func (r *PGRepository) GetMonitorByID(ctx context.Context, tx pgx.Tx, teamID, monitorID int64) (*models.Monitor, error) {
 	query := `
-		SELECT id, team_id, name, type, interval, config, last_checked, next_check, notification, updated_at, created_at, "group"
+		SELECT id, team_id, name, type, interval, config, last_checked, next_check, updated_at, created_at
 		FROM monitors
 		WHERE id = $1 AND team_id = $2
 	`
@@ -69,10 +68,8 @@ func (r *PGRepository) GetMonitorByID(ctx context.Context, tx pgx.Tx, teamID, mo
 		&monitor.Config,
 		&monitor.LastChecked,
 		&monitor.NextCheck,
-		&monitor.NotificationIDs,
 		&monitor.UpdatedAt,
 		&monitor.CreatedAt,
-		&monitor.GroupID,
 	); err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, nil
@@ -87,9 +84,9 @@ func (r *PGRepository) GetMonitorByID(ctx context.Context, tx pgx.Tx, teamID, mo
 func (r *PGRepository) UpdateMonitor(ctx context.Context, tx pgx.Tx, monitor models.Monitor) (*models.Monitor, error) {
 	query := `
 		UPDATE monitors
-		SET name = $1, type = $2, interval = $3, config = $4, last_checked = $5, next_check = $6, notification = $7, updated_at = $8, "group" = $9
-		WHERE id = $10 AND team_id = $11
-		RETURNING id, team_id, name, type, interval, config, last_checked, next_check, notification, updated_at, created_at, "group"
+		SET name = $1, type = $2, interval = $3, config = $4, last_checked = $5, next_check = $6, updated_at = $7
+		WHERE id = $8 AND team_id = $9
+		RETURNING id, team_id, name, type, interval, config, last_checked, next_check, updated_at, created_at
 	`
 
 	var updated models.Monitor
@@ -100,9 +97,7 @@ func (r *PGRepository) UpdateMonitor(ctx context.Context, tx pgx.Tx, monitor mod
 		monitor.Config,
 		monitor.LastChecked,
 		monitor.NextCheck,
-		monitor.NotificationIDs,
 		monitor.UpdatedAt,
-		monitor.GroupID,
 		monitor.ID,
 		monitor.TeamID,
 	).Scan(
@@ -114,10 +109,8 @@ func (r *PGRepository) UpdateMonitor(ctx context.Context, tx pgx.Tx, monitor mod
 		&updated.Config,
 		&updated.LastChecked,
 		&updated.NextCheck,
-		&updated.NotificationIDs,
 		&updated.UpdatedAt,
 		&updated.CreatedAt,
-		&updated.GroupID,
 	); err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, nil
@@ -145,7 +138,7 @@ func (r *PGRepository) DeleteMonitor(ctx context.Context, tx pgx.Tx, teamID, mon
 // ListMonitorsDueForCheck fetches all monitors where next_check <= now
 func (r *PGRepository) ListMonitorsDueForCheck(ctx context.Context, tx pgx.Tx) ([]models.Monitor, error) {
 	query := `
-		SELECT id, team_id, name, type, interval, config, last_checked, next_check, notification, updated_at, created_at, "group"
+		SELECT id, team_id, name, type, interval, config, last_checked, next_check, updated_at, created_at
 		FROM monitors
 		WHERE next_check <= NOW()
 		ORDER BY next_check ASC
@@ -186,4 +179,66 @@ func (r *PGRepository) BatchUpdateMonitorsLastChecked(ctx context.Context, tx pg
 
 	_, err := tx.Exec(ctx, query, lastChecked, monitorIDs, nextChecks)
 	return err
+}
+
+// CreateMonitorNotifications creates associations between a monitor and notification IDs in the junction table.
+func (r *PGRepository) CreateMonitorNotifications(ctx context.Context, tx pgx.Tx, monitorID int64, notificationIDs []int64) error {
+	if len(notificationIDs) == 0 {
+		return nil
+	}
+
+	query := `
+		INSERT INTO monitor_notificaiton (id, monitor_id, notification_id)
+		VALUES ($1, $2, $3)
+	`
+
+	for _, notificationID := range notificationIDs {
+		junctionID, err := id.GetID()
+		if err != nil {
+			return fmt.Errorf("failed to generate junction table ID: %w", err)
+		}
+
+		if _, err := tx.Exec(ctx, query, junctionID, monitorID, notificationID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// DeleteMonitorNotifications removes all notification associations for a monitor.
+func (r *PGRepository) DeleteMonitorNotifications(ctx context.Context, tx pgx.Tx, monitorID int64) error {
+	_, err := tx.Exec(ctx, `DELETE FROM monitor_notificaiton WHERE monitor_id = $1`, monitorID)
+	return err
+}
+
+// GetNotificationIDsByMonitorID fetches all notification IDs associated with a monitor.
+func (r *PGRepository) GetNotificationIDsByMonitorID(ctx context.Context, tx pgx.Tx, monitorID int64) ([]int64, error) {
+	query := `
+		SELECT notification_id
+		FROM monitor_notificaiton
+		WHERE monitor_id = $1
+		ORDER BY id
+	`
+
+	var notificationIDs []int64
+	rows, err := tx.Query(ctx, query, monitorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var notificationID int64
+		if err := rows.Scan(&notificationID); err != nil {
+			return nil, err
+		}
+		notificationIDs = append(notificationIDs, notificationID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return notificationIDs, nil
 }

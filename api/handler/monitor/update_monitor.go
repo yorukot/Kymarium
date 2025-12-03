@@ -21,7 +21,6 @@ type updateMonitorRequest struct {
 	Interval        int                `json:"interval" validate:"required,gt=0"`
 	Config          json.RawMessage    `json:"config" validate:"required"`
 	NotificationIDs []int64            `json:"notification"`
-	GroupID         *int64             `json:"group,omitempty"`
 }
 
 // UpdateMonitor godoc
@@ -62,10 +61,6 @@ func (h *MonitorHandler) UpdateMonitor(c echo.Context) error {
 
 	if len(req.Config) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Monitor config is required")
-	}
-
-	if req.NotificationIDs == nil {
-		req.NotificationIDs = []int64{}
 	}
 
 	userID, err := authutil.GetUserIDFromContext(c)
@@ -111,18 +106,16 @@ func (h *MonitorHandler) UpdateMonitor(c echo.Context) error {
 
 	now := time.Now()
 	monitor := models.Monitor{
-		ID:              monitorID,
-		TeamID:          teamID,
-		Name:            req.Name,
-		Type:            req.Type,
-		Interval:        req.Interval,
-		Config:          req.Config,
-		LastChecked:     existing.LastChecked,
-		NextCheck:       now.Add(time.Duration(req.Interval) * time.Second),
-		NotificationIDs: req.NotificationIDs,
-		UpdatedAt:       now,
-		CreatedAt:       existing.CreatedAt,
-		GroupID:         req.GroupID,
+		ID:          monitorID,
+		TeamID:      teamID,
+		Name:        req.Name,
+		Type:        req.Type,
+		Interval:    req.Interval,
+		Config:      req.Config,
+		LastChecked: existing.LastChecked,
+		NextCheck:   now.Add(time.Duration(req.Interval) * time.Second),
+		UpdatedAt:   now,
+		CreatedAt:   existing.CreatedAt,
 	}
 
 	updated, err := h.Repo.UpdateMonitor(c.Request().Context(), tx, monitor)
@@ -137,6 +130,21 @@ func (h *MonitorHandler) UpdateMonitor(c echo.Context) error {
 
 	if updated == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Monitor not found")
+	}
+
+	// Update monitor-notification associations
+	// First, delete existing associations
+	if err := h.Repo.DeleteMonitorNotifications(c.Request().Context(), tx, monitorID); err != nil {
+		zap.L().Error("Failed to delete monitor notifications", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete monitor notifications")
+	}
+
+	// Then create new associations
+	if len(req.NotificationIDs) > 0 {
+		if err := h.Repo.CreateMonitorNotifications(c.Request().Context(), tx, monitorID, req.NotificationIDs); err != nil {
+			zap.L().Error("Failed to create monitor notifications", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create monitor notifications")
+		}
 	}
 
 	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {

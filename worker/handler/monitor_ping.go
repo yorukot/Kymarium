@@ -51,7 +51,7 @@ func (h *Handler) pingMonitor(ctx context.Context, monitor models.Monitor, regio
 
 	if result != nil {
 		ping.Status = result.Status
-		ping.Latency = int16(clampLatencyMs(result.Duration))
+		ping.Latency = int(clampLatencyMs(result.Duration))
 		ping.Data = marshalPingData(result.Data)
 	} else {
 		ping.Data = marshalPingData(map[string]any{"error": err.Error()})
@@ -61,11 +61,41 @@ func (h *Handler) pingMonitor(ctx context.Context, monitor models.Monitor, regio
 }
 
 func (h *Handler) enqueueNotificationTasks(monitor models.Monitor, ping models.Ping, region string) {
-	if h.notifier == nil || len(monitor.NotificationIDs) == 0 {
+	if h.notifier == nil {
 		return
 	}
 
-	for _, notificationID := range monitor.NotificationIDs {
+	// Fetch notification IDs from junction table
+	ctx := context.Background()
+	tx, err := h.repo.StartTransaction(ctx)
+	if err != nil {
+		zap.L().Error("failed to start transaction for notification fetch",
+			zap.Int64("monitor_id", monitor.ID),
+			zap.Error(err))
+		return
+	}
+	defer h.repo.DeferRollback(tx, ctx)
+
+	notificationIDs, err := h.repo.GetNotificationIDsByMonitorID(ctx, tx, monitor.ID)
+	if err != nil {
+		zap.L().Error("failed to fetch notification IDs",
+			zap.Int64("monitor_id", monitor.ID),
+			zap.Error(err))
+		return
+	}
+
+	if err := h.repo.CommitTransaction(tx, ctx); err != nil {
+		zap.L().Error("failed to commit transaction",
+			zap.Int64("monitor_id", monitor.ID),
+			zap.Error(err))
+		return
+	}
+
+	if len(notificationIDs) == 0 {
+		return
+	}
+
+	for _, notificationID := range notificationIDs {
 
 		payload := tasks.NotificationPayload{
 			TeamID:         monitor.TeamID,

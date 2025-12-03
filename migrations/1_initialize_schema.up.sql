@@ -1,8 +1,10 @@
 CREATE SCHEMA IF NOT EXISTS "public";
 
 CREATE TYPE "auth_provider" AS ENUM ('email', 'google');
+CREATE TYPE "incident_event_type" AS ENUM ('detected', 'notification_sent', 'manually_resolved', 'auto_resolved', 'unpublished', 'published', 'investigating', 'identified', 'update', 'monitoring');
+CREATE TYPE "incident_status" AS ENUM ('detected', 'investigating', 'identified', 'monitoring', 'resolved');
 CREATE TYPE "member_role" AS ENUM ('owner', 'admin', 'member', 'viewer');
-CREATE TYPE "monitor_type" AS ENUM ('http');
+CREATE TYPE "monitor_type" AS ENUM ('http', 'ping');
 CREATE TYPE "notification_type" AS ENUM ('discord', 'telegram', 'email');
 CREATE TYPE "ping_status" AS ENUM ('successful', 'failed', 'timeout');
 
@@ -38,7 +40,7 @@ CREATE TABLE "public"."accounts" (
     "email" character varying(255) NOT NULL,
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL,
-    PRIMARY KEY ("id")
+    CONSTRAINT "pk_accounts_id" PRIMARY KEY ("id")
 );
 -- Indexes
 CREATE UNIQUE INDEX "accounts_accounts_provider_provider_user_id_key" ON "public"."accounts" ("provider", "provider_user_id");
@@ -100,10 +102,8 @@ CREATE TABLE "public"."monitors" (
     "config" jsonb NOT NULL,
     "last_checked" timestamp NOT NULL,
     "next_check" timestamp NOT NULL,
-    "notification" bigint[] NOT NULL,
     "updated_at" timestamp NOT NULL,
     "created_at" timestamp NOT NULL,
-    "group" bigint,
     CONSTRAINT "pk_monitors_id" PRIMARY KEY ("id")
 );
 
@@ -122,10 +122,39 @@ CREATE TABLE "public"."pings" (
     "time" timestamp NOT NULL,
     "monitor_id" bigint NOT NULL,
     "region" text NOT NULL,
-    "latency" smallint NOT NULL,
+    "latency" integer NOT NULL,
     "status" ping_status NOT NULL,
     "data" jsonb,
     CONSTRAINT "pk_table_9_id" PRIMARY KEY ("time", "monitor_id")
+);
+
+CREATE TABLE "public"."incidents" (
+    "id" bigint NOT NULL,
+    "monitor_id" bigint NOT NULL,
+    "status" incident_status NOT NULL,
+    "started_at" timestamp NOT NULL,
+    "resloved_at" timestamp,
+    "created_at" timestamp NOT NULL,
+    "updated_at" timestamp NOT NULL,
+    CONSTRAINT "pk_table_11_id" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "public"."incident_events" (
+    "id" bigint NOT NULL,
+    "incident_id" bigint NOT NULL,
+    "message" text NOT NULL,
+    "event_type" incident_event_type NOT NULL,
+    "public" boolean NOT NULL,
+    "created_at" timestamp NOT NULL,
+    "updated_at" timestamp NOT NULL,
+    CONSTRAINT "pk_table_12_id" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "public"."monitor_notificaiton" (
+    "id" bigint NOT NULL,
+    "monitor_id" bigint NOT NULL,
+    "notification_id" bigint NOT NULL,
+    CONSTRAINT "pk_table_13_id" PRIMARY KEY ("id")
 );
 
 -- Foreign key constraints
@@ -141,3 +170,7 @@ ALTER TABLE "public"."team_invites" ADD CONSTRAINT "fk_team_invites_team_id_team
 ALTER TABLE "public"."team_members" ADD CONSTRAINT "fk_team_members_team_id_teams_id" FOREIGN KEY("team_id") REFERENCES "public"."teams"("id");
 ALTER TABLE "public"."team_members" ADD CONSTRAINT "fk_team_members_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
 ALTER TABLE "public"."monitors" ADD CONSTRAINT "fk_monitors_team_id_teams_id" FOREIGN KEY("team_id") REFERENCES "public"."teams"("id");
+ALTER TABLE "public"."incident_events" ADD CONSTRAINT "fk_incident_events_incident_id_incidents_id" FOREIGN KEY("incident_id") REFERENCES "public"."incidents"("id");
+ALTER TABLE "public"."incidents" ADD CONSTRAINT "fk_incidents_monitor_id_monitors_id" FOREIGN KEY("monitor_id") REFERENCES "public"."monitors"("id");
+ALTER TABLE "public"."monitor_notificaiton" ADD CONSTRAINT "fk_monitor_notificaiton_monitor_id_monitors_id" FOREIGN KEY("monitor_id") REFERENCES "public"."monitors"("id");
+ALTER TABLE "public"."monitor_notificaiton" ADD CONSTRAINT "fk_monitor_notificaiton_notification_id_notifications_id" FOREIGN KEY("notification_id") REFERENCES "public"."notifications"("id");
