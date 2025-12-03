@@ -13,6 +13,7 @@ type MonitorType string
 
 const (
 	MonitorTypeHTTP MonitorType = "http"
+	MonitorTypePing MonitorType = "ping"
 )
 
 type NotificationType string
@@ -58,6 +59,20 @@ func (m Monitor) HTTPConfig() (*monitorm.HTTPMonitorConfig, error) {
 	var cfg monitorm.HTTPMonitorConfig
 	if err := json.Unmarshal(m.Config, &cfg); err != nil {
 		return nil, fmt.Errorf("decode http monitor config: %w", err)
+	}
+
+	return &cfg, validator.New().Struct(cfg)
+}
+
+// PingConfig decodes the monitor config into a PingMonitorConfig.
+func (m Monitor) PingConfig() (*monitorm.PingMonitorConfig, error) {
+	if m.Type != MonitorTypePing {
+		return nil, fmt.Errorf("unsupported monitor type %q", m.Type)
+	}
+
+	var cfg monitorm.PingMonitorConfig
+	if err := json.Unmarshal(m.Config, &cfg); err != nil {
+		return nil, fmt.Errorf("decode ping monitor config: %w", err)
 	}
 
 	return &cfg, validator.New().Struct(cfg)

@@ -17,7 +17,7 @@ import (
 
 type updateMonitorRequest struct {
 	Name            string             `json:"name" validate:"required,min=1,max=255"`
-	Type            models.MonitorType `json:"type" validate:"required,oneof=http"`
+	Type            models.MonitorType `json:"type" validate:"required,oneof=http ping"`
 	Interval        int                `json:"interval" validate:"required,gt=0"`
 	Config          json.RawMessage    `json:"config" validate:"required"`
 	NotificationIDs []int64            `json:"notification"`

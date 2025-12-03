@@ -1280,10 +1280,12 @@ const docTemplate = `{
         "models.MonitorType": {
             "type": "string",
             "enum": [
-                "http"
+                "http",
+                "ping"
             ],
             "x-enum-varnames": [
-                "MonitorTypeHTTP"
+                "MonitorTypeHTTP",
+                "MonitorTypePing"
             ]
         },
         "models.NotificationType": {

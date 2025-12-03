@@ -37,9 +37,11 @@ definitions:
   models.MonitorType:
     enum:
     - http
+    - ping
     type: string
     x-enum-varnames:
     - MonitorTypeHTTP
+    - MonitorTypePing
   models.NotificationType:
     enum:
     - discord

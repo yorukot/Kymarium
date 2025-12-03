@@ -31,6 +31,8 @@ func RunWithClient(ctx context.Context, client *http.Client, monitor models.Moni
 	switch monitor.Type {
 	case models.MonitorTypeHTTP:
 		return RunHTTP(ctx, client, monitor)
+	case models.MonitorTypePing:
+		return RunPing(ctx, monitor)
 	default:
 		return nil, fmt.Errorf("unsupported monitor type %q", monitor.Type)
 	}
