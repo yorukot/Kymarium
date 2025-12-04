@@ -22,7 +22,7 @@ type updateMonitorRequest struct {
 	Config            json.RawMessage    `json:"config" validate:"required"`
 	FailureThreshold  int16              `json:"failure_threshold" validate:"required,gt=0"`
 	RecoveryThreshold int16              `json:"recovery_threshold" validate:"required,gt=0"`
-	NotificationIDs   []int64            `json:"notification"`
+	NotificationIDs   notificationIDList `json:"notification"`
 }
 
 // UpdateMonitor godoc
@@ -107,6 +107,7 @@ func (h *MonitorHandler) UpdateMonitor(c echo.Context) error {
 	}
 
 	now := time.Now()
+	notificationIDs := req.NotificationIDs.Int64s()
 	monitor := models.Monitor{
 		ID:                monitorID,
 		TeamID:            teamID,
@@ -118,6 +119,7 @@ func (h *MonitorHandler) UpdateMonitor(c echo.Context) error {
 		NextCheck:         now.Add(time.Duration(req.Interval) * time.Second),
 		FailureThreshold:  req.FailureThreshold,
 		RecoveryThreshold: req.RecoveryThreshold,
+		NotificationIDs:   notificationIDs,
 		UpdatedAt:         now,
 		CreatedAt:         existing.CreatedAt,
 	}
@@ -144,8 +146,8 @@ func (h *MonitorHandler) UpdateMonitor(c echo.Context) error {
 	}
 
 	// Then create new associations
-	if len(req.NotificationIDs) > 0 {
-		if err := h.Repo.CreateMonitorNotifications(c.Request().Context(), tx, monitorID, req.NotificationIDs); err != nil {
+	if len(notificationIDs) > 0 {
+		if err := h.Repo.CreateMonitorNotifications(c.Request().Context(), tx, monitorID, notificationIDs); err != nil {
 			zap.L().Error("Failed to create monitor notifications", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create monitor notifications")
 		}
@@ -155,7 +157,7 @@ func (h *MonitorHandler) UpdateMonitor(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	updated.NotificationIDs = req.NotificationIDs
+	updated.NotificationIDs = notificationIDs
 
-	return c.JSON(http.StatusOK, response.Success("Monitor updated successfully", updated))
+	return c.JSON(http.StatusOK, response.Success("Monitor updated successfully", newMonitorResponse(*updated)))
 }

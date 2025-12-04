@@ -75,5 +75,5 @@ func (h *MonitorHandler) GetMonitor(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	return c.JSON(http.StatusOK, response.Success("Monitor retrieved successfully", monitor))
+	return c.JSON(http.StatusOK, response.Success("Monitor retrieved successfully", newMonitorResponse(*monitor)))
 }

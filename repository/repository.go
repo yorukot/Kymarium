@@ -59,6 +59,14 @@ type Repository interface {
 
 	// Pings
 	BatchInsertPings(ctx context.Context, tx pgx.Tx, pings []models.Ping) error
+
+	// Incidents
+	GetOpenIncidentByMonitorID(ctx context.Context, tx pgx.Tx, monitorID int64) (*models.Incident, error)
+	CreateIncident(ctx context.Context, tx pgx.Tx, incident models.Incident) error
+	MarkIncidentResolved(ctx context.Context, tx pgx.Tx, incidentID int64, resolvedAt, updatedAt time.Time) error
+	CreateIncidentEvent(ctx context.Context, tx pgx.Tx, event models.IncidentEvent) error
+	GetLastIncidentEvent(ctx context.Context, tx pgx.Tx, incidentID int64) (*models.IncidentEvent, error)
+	ListRecentPingsByMonitorIDAndRegion(ctx context.Context, tx pgx.Tx, monitorID int64, region string, limit int) ([]models.Ping, error)
 }
 
 // PGRepository is the production repository backed by pgx.

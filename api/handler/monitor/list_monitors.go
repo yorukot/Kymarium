@@ -65,5 +65,5 @@ func (h *MonitorHandler) ListMonitors(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	return c.JSON(http.StatusOK, response.Success("Monitors retrieved successfully", monitors))
+	return c.JSON(http.StatusOK, response.Success("Monitors retrieved successfully", newMonitorResponses(monitors)))
 }

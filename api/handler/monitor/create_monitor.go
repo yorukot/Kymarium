@@ -22,7 +22,7 @@ type createMonitorRequest struct {
 	Config            json.RawMessage    `json:"config" validate:"required"`
 	FailureThreshold  int16              `json:"failure_threshold" validate:"required,gt=0"`
 	RecoveryThreshold int16              `json:"recovery_threshold" validate:"required,gt=0"`
-	NotificationIDs   []int64            `json:"notification"`
+	NotificationIDs   notificationIDList `json:"notification"`
 }
 
 // CreateMonitor godocit
@@ -97,6 +97,7 @@ func (h *MonitorHandler) CreateMonitor(c echo.Context) error {
 	}
 
 	now := time.Now()
+	notificationIDs := req.NotificationIDs.Int64s()
 	monitor := models.Monitor{
 		ID:                monitorID,
 		TeamID:            teamID,
@@ -108,6 +109,7 @@ func (h *MonitorHandler) CreateMonitor(c echo.Context) error {
 		NextCheck:         now.Add(time.Duration(req.Interval) * time.Second),
 		FailureThreshold:  req.FailureThreshold,
 		RecoveryThreshold: req.RecoveryThreshold,
+		NotificationIDs:   notificationIDs,
 		UpdatedAt:         now,
 		CreatedAt:         now,
 	}
@@ -118,8 +120,8 @@ func (h *MonitorHandler) CreateMonitor(c echo.Context) error {
 	}
 
 	// Create monitor-notification associations
-	if len(req.NotificationIDs) > 0 {
-		if err := h.Repo.CreateMonitorNotifications(c.Request().Context(), tx, monitorID, req.NotificationIDs); err != nil {
+	if len(notificationIDs) > 0 {
+		if err := h.Repo.CreateMonitorNotifications(c.Request().Context(), tx, monitorID, notificationIDs); err != nil {
 			zap.L().Error("Failed to create monitor notifications", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create monitor notifications")
 		}
@@ -129,7 +131,7 @@ func (h *MonitorHandler) CreateMonitor(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	monitor.NotificationIDs = req.NotificationIDs
+	monitor.NotificationIDs = notificationIDs
 
-	return c.JSON(http.StatusOK, response.Success("Monitor created successfully", monitor))
+	return c.JSON(http.StatusOK, response.Success("Monitor created successfully", newMonitorResponse(monitor)))
 }
