@@ -1,88 +1,90 @@
-<script lang="ts" module>
-	// This is sample data.
-	const data = {
-		user: {
-			name: 'shadcn',
-			email: 'm@example.com',
-			avatar: '/avatars/shadcn.jpg'
-		},
-		teams: [
-			{
-			  id: '123',
-			name: 'Acme Inc',
-			logo: 'lucide:layout-panel-left',
-			plan: 'Enterprise'
-		},
-		{
-			id: '456',
-			name: 'Acme Corp.',
-			logo: 'lucide:audio-waveform',
-			plan: 'Startup'
-		},
-		{
-      id: '789',
-			name: 'Evil Corp.',
-			logo: 'lucide:terminal',
-			plan: 'Free'
-		}
-	],
-	navMain: [
-		{
-			title: 'Monitors',
-			url: '/monitors',
-			icon: 'lucide:monitor'
-		},
-		{
-			title: 'Incidents',
-			url: '/incidents',
-			icon: 'lucide:alert-triangle'
-		},
-		{
-			title: 'Notifications',
-			url: '/notifications',
-			icon: 'lucide:bell'
-		},
-		{
-			title: 'Status pages',
-			url: '/status-pages',
-			icon: 'lucide:globe'
-		},
-		{
-			title: 'Teams',
-			url: '/teams',
-			icon: 'lucide:users'
-		},
-		{
-			title: 'Settings',
-			url: '/settings',
-			icon: 'lucide:settings-2'
-		}
-	]
-};
-</script>
-
 <script lang="ts">
 	import NavMain from './nav-main.svelte';
 	import NavUser from './nav-user.svelte';
 	import TeamSwitcher from './team-switcher.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
-	let {
+
+	type SidebarTeam = {
+		id: string;
+		name: string;
+		logo?: string;
+		plan?: string;
+	};
+
+	type SidebarUser = {
+		name: string;
+		email?: string;
+		avatar?: string;
+	};
+
+	type NavItem = {
+		title: string;
+		url: string;
+		icon?: string;
+	};
+
+	const fallbackUser: SidebarUser = {
+		name: 'User',
+		email: 'Signed in'
+	};
+
+	const fallbackTeams: SidebarTeam[] = [
+		{ id: 'placeholder', name: 'Team', logo: 'lucide:layout-panel-left', plan: 'Member' }
+	];
+
+	const fallbackNavItems: NavItem[] = [
+		{ title: 'Monitors', url: '/monitors', icon: 'lucide:monitor' },
+		{ title: 'Incidents', url: '/incidents', icon: 'lucide:alert-triangle' },
+		{ title: 'Notifications', url: '/notifications', icon: 'lucide:bell' }
+	];
+
+let {
+	user = fallbackUser,
+	teams = fallbackTeams,
+	navItems = fallbackNavItems,
+		currentTeamId,
 		ref = $bindable(null),
 		collapsible = 'icon',
 		...restProps
-	}: ComponentProps<typeof Sidebar.Root> = $props();
+	}: {
+		user?: SidebarUser;
+		teams?: SidebarTeam[];
+		navItems?: NavItem[];
+		currentTeamId?: string;
+	} & ComponentProps<typeof Sidebar.Root> = $props();
+
+	const resolvedTeams = $derived(
+		teams && teams.length > 0 ? teams : fallbackTeams
+	);
+	const baseNavItems = $derived(
+		navItems && navItems.length > 0 ? navItems : fallbackNavItems
+	);
+	const resolvedNavItems = $derived(
+		baseNavItems.map((item) => {
+			if (
+				!currentTeamId ||
+				item.url.startsWith('http') ||
+				item.url.startsWith(`/${currentTeamId}`)
+			) {
+				return item;
+			}
+
+			const normalizedPath = item.url.startsWith('/') ? item.url : `/${item.url}`;
+			return { ...item, url: `/${currentTeamId}${normalizedPath}` };
+		})
+	);
 </script>
 
 <Sidebar.Root {collapsible} {...restProps}>
 	<Sidebar.Header>
-		<TeamSwitcher teams={data.teams} />
+		<TeamSwitcher teams={resolvedTeams} activeTeamId={currentTeamId} />
 	</Sidebar.Header>
 	<Sidebar.Content>
-		<NavMain items={data.navMain} />
+		<NavMain items={resolvedNavItems} />
 	</Sidebar.Content>
 	<Sidebar.Footer>
-		<NavUser user={data.user} />
+		<NavUser user={user ?? fallbackUser} />
 	</Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>

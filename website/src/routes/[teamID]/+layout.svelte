@@ -7,7 +7,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { ModeWatcher } from 'mode-watcher';
 
-	let { children } = $props();
+	let { children, data }: import('./$types').LayoutProps = $props();
 </script>
 
 <svelte:head>
@@ -17,7 +17,12 @@
 <ModeWatcher />
 
 <Sidebar.Provider>
-	<AppSidebar />
+	<AppSidebar
+		user={data.user}
+		teams={[data.team]}
+		currentTeamId={data.team.id}
+		navItems={data.navItems}
+	/>
 	<Sidebar.Inset>
 		<header
 			class="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear"

@@ -55,6 +55,8 @@
 		"zod": "^4.1.13"
 	},
 	"dependencies": {
+		"@dicebear/collection": "^9.2.4",
+		"@dicebear/core": "^9.2.4",
 		"@iconify-json/lucide": "^1.2.79",
 		"@iconify-json/ri": "^1.2.6",
 		"mode-watcher": "^1.1.0"
