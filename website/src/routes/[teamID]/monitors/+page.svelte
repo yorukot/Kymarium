@@ -10,13 +10,21 @@
 			name: 'Public API',
 			target: 'https://api.knocker.dev/health',
 			type: 'HTTP',
-			status: 'operational',
+			status: 'down',
 			regions: ['us-east-1', 'eu-west-2', 'ap-south-1'],
 			frequency: 'Every 30s',
 			uptime: '99.99%',
 			responseTime: '182 ms',
 			lastChecked: '2m ago',
-			lastIncident: 'Resolved 2d ago'
+			lastIncident: 'Resolved 2d ago',
+			incident: {
+				id: 'inc-104',
+				status: 'investigating',
+				severity: 'critical',
+				updatedAt: '5m ago',
+				summary: 'Public API returning 5xx for us-east-1 after rollout',
+				link: '/incidents/inc-104'
+			}
 		},
 		{
 			id: 'marketing-site',
@@ -29,7 +37,15 @@
 			uptime: '99.80%',
 			responseTime: '438 ms',
 			lastChecked: 'Just now',
-			lastIncident: 'Slow TTFB detected'
+			lastIncident: 'Slow TTFB detected',
+			incident: {
+				id: 'inc-099',
+				status: 'monitoring',
+				severity: 'major',
+				updatedAt: '12m ago',
+				summary: 'Elevated TTFB while CDN purge finishes',
+				link: '/incidents/inc-099'
+			}
 		},
 		{
 			id: 'bg-worker',
