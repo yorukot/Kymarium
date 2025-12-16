@@ -14,8 +14,4 @@ import { Button } from '$lib/components/ui/button';
 		</Button>
 	</div>
 	<NewMonitor />
-	<div class="flex gap-2 justify-end">
-		<Button size="default" variant="secondary">Cancel</Button>
-		<Button size="default" variant="default">Create</Button>
-	</div>
 </div>

@@ -4,6 +4,8 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Accordion from '$lib/components/ui/accordion';
 
+	const { errors = {} } = $props<{ errors?: any }>();
+
 	let host = $state('');
 	let timeoutSeconds = $state<number | ''>(5);
 	let packetSize = $state<number | ''>('');
@@ -34,12 +36,17 @@
 				<Field.Description>Hostname or IP address to ping.</Field.Description>
 				<Input
 					id="ping-host"
-					name="host"
+					name="config.host"
 					type="text"
 					bind:value={host}
 					placeholder="example.com or 192.0.2.1"
 					required
 				/>
+				{#if errors?.config?.host}
+					<Field.Description class="text-destructive">
+						{errors.config.host[0]}
+					</Field.Description>
+				{/if}
 			</div>
 
 			<Accordion.Root type="single">
@@ -51,7 +58,7 @@
 							<Field.Description>{timeoutHelper}</Field.Description>
 							<Input
 								id="ping-timeout"
-								name="timeoutSeconds"
+								name="config.timeoutSeconds"
 								type="number"
 								min="0"
 								max="120"
@@ -59,6 +66,11 @@
 								bind:value={timeoutSeconds}
 								placeholder="5"
 							/>
+							{#if errors?.config?.timeoutSeconds}
+								<Field.Description class="text-destructive">
+									{errors.config.timeoutSeconds[0]}
+								</Field.Description>
+							{/if}
 						</div>
 
 						<div class="space-y-2">
@@ -66,7 +78,7 @@
 							<Field.Description>{packetSizeHelper}</Field.Description>
 							<Input
 								id="ping-packet-size"
-								name="packetSize"
+								name="config.packetSize"
 								type="number"
 								min="1"
 								max="65000"
@@ -74,6 +86,11 @@
 								bind:value={packetSize}
 								placeholder="56"
 							/>
+							{#if errors?.config?.packetSize}
+								<Field.Description class="text-destructive">
+									{errors.config.packetSize[0]}
+								</Field.Description>
+							{/if}
 						</div>
 					</Accordion.Content>
 				</Accordion.Item>
