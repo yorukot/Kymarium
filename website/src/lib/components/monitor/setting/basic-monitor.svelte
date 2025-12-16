@@ -8,6 +8,9 @@
 	import { Slider } from '$lib/components/ui/slider';
 	import { decidedNotificationIcon } from '../utils';
 	import * as Select from '$lib/components/ui/select';
+	import HttpMonitor from './http-monitor.svelte';
+	import * as Accordion from '$lib/components/ui/accordion';
+	import PingMonitor from './ping-monitor.svelte';
 
 	let selectedMonitorType = $state<MonitorType>('http');
 	let selectedNotificationIds = $state<string[]>([]);
@@ -146,109 +149,134 @@
 	<Card.Content>
 		<form class="space-y-4">
 			<Field.Set>
-				<Field.Label for="monitor-name">Monitor name</Field.Label>
-				<Input id="monitor-name" name="monitor-name" type="text" placeholder="My Monitor" />
-				<Field.Description>The name of your monitor.</Field.Description>
-
-				<Field.Label>Monitor type</Field.Label>
-				<Field.Description>Select the type of monitor you want to create.</Field.Description>
-				<RadioGroup.Root
-					bind:value={selectedMonitorType}
-					class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(240px,1fr))]"
-				>
-					{#each monitorTypeSelectData as option (option.value)}
-						<Field.Label for={`monitor-type-${option.value}`}>
-							<Field.Field orientation="horizontal">
-								<Field.Content>
-									<Field.Title>{option.title}</Field.Title>
-									<Field.Description>
-										{option.description}
-									</Field.Description>
-								</Field.Content>
-
-								<RadioGroup.Item id={`monitor-type-${option.value}`} value={option.value} />
-							</Field.Field>
-						</Field.Label>
-					{/each}
-				</RadioGroup.Root>
-
-				<Field.Label>Interval</Field.Label>
-				<Field.Description>
-					Monitor will run every
-					<span class="font-medium">
-						{intervalOptions[intervalIndex].label}
-					</span>
-				</Field.Description>
-
-				<Slider
-					type="single"
-					min={0}
-					max={intervalOptions.length - 1}
-					step={1}
-					bind:value={intervalIndex}
-					class="mt-4"
-				/>
-				<div class="mt-2 flex justify-between text-xs text-muted-foreground">
-					{#each intervalOptions as option (option.seconds)}
-						<span class="w-6 text-center">
-							{option.label}
-						</span>
-					{/each}
+				<div class="space-y-2">
+					<Field.Label for="monitor-name">Monitor name</Field.Label>
+					<Input id="monitor-name" name="monitor-name" type="text" placeholder="My Monitor" />
+					<Field.Description>The name of your monitor.</Field.Description>
 				</div>
 
-				<Field.Label>Notifications</Field.Label>
-				<Field.Description>
-					Select which notifications to send when this monitor triggers.
-				</Field.Description>
-				<MultiSelect
-					name="notificationIds"
-					bind:value={selectedNotificationIds}
-					options={notificationOptions}
-					placeholder="Select notifications"
-					emptyMessage="No matching notifications."
-					class="mt-2"
-				/>
+				<div class="space-y-2">
+					<Field.Label>Monitor type</Field.Label>
+					<Field.Description>Select the type of monitor you want to create.</Field.Description>
+					<RadioGroup.Root
+						bind:value={selectedMonitorType}
+						class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(240px,1fr))]"
+					>
+						{#each monitorTypeSelectData as option (option.value)}
+							<Field.Label for={`monitor-type-${option.value}`}>
+								<Field.Field orientation="horizontal">
+									<Field.Content>
+										<Field.Title>{option.title}</Field.Title>
+										<Field.Description>
+											{option.description}
+										</Field.Description>
+									</Field.Content>
 
-				<Field.Label for="failure-threshold">Failure threshold</Field.Label>
-				<Field.Description>{failureThresholdHelper}</Field.Description>
-				<Select.Root type="single" bind:value={failureThresholdValue}>
-					<Select.Trigger class="w-full justify-between">
-						<span data-slot="select-value" class="text-sm font-medium">
-							{failureThresholdLabel}
-						</span>
-					</Select.Trigger>
-					<Select.Content>
-						<Select.Group>
-							<Select.Label>Failed checks</Select.Label>
-							{#each thresholdOptions as option (option.value)}
-								<Select.Item value={option.value.toString()}>
-									{option.label}
-								</Select.Item>
-							{/each}
-						</Select.Group>
-					</Select.Content>
-				</Select.Root>
+									<RadioGroup.Item id={`monitor-type-${option.value}`} value={option.value} />
+								</Field.Field>
+							</Field.Label>
+						{/each}
+					</RadioGroup.Root>
+				</div>
 
-				<Field.Label for="recovery-threshold">Recovery threshold</Field.Label>
-				<Field.Description>{recoveryThresholdHelper}</Field.Description>
-				<Select.Root type="single" bind:value={recoveryThresholdValue}>
-					<Select.Trigger class="w-full justify-between">
-						<span data-slot="select-value" class="text-sm font-medium">
-							{recoveryThresholdLabel}
+				<div class="space-y-2">
+					<Field.Label>Interval</Field.Label>
+					<Field.Description>
+						Monitor will run every
+						<span class="font-medium">
+							{intervalOptions[intervalIndex].label}
 						</span>
-					</Select.Trigger>
-					<Select.Content>
-						<Select.Group>
-							<Select.Label>Successful checks</Select.Label>
-							{#each thresholdOptions as option (option.value)}
-								<Select.Item value={option.value.toString()}>
-									{option.label}
-								</Select.Item>
-							{/each}
-						</Select.Group>
-					</Select.Content>
-				</Select.Root>
+					</Field.Description>
+
+					<Slider
+						type="single"
+						min={0}
+						max={intervalOptions.length - 1}
+						step={1}
+						bind:value={intervalIndex}
+						class="mt-4"
+					/>
+					<div class="mt-2 flex justify-between text-xs text-muted-foreground">
+						{#each intervalOptions as option (option.seconds)}
+							<span class="w-6 text-center">
+								{option.label}
+							</span>
+						{/each}
+					</div>
+				</div>
+
+				<div class="space-y-2">
+					<Field.Label>Notifications</Field.Label>
+					<Field.Description>
+						Select which notifications to send when this monitor triggers.
+					</Field.Description>
+					<MultiSelect
+						name="notificationIds"
+						bind:value={selectedNotificationIds}
+						options={notificationOptions}
+						placeholder="Select notifications"
+						emptyMessage="No matching notifications."
+						class="mt-2"
+					/>
+				</div>
+
+				<Accordion.Root type="single">
+					<Accordion.Item value="item-1">
+						<Accordion.Trigger class="text-lg">Advance setting</Accordion.Trigger>
+						<Accordion.Content class="space-y-6">
+							<div class="space-y-2">
+								<Field.Label for="failure-threshold">Failure threshold</Field.Label>
+								<Field.Description>{failureThresholdHelper}</Field.Description>
+								<Select.Root type="single" bind:value={failureThresholdValue}>
+									<Select.Trigger class="w-full justify-between">
+										<span data-slot="select-value" class="text-sm font-medium">
+											{failureThresholdLabel}
+										</span>
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Group>
+											<Select.Label>Failed checks</Select.Label>
+											{#each thresholdOptions as option (option.value)}
+												<Select.Item value={option.value.toString()}>
+													{option.label}
+												</Select.Item>
+											{/each}
+										</Select.Group>
+									</Select.Content>
+								</Select.Root>
+							</div>
+
+							<div class="space-y-2">
+								<Field.Label for="recovery-threshold">Recovery threshold</Field.Label>
+								<Field.Description>{recoveryThresholdHelper}</Field.Description>
+								<Select.Root type="single" bind:value={recoveryThresholdValue}>
+									<Select.Trigger class="w-full justify-between">
+										<span data-slot="select-value" class="text-sm font-medium">
+											{recoveryThresholdLabel}
+										</span>
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Group>
+											<Select.Label>Successful checks</Select.Label>
+											{#each thresholdOptions as option (option.value)}
+												<Select.Item value={option.value.toString()}>
+													{option.label}
+												</Select.Item>
+											{/each}
+										</Select.Group>
+									</Select.Content>
+								</Select.Root>
+							</div>
+						</Accordion.Content>
+					</Accordion.Item>
+				</Accordion.Root>
 			</Field.Set>
 		</form>
 	</Card.Content>
 </Card.Root>
+
+{#if selectedMonitorType === 'http'}
+	<HttpMonitor />
+{:else if selectedMonitorType === 'ping'}
+	<PingMonitor />
+{/if}

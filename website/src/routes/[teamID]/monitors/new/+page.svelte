@@ -1,5 +1,5 @@
 <script lang="ts">
-	import NewMonitor from '$lib/components/monitor/new/new-monitor.svelte';
+	import NewMonitor from '$lib/components/monitor/setting/basic-monitor.svelte';
 import { Button } from '$lib/components/ui/button';
 	import Icon from '@iconify/svelte';
 </script>
