@@ -12,11 +12,11 @@ SELECT
     count(*) FILTER (
         WHERE status = 'successful' AND latency <= 5000
     ) AS good_count,
-    percentile_cont(0.50) WITHIN GROUP (ORDER BY latency / 1000.0) AS p50,
-    percentile_cont(0.75) WITHIN GROUP (ORDER BY latency / 1000.0) AS p75,
-    percentile_cont(0.90) WITHIN GROUP (ORDER BY latency / 1000.0) AS p90,
-    percentile_cont(0.95) WITHIN GROUP (ORDER BY latency / 1000.0) AS p95,
-    percentile_cont(0.99) WITHIN GROUP (ORDER BY latency / 1000.0) AS p99
+    percentile_cont(0.50) WITHIN GROUP (ORDER BY latency) AS p50_ms,
+    percentile_cont(0.75) WITHIN GROUP (ORDER BY latency) AS p75_ms,
+    percentile_cont(0.90) WITHIN GROUP (ORDER BY latency) AS p90_ms,
+    percentile_cont(0.95) WITHIN GROUP (ORDER BY latency) AS p95_ms,
+    percentile_cont(0.99) WITHIN GROUP (ORDER BY latency) AS p99_ms
 FROM pings
 GROUP BY monitor_id, region, bucket
 WITH NO DATA;

@@ -17,6 +17,7 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import Icon from '@iconify/svelte';
 	import Checkbox from '../checkbox/checkbox.svelte';
+	import { createEventDispatcher } from 'svelte';
 
 	type MultiSelectProps = {
 		value?: string[];
@@ -46,6 +47,8 @@
 		closeOnSelect = false
 	}: MultiSelectProps = $props();
 
+	let hiddenSelect: HTMLSelectElement | null = null;
+
 	const selectedOptions = $derived(
 		options.filter((option: MultiSelectOption) => value?.includes(option.value))
 	);
@@ -54,6 +57,27 @@
 	const optionOrder = $derived(
 		new Map(options.map((option: MultiSelectOption, index: number) => [option.value, index]))
 	);
+
+	const dispatch = createEventDispatcher<{
+		change: string[];
+		input: string[];
+	}>();
+
+	function syncHiddenSelect(next: string[]) {
+		if (!hiddenSelect) return;
+		for (const option of hiddenSelect.options) {
+			option.selected = next.includes(option.value);
+		}
+		hiddenSelect.dispatchEvent(new Event('input', { bubbles: true }));
+		hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+	}
+
+	function setValue(next: string[]) {
+		value = next;
+		dispatch('input', value);
+		dispatch('change', value);
+		syncHiddenSelect(next);
+	}
 
 	function toggle(optionValue: string) {
 		if (disabled) return;
@@ -65,13 +89,15 @@
 			? value.filter((item: string) => item !== optionValue)
 			: [...value, optionValue];
 
-		value = next
+		const ordered = next
 			.slice()
 			.sort(
 				(a: string, b: string) =>
 					(optionOrder.get(a) ?? Number.POSITIVE_INFINITY) -
 					(optionOrder.get(b) ?? Number.POSITIVE_INFINITY)
 			);
+
+		setValue(ordered);
 
 		if (closeOnSelect && !exists) {
 			open = false;
@@ -82,14 +108,29 @@
 		event?.preventDefault();
 		event?.stopPropagation();
 		if (disabled) return;
-		value = [];
+		setValue([]);
 	}
+
+	$effect(() => {
+		syncHiddenSelect(value ?? []);
+	});
 </script>
 
 {#if name}
-	{#each value ?? [] as selected (selected)}
-		<input type="hidden" {name} value={selected} />
-	{/each}
+	<select
+		multiple
+		bind:this={hiddenSelect}
+		name={name}
+		class="hidden"
+		aria-hidden="true"
+		tabindex="-1"
+	>
+		{#each options as option (option.value)}
+			<option value={option.value} selected={value?.includes(option.value)}>
+				{option.label}
+			</option>
+		{/each}
+	</select>
 {/if}
 
 <Popover bind:open>

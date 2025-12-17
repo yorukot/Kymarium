@@ -53,10 +53,76 @@ export function normalizeStatusCodes(codes: string[]): number[] {
 	return Array.from(result).sort((a, b) => a - b);
 }
 
+/**
+ * Replace full numeric coverage of a class with its shorthand token (e.g. 2xx),
+ * and drop numeric codes when the shorthand is already selected.
+ */
+export function condenseStatusTokens(tokens: string[]): string[] {
+	const next = new Set(tokens);
+
+	for (let cls = 1; cls <= 5; cls++) {
+		const classToken = `${cls}xx`;
+		const classCodes = CLASS_STATUS_CODES[cls] ?? [];
+		const classCodeStrings = classCodes.map(String);
+
+		// If shorthand already selected, remove all numeric members.
+		if (next.has(classToken)) {
+			classCodeStrings.forEach((code) => next.delete(code));
+			continue;
+		}
+
+		// If all numeric codes are present, collapse to shorthand.
+		const hasAll = classCodeStrings.length > 0 && classCodeStrings.every((code) => next.has(code));
+		if (hasAll) {
+			classCodeStrings.forEach((code) => next.delete(code));
+			next.add(classToken);
+		}
+	}
+
+	// Preserve deterministic order: numeric ascending, then class tokens ascending.
+	return Array.from(next).sort((a, b) => {
+		const numA = Number(a);
+		const numB = Number(b);
+		const isNumA = Number.isInteger(numA);
+		const isNumB = Number.isInteger(numB);
+		if (isNumA && isNumB) return numA - numB;
+		if (isNumA) return -1;
+		if (isNumB) return 1;
+		return a.localeCompare(b);
+	});
+}
+
+/**
+ * Collapse a full set of status codes for a class back into its shorthand token (e.g. 2xx).
+ * This keeps forms compact when all codes of a class are present.
+ */
+export function collapseStatusCodesToRanges(codes: number[]): string[] {
+	const remaining = new Set(codes);
+	const result: string[] = [];
+
+	for (let cls = 1; cls <= 5; cls++) {
+		const classCodes = CLASS_STATUS_CODES[cls] ?? [];
+		const hasAll = classCodes.every((code) => remaining.has(code));
+		if (hasAll && classCodes.length > 0) {
+			result.push(`${cls}xx`);
+			classCodes.forEach((code) => remaining.delete(code));
+		}
+	}
+
+	// add any leftover specific codes
+	result.push(
+		...Array.from(remaining)
+			.sort((a, b) => a - b)
+			.map(String)
+	);
+
+	return result;
+}
+
 // --- Internal helpers ----
 
 // Source: IANA/MDN registered status codes (HTTP/1.1 + common extensions).
-const ALL_STATUS_CODES = new Set<number>([
+export const ALL_STATUS_CODES = new Set<number>([
 	// 1xx Informational
 	100, 101, 102, 103,
 	// 2xx Success
@@ -70,3 +136,10 @@ const ALL_STATUS_CODES = new Set<number>([
 	// 5xx Server Error
 	500, 501, 502, 503, 504, 505, 506, 507, 508, 510, 511
 ]);
+
+const CLASS_STATUS_CODES: Record<number, number[]> = {};
+for (const code of ALL_STATUS_CODES) {
+	const cls = Math.floor(code / 100);
+	if (!CLASS_STATUS_CODES[cls]) CLASS_STATUS_CODES[cls] = [];
+	CLASS_STATUS_CODES[cls].push(code);
+}

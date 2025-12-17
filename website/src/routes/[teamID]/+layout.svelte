@@ -9,10 +9,16 @@
 	import { page } from '$app/state';
 	import type { Page } from '@sveltejs/kit';
 	import type { SidebarData } from './+layout';
+	import type { Monitor } from '../../types/monitor';
 
 	type Crumb = {
 		label: string;
 		href: string;
+	};
+
+	type BreadcrumbPageData = {
+		monitor?: Monitor;
+		monitors?: Monitor[];
 	};
 
 	/** @type {import('./$types').PageProps} */
@@ -22,6 +28,9 @@
 
 	function buildBreadcrumbs(currentPage: Page, layoutData: SidebarData): Crumb[] {
 		const segments = currentPage.url.pathname.split('/').filter(Boolean);
+		const pageData = currentPage.data as BreadcrumbPageData | undefined;
+		const monitors = pageData?.monitors ?? [];
+		const monitor = pageData?.monitor;
 
 		if (!segments.length) return [];
 
@@ -36,10 +45,21 @@
 			}
 		];
 
-		for (const segment of rest) {
+		for (let index = 0; index < rest.length; index++) {
+			const segment = rest[index];
 			href = `${href}/${segment}`;
+
+			let label = formatSegment(segment);
+
+			if (rest[index - 1] === 'monitors') {
+				label =
+					(monitor && monitor.id === segment && monitor.name) ||
+					monitors.find((item) => item.id === segment)?.name ||
+					label;
+			}
+
 			trail.push({
-				label: formatSegment(segment),
+				label,
 				href
 			});
 		}

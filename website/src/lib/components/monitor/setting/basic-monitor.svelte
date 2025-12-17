@@ -3,30 +3,24 @@
 	import { validator } from '@felte/validator-zod';
 	import { z } from 'zod';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { get } from 'svelte/store';
+	import { page } from '$app/state';
 
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Field from '$lib/components/ui/field/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group';
-import MultiSelect, { type MultiSelectOption } from '$lib/components/ui/multi-select';
-import type { Monitor, MonitorType } from '../../../../types';
-import type { Notification } from '../../../../types';
+	import MultiSelect, { type MultiSelectOption } from '$lib/components/ui/multi-select';
+	import type { Monitor, MonitorType } from '../../../../types';
+	import type { Notification } from '../../../../types';
 	import { Slider } from '$lib/components/ui/slider';
-	import { decidedNotificationIcon } from '../utils';
 	import * as Select from '$lib/components/ui/select';
 	import HttpMonitor from './http-monitor.svelte';
 	import PingMonitor from './ping-monitor.svelte';
-import { Button } from '$lib/components/ui/button';
-import { createMonitor, updateMonitor } from '$lib/api/monitor';
-	import { normalizeStatusCodes, parseHeaders } from './utils';
-	import {
-		intervalOptions,
-		monitorTypeSelectData,
-		thresholdOptions,
-		httpMethods
-	} from './setting';
+	import { Button } from '$lib/components/ui/button';
+	import { createMonitor, updateMonitor } from '$lib/api/monitor';
+	import { collapseStatusCodesToRanges, normalizeStatusCodes, parseHeaders } from './utils';
+	import { intervalOptions, monitorTypeSelectData, thresholdOptions, httpMethods } from './setting';
+	import { decidedNotificationIcon } from '$lib/utils/notification';
 
 	const httpConfigSchema = z.object({
 		url: z.url('Must be a valid URL'),
@@ -99,23 +93,27 @@ import { createMonitor, updateMonitor } from '$lib/api/monitor';
 	const initialFailureThreshold = '1';
 	const initialRecoveryThreshold = '1';
 
-	let { notifications, monitor = null }: { notifications: Notification[]; monitor?: Monitor | null } =
-		$props();
+	let {
+		notifications,
+		monitor = null
+	}: { notifications: Notification[]; monitor?: Monitor | null } = $props();
 
-	const isEdit = monitor !== null;
+	const isEdit = $derived.by(() => monitor !== null);
 
-	let selectedMonitorType = $state<MonitorType>(monitor?.type ?? 'http');
-	const foundIntervalIndex = intervalOptions.findIndex((opt) => opt.seconds === (monitor?.interval ?? -1));
+	let selectedMonitorType = $derived<MonitorType>(monitor?.type ?? 'http');
+	const foundIntervalIndex = intervalOptions.findIndex(
+		(opt) => opt.seconds === (monitor?.interval ?? -1)
+	);
 	let intervalIndex = $state<number>(
 		foundIntervalIndex !== -1 ? foundIntervalIndex : initialIntervalIndex
 	);
-	let failureThresholdValue = $state<string>(
+	let failureThresholdValue = $derived<string>(
 		(monitor?.failureThreshold ?? Number(initialFailureThreshold)).toString()
 	);
-	let recoveryThresholdValue = $state<string>(
+	let recoveryThresholdValue = $derived<string>(
 		(monitor?.recoveryThreshold ?? Number(initialRecoveryThreshold)).toString()
 	);
-	let selectedNotificationIds = $state<string[]>(monitor?.notification ?? []);
+	let selectedNotificationIds = $derived<string[]>(monitor?.notification ?? []);
 
 	const notificationOptions: MultiSelectOption[] = $derived.by(() =>
 		notifications.map((notification) => ({
@@ -137,50 +135,32 @@ import { createMonitor, updateMonitor } from '$lib/api/monitor';
 		return {
 			url: (config?.url as string) ?? '',
 			method: ((config?.method as HttpConfig['method']) ?? 'GET') as HttpConfig['method'],
-			maxRedirects:
-				(config?.max_redirects as number) ??
-				(config?.maxRedirects as number) ??
-				defaultHttpConfig().maxRedirects,
+			maxRedirects: (config?.maxRedirects as number) ?? defaultHttpConfig().maxRedirects,
 			requestTimeoutSeconds:
-				(config?.request_timeout as number) ??
-				(config?.requestTimeout as number) ??
-				defaultHttpConfig().requestTimeoutSeconds,
+				(config?.requestTimeout as number) ?? defaultHttpConfig().requestTimeoutSeconds,
 			headers: toHeaderString(config?.headers as Record<string, string> | undefined),
-			bodyEncoding:
-				(config?.body_encoding as HttpConfig['bodyEncoding']) ??
-				(config?.bodyEncoding as HttpConfig['bodyEncoding']) ??
-				'',
+			bodyEncoding: (config?.bodyEncoding as HttpConfig['bodyEncoding']) ?? '',
 			body: (config?.body as string) ?? '',
-			acceptedStatusCodes:
-				(config?.accepted_status_codes as number[] | undefined)?.map(String) ??
-				(config?.acceptedStatusCodes as number[] | undefined)?.map(String) ??
-				defaultHttpConfig().acceptedStatusCodes,
-			upsideDownMode:
-				(config?.upside_down_mode as boolean) ??
-				(config?.upsideDownMode as boolean) ??
-				defaultHttpConfig().upsideDownMode,
+			acceptedStatusCodes: (() => {
+				const raw = config?.acceptedStatusCodes as number[] | undefined;
+				if (raw && raw.length) {
+					return collapseStatusCodesToRanges(raw);
+				}
+				return defaultHttpConfig().acceptedStatusCodes;
+			})(),
+			upsideDownMode: (config?.upsideDownMode as boolean) ?? defaultHttpConfig().upsideDownMode,
 			certificateExpiryNotification:
-				(config?.certificate_expiry_notification as boolean) ??
 				(config?.certificateExpiryNotification as boolean) ??
 				defaultHttpConfig().certificateExpiryNotification,
-			ignoreTlsError:
-				(config?.ignore_tls_error as boolean) ??
-				(config?.ignoreTlsError as boolean) ??
-				defaultHttpConfig().ignoreTlsError
+			ignoreTlsError: (config?.ignoreTlsError as boolean) ?? defaultHttpConfig().ignoreTlsError
 		};
 	}
 
 	function initialPingFromMonitor(config: Record<string, unknown> | undefined): PingConfig {
 		return {
 			host: (config?.host as string) ?? '',
-			timeoutSeconds:
-				(config?.timeout_seconds as number) ??
-				(config?.timeoutSeconds as number) ??
-				defaultPingConfig().timeoutSeconds,
-			packetSize:
-				(config?.packet_size as number) ??
-				(config?.packetSize as number) ??
-				(defaultPingConfig().packetSize ?? '')
+			timeoutSeconds: (config?.timeoutSeconds as number) ?? defaultPingConfig().timeoutSeconds,
+			packetSize: (config?.packetSize as number) ?? defaultPingConfig().packetSize ?? ''
 		};
 	}
 
@@ -226,7 +206,7 @@ import { createMonitor, updateMonitor } from '$lib/api/monitor';
 			try {
 				const payload = buildPayload(values);
 				console.log('monitor:create:payload', payload);
-				const { params } = get(page);
+				const { params } = page;
 				const teamID = params?.teamID;
 				if (!teamID) {
 					console.error('monitor:create missing teamID in route params', params);
@@ -240,9 +220,7 @@ import { createMonitor, updateMonitor } from '$lib/api/monitor';
 			} catch (error) {
 				console.error('monitor:save:error', error);
 				const message =
-					error instanceof Error
-						? error.message
-						: 'Failed to save monitor. Please try again.';
+					error instanceof Error ? error.message : 'Failed to save monitor. Please try again.';
 				return { FORM_ERROR: message };
 			}
 		}
@@ -284,7 +262,9 @@ import { createMonitor, updateMonitor } from '$lib/api/monitor';
 			config: {
 				host: values.config.host,
 				timeout_seconds: values.config.timeoutSeconds,
-				...(values.config.packetSize === '' ? {} : { packet_size: Number(values.config.packetSize) })
+				...(values.config.packetSize === ''
+					? {}
+					: { packet_size: Number(values.config.packetSize) })
 			}
 		};
 	}
@@ -312,21 +292,12 @@ import { createMonitor, updateMonitor } from '$lib/api/monitor';
 		setFields('notification', selectedNotificationIds);
 	});
 
-	$effect(() => {
-		if (selectedMonitorType === 'http') {
-			setFields('config.acceptedStatusCodes', httpAcceptedStatusCodes);
-		}
-	});
-
 	function handleTypeChange(next: MonitorType) {
 		selectedMonitorType = next;
 		setFields('type', next);
 		const configValue: MonitorFormValues['config'] =
 			next === 'http' ? defaultHttpConfig() : defaultPingConfig();
 		setFields('config', configValue);
-		if (next === 'http') {
-			httpAcceptedStatusCodes = defaultHttpConfig().acceptedStatusCodes;
-		}
 	}
 
 	const failureThresholdLabel = $derived.by(() => {
@@ -353,20 +324,17 @@ import { createMonitor, updateMonitor } from '$lib/api/monitor';
 		return `After ${recoveryThresholdValue} consecutive successful checks.`;
 	});
 
-	const initialHttpConfig =
-		monitor?.type === 'http' ? (initialValues.config as HttpConfig) : undefined;
-	const initialPingConfig =
-		monitor?.type === 'ping' ? (initialValues.config as PingConfig) : undefined;
-
-	let httpAcceptedStatusCodes = $state<string[]>(
-		initialHttpConfig?.acceptedStatusCodes ?? ['2xx']
+	const initialHttpConfig = $derived(
+		monitor?.type === 'http' ? (initialValues.config as HttpConfig) : undefined
+	);
+	const initialPingConfig = $derived(
+		monitor?.type === 'ping' ? (initialValues.config as PingConfig) : undefined
 	);
 </script>
 
 <form use:form class="space-y-4 w-full">
-
-<Card.Root class="mx-auto w-full">
-	<Card.Content>
+	<Card.Root class="mx-auto w-full">
+		<Card.Content>
 			<Field.Set>
 				<div class="space-y-2">
 					<Field.Label for="monitor-name">Monitor name</Field.Label>
@@ -504,32 +472,24 @@ import { createMonitor, updateMonitor } from '$lib/api/monitor';
 					{/if}
 				</div>
 			</Field.Set>
-	</Card.Content>
-</Card.Root>
+		</Card.Content>
+	</Card.Root>
 
-{#if selectedMonitorType === 'http'}
-	<HttpMonitor
-		errors={$errors}
-		initialConfig={initialHttpConfig}
-		acceptedStatusCodes={httpAcceptedStatusCodes}
-		onAcceptedStatusChange={(codes) => {
-			httpAcceptedStatusCodes = codes;
-		}}
-	/>
-{:else}
-	<PingMonitor errors={$errors} initialConfig={initialPingConfig} />
-{/if}
+	{#if selectedMonitorType === 'http'}
+		<HttpMonitor errors={$errors} initialConfig={initialHttpConfig} />
+	{:else}
+		<PingMonitor errors={$errors} initialConfig={initialPingConfig} />
+	{/if}
 
-{#if formLevelError}
-	<Field.Description class="text-destructive text-right">
-		{formLevelError}
-	</Field.Description>
-{/if}
+	{#if formLevelError}
+		<Field.Description class="text-destructive text-right">
+			{formLevelError}
+		</Field.Description>
+	{/if}
 
-<div class="flex gap-2 justify-end">
-	<Button type="submit" size="default" variant="default" disabled={$isSubmitting}>
-		{$isSubmitting ? (isEdit ? 'Saving…' : 'Creating…') : isEdit ? 'Save changes' : 'Create'}
-	</Button>
-</div>
-
+	<div class="flex gap-2 justify-end">
+		<Button type="submit" size="default" variant="default" disabled={$isSubmitting}>
+			{$isSubmitting ? (isEdit ? 'Saving…' : 'Creating…') : isEdit ? 'Save changes' : 'Create'}
+		</Button>
+	</div>
 </form>

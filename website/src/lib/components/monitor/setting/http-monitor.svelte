@@ -6,23 +6,15 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Switch } from '$lib/components/ui/switch';
 	import MultiSelect from '$lib/components/ui/multi-select';
-import * as Accordion from '$lib/components/ui/accordion';
+	import * as Accordion from '$lib/components/ui/accordion';
 
 	import type { BodyEncoding, HTTPMethod } from '../../../../types/monitor-config';
-	import {
-		bodyEncodingOptions,
-		acceptedStatusOptions,
-		httpMethods,
-		successStatusCodes
-	} from './setting';
+	import { bodyEncodingOptions, acceptedStatusOptions, httpMethods } from './setting';
+	import { condenseStatusTokens } from './utils';
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const {
-		errors = {},
-		initialConfig,
-		acceptedStatusCodes: acceptedStatusCodesProp,
-		onAcceptedStatusChange = () => {}
-	} = $props<{
+	
+	const { errors = {}, initialConfig } = $props<{
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		errors?: any;
 		initialConfig?: {
 			url: string;
@@ -37,29 +29,21 @@ import * as Accordion from '$lib/components/ui/accordion';
 			ignoreTlsError: boolean;
 			certificateExpiryNotification: boolean;
 		};
-		acceptedStatusCodes?: string[];
-		onAcceptedStatusChange?: (codes: string[]) => void;
 	}>();
 
-	let url = $state(initialConfig?.url ?? '');
-	let method = $state<HTTPMethod>(initialConfig?.method ?? 'GET');
-	let requestTimeoutSeconds = $state<number | ''>(initialConfig?.requestTimeoutSeconds ?? 10);
-	let maxRedirects = $state<number | ''>(initialConfig?.maxRedirects ?? 5);
-	let headers = $state(initialConfig?.headers ?? '');
-	let bodyEncoding = $state<BodyEncoding | ''>(initialConfig?.bodyEncoding ?? '');
-	let body = $state(initialConfig?.body ?? '');
-	let acceptedStatusCodes = $state<string[]>(
-		acceptedStatusCodesProp ?? initialConfig?.acceptedStatusCodes ?? ['2xx']
-	);
-	let upsideDownMode = $state(initialConfig?.upsideDownMode ?? false);
-	let ignoreTlsError = $state(initialConfig?.ignoreTlsError ?? false);
-	let certificateExpiryNotification = $state(
+	let url = $derived(initialConfig?.url ?? '');
+	let method = $derived<HTTPMethod>(initialConfig?.method ?? 'GET');
+	let requestTimeoutSeconds = $derived<number | ''>(initialConfig?.requestTimeoutSeconds ?? 10);
+	let maxRedirects = $derived<number | ''>(initialConfig?.maxRedirects ?? 5);
+	let headers = $derived(initialConfig?.headers ?? '');
+	let bodyEncoding = $derived<BodyEncoding | ''>(initialConfig?.bodyEncoding ?? '');
+	let body = $derived(initialConfig?.body ?? '');
+	let acceptedStatusCodes = $derived<string[]>(initialConfig?.acceptedStatusCodes ?? ['2xx']);
+	let upsideDownMode = $derived(initialConfig?.upsideDownMode ?? false);
+	let ignoreTlsError = $derived(initialConfig?.ignoreTlsError ?? false);
+	let certificateExpiryNotification = $derived(
 		initialConfig?.certificateExpiryNotification ?? true
 	);
-
-	$effect(() => {
-		onAcceptedStatusChange(acceptedStatusCodes);
-	});
 
 	const timeoutHelper = $derived.by(() =>
 		requestTimeoutSeconds === ''
@@ -76,47 +60,10 @@ import * as Accordion from '$lib/components/ui/accordion';
 	const acceptedStatusHelper =
 		'Choose specific codes or broad ranges (2xx/4xx/5xx). Leave empty to accept any 2xx.';
 
-	const statusOptionOrder = new Map(
-		acceptedStatusOptions.map((option, index) => [option.value, index])
-	);
-
-	function sortStatusSelections(values: string[]): string[] {
-		return values
-			.slice()
-			.sort(
-				(a, b) =>
-					(statusOptionOrder.get(a) ?? Number.POSITIVE_INFINITY) -
-					(statusOptionOrder.get(b) ?? Number.POSITIVE_INFINITY)
-			);
-	}
-
-	function selectionsEqual(a: string[], b: string[]): boolean {
-		return a.length === b.length && a.every((value, idx) => value === b[idx]);
-	}
-
 	$effect(() => {
-		const current = acceptedStatusCodes ?? [];
-		const hasRange = current.includes('2xx');
-		const hasAllSuccessCodes = successStatusCodes.every((code) => current.includes(code));
-
-		if (hasRange) {
-			const cleaned = sortStatusSelections(
-				current.filter((code) => code === '2xx' || !successStatusCodes.includes(code))
-			);
-			if (!selectionsEqual(cleaned, current)) {
-				acceptedStatusCodes = cleaned;
-			}
-			return;
-		}
-
-		if (hasAllSuccessCodes) {
-			const next = sortStatusSelections([
-				...current.filter((code) => !successStatusCodes.includes(code)),
-				'2xx'
-			]);
-			if (!selectionsEqual(next, current)) {
-				acceptedStatusCodes = next;
-			}
+		const condensed = condenseStatusTokens(acceptedStatusCodes ?? []);
+		if (condensed.join('|') !== (acceptedStatusCodes ?? []).join('|')) {
+			acceptedStatusCodes = condensed;
 		}
 	});
 </script>

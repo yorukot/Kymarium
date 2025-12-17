@@ -4,13 +4,13 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import Icon from '@iconify/svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import { monitorTarget } from './utils';
 	import { deleteMonitor } from '$lib/api/monitor';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';
 	import DeleteMonitorDialog from './delete-monitor-dialog.svelte';
 	import { goto } from '$app/navigation';
 	import Button from '../ui/button/button.svelte';
+	import { monitorTarget } from '$lib/utils/monitor';
 
 	let { monitors }: { monitors: Monitor[] } = $props();
 
@@ -70,29 +70,32 @@
 							</p>
 						</div>
 					</div>
-
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger class="shrink-0">
-							<Button variant="ghost" size="icon">
-								<Icon icon="lucide:more-vertical" />
-							</Button>
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content>
-							<DropdownMenu.Group>
-								<DropdownMenu.Item>
-									<Icon icon="lucide:eye" /> View details
-								</DropdownMenu.Item>
-								<DropdownMenu.Item onclick={() => goto(`monitors/${monitor.id}/edit`)}>
-									<Icon icon="lucide:edit" /> Edit
-								</DropdownMenu.Item>
-								<DropdownMenu.Separator />
-								<DropdownMenu.Item variant="destructive" onclick={() => askDelete(monitor)}>
-									<Icon icon="lucide:trash" />
-									Delete
-								</DropdownMenu.Item>
-							</DropdownMenu.Group>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
+					<div>
+					<div>
+					</div>
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger class="shrink-0">
+								<Button variant="ghost" size="icon">
+									<Icon icon="lucide:more-vertical" />
+								</Button>
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content>
+								<DropdownMenu.Group>
+									<DropdownMenu.Item>
+										<Icon icon="lucide:eye" /> View details
+									</DropdownMenu.Item>
+									<DropdownMenu.Item onclick={() => goto(`monitors/${monitor.id}/edit`)}>
+										<Icon icon="lucide:edit" /> Edit
+									</DropdownMenu.Item>
+									<DropdownMenu.Separator />
+									<DropdownMenu.Item variant="destructive" onclick={() => askDelete(monitor)}>
+										<Icon icon="lucide:trash" />
+										Delete
+									</DropdownMenu.Item>
+								</DropdownMenu.Group>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+					</div>
 				</div>
 			</Card>
 		{/each}
