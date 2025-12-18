@@ -20,9 +20,11 @@ type monitorIDList = utils.IDList
 
 type createIncidentRequest struct {
 	Status     models.IncidentStatus `json:"status" validate:"omitempty,oneof=detected investigating identified monitoring resolved"`
+	Severity   models.IncidentSeverity `json:"severity" validate:"omitempty,oneof=emergency critical major minor info"`
 	Message    string                `json:"message" validate:"omitempty,min=1"`
 	StartedAt  *time.Time            `json:"started_at,omitempty"`
 	Public     *bool                 `json:"public"`
+	AutoResolve *bool                `json:"auto_resolve"`
 	MonitorIDs monitorIDList         `json:"monitor_ids" validate:"required,min=1"`
 }
 
@@ -114,10 +116,19 @@ func (h *IncidentHandler) CreateIncident(c echo.Context) error {
 	if status == "" {
 		status = models.IncidentStatusDetected
 	}
+	severity := req.Severity
+	if severity == "" {
+		severity = models.IncidentSeverityMajor
+	}
 
 	isPublic := true
 	if req.Public != nil {
 		isPublic = *req.Public
+	}
+
+	autoResolve := false
+	if req.AutoResolve != nil {
+		autoResolve = *req.AutoResolve
 	}
 
 	now := time.Now().UTC()
@@ -138,13 +149,15 @@ func (h *IncidentHandler) CreateIncident(c echo.Context) error {
 	}
 
 	incident := models.Incident{
-		ID:         incidentID,
-		Status:     status,
-		IsPublic:   isPublic,
-		StartedAt:  *startedAt,
-		ResolvedAt: resolvedAt,
-		CreatedAt:  now,
-		UpdatedAt:  now,
+		ID:          incidentID,
+		Status:      status,
+		Severity:    severity,
+		IsPublic:    isPublic,
+		AutoResolve: autoResolve,
+		StartedAt:   *startedAt,
+		ResolvedAt:  resolvedAt,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
 	if err := h.Repo.CreateIncident(ctx, tx, incident); err != nil {

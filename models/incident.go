@@ -12,6 +12,16 @@ const (
 	IncidentStatusResolved      IncidentStatus = "resolved"
 )
 
+type IncidentSeverity string
+
+const (
+	IncidentSeverityEmergency IncidentSeverity = "emergency"
+	IncidentSeverityCritical  IncidentSeverity = "critical"
+	IncidentSeverityMajor     IncidentSeverity = "major"
+	IncidentSeverityMinor     IncidentSeverity = "minor"
+	IncidentSeverityInfo      IncidentSeverity = "info"
+)
+
 type EventType string
 
 const (
@@ -29,13 +39,15 @@ const (
 
 // Incident represents an incident record in the database
 type Incident struct {
-	ID         int64          `json:"id,string" db:"id"`
-	Status     IncidentStatus `json:"status" db:"status"`
-	IsPublic   bool           `json:"is_public" db:"is_public"`
-	StartedAt  time.Time      `json:"started_at" db:"started_at"`
-	ResolvedAt *time.Time     `json:"resolved_at,omitempty" db:"resolved_at"`
-	CreatedAt  time.Time      `json:"created_at" db:"created_at"`
-	UpdatedAt  time.Time      `json:"updated_at" db:"updated_at"`
+	ID          int64            `json:"id,string" db:"id"`
+	Status      IncidentStatus   `json:"status" db:"status"`
+	Severity    IncidentSeverity `json:"severity" db:"severity"`
+	IsPublic    bool             `json:"is_public" db:"is_public"`
+	AutoResolve bool             `json:"auto_resolve" db:"auto_resolve"`
+	StartedAt   time.Time        `json:"started_at" db:"started_at"`
+	ResolvedAt  *time.Time       `json:"resolved_at,omitempty" db:"resolved_at"`
+	CreatedAt   time.Time        `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time        `json:"updated_at" db:"updated_at"`
 }
 
 // IncidentMonitor links incidents to monitors.

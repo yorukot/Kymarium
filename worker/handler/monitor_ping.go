@@ -140,7 +140,7 @@ func clampLatencyMs(duration time.Duration) int64 {
 		return 0
 	}
 
-	const maxLatencyMs = int64(math.MaxInt64)
+	const maxLatencyMs = int64(math.MaxInt32)
 	if ms > maxLatencyMs {
 		return maxLatencyMs
 	}
@@ -182,13 +182,13 @@ func (h *Handler) processIncident(ctx context.Context, monitor models.Monitor, p
 	if targetStatus != monitor.Status {
 		if err := h.repo.UpdateMonitorStatus(ctx, tx, monitor.ID, targetStatus, time.Now().UTC()); err != nil {
 			zap.L().Error("failed to update monitor status",
-				zap.Int64("monitor_id", monitor.ID),
-				zap.Int64("region_id", regionID),
-				zap.String("region_name", region.Name),
-				zap.String("target_status", string(targetStatus)),
-				zap.Error(err))
-			return
-		}
+			zap.Int64("monitor_id", monitor.ID),
+			zap.Int64("region_id", regionID),
+			zap.String("region_name", region.Name),
+			zap.String("target_status", string(targetStatus)),
+			zap.Error(err))
+		return
+	}
 		monitor.Status = targetStatus
 	}
 
@@ -299,7 +299,7 @@ func (h *Handler) handleIncidentRecovery(ctx context.Context, tx pgx.Tx, monitor
 	}
 
 	allSuccessful := true
-	for i := range recoveryThreshold {
+	for i := 0; i < recoveryThreshold; i++ {
 		if samples[i].Status != models.PingStatusSuccessful {
 			allSuccessful = false
 			break
@@ -355,12 +355,14 @@ func (h *Handler) createIncidentIfAbsent(ctx context.Context, tx pgx.Tx, monitor
 	}
 
 	incident := models.Incident{
-		ID:        newID,
-		Status:    models.IncidentStatusDetected,
-		IsPublic:  false,
-		StartedAt: startedAt,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:          newID,
+		Status:      models.IncidentStatusDetected,
+		Severity:    models.IncidentSeverityMajor,
+		IsPublic:    false,
+		AutoResolve: true,
+		StartedAt:   startedAt,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
 	if err := h.repo.CreateIncident(ctx, tx, incident); err != nil {
@@ -417,4 +419,11 @@ func incidentMessage(region, detail string, ping models.Ping, fallback string) s
 		msg = fmt.Sprintf("%s: %s", region, msg)
 	}
 	return msg
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

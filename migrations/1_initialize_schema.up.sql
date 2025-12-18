@@ -6,6 +6,7 @@ CREATE EXTENSION IF NOT EXISTS timescaledb;
 CREATE TYPE "auth_provider" AS ENUM ('email', 'google');
 CREATE TYPE "event_type" AS ENUM ('detected', 'notification_sent', 'manually_resolved', 'auto_resolved', 'unpublished', 'published', 'investigating', 'identified', 'update', 'monitoring');
 CREATE TYPE "incident_status" AS ENUM ('detected', 'investigating', 'identified', 'monitoring', 'resolved');
+CREATE TYPE "incident_severity" AS ENUM ('emergency', 'critical', 'major', 'minor', 'info');
 CREATE TYPE "member_role" AS ENUM ('owner', 'admin', 'member', 'viewer');
 CREATE TYPE "monitor_status" AS ENUM ('up', 'down');
 CREATE TYPE "monitor_type" AS ENUM ('http', 'ping');
@@ -114,7 +115,9 @@ CREATE INDEX "idx_refresh_tokens_user_id" ON "public"."refresh_tokens" ("user_id
 CREATE TABLE "public"."incidents" (
     "id" bigint NOT NULL,
     "status" incident_status NOT NULL,
+    "severity" incident_severity NOT NULL DEFAULT 'major',
     "is_public" boolean NOT NULL,
+    "auto_resolve" boolean NOT NULL DEFAULT false,
     "started_at" timestamp NOT NULL,
     "resolved_at" timestamp,
     "created_at" timestamp NOT NULL,

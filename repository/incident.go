@@ -14,7 +14,7 @@ import (
 // GetOpenIncidentByMonitorID fetches the latest non-resolved incident for a monitor, if any.
 func (r *PGRepository) GetOpenIncidentByMonitorID(ctx context.Context, tx pgx.Tx, monitorID int64) (*models.Incident, error) {
 	const query = `
-		SELECT i.id, i.status, i.is_public, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		WHERE im.monitor_id = $1
@@ -37,8 +37,8 @@ func (r *PGRepository) GetOpenIncidentByMonitorID(ctx context.Context, tx pgx.Tx
 // CreateIncident inserts a new incident row.
 func (r *PGRepository) CreateIncident(ctx context.Context, tx pgx.Tx, incident models.Incident) error {
 	const query = `
-		INSERT INTO incidents (id, status, is_public, started_at, resolved_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO incidents (id, status, severity, is_public, auto_resolve, started_at, resolved_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
 	idVal := incident.ID
@@ -55,7 +55,9 @@ func (r *PGRepository) CreateIncident(ctx context.Context, tx pgx.Tx, incident m
 	_, err := tx.Exec(ctx, query,
 		incident.ID,
 		incident.Status,
+		incident.Severity,
 		incident.IsPublic,
+		incident.AutoResolve,
 		incident.StartedAt,
 		incident.ResolvedAt,
 		incident.CreatedAt,
@@ -148,7 +150,7 @@ func (r *PGRepository) GetLastEventTimeline(ctx context.Context, tx pgx.Tx, inci
 // ListIncidentsByMonitorID returns all incidents for a monitor.
 func (r *PGRepository) ListIncidentsByMonitorID(ctx context.Context, tx pgx.Tx, monitorID int64) ([]models.Incident, error) {
 	const query = `
-		SELECT i.id, i.status, i.is_public, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		WHERE im.monitor_id = $1
@@ -166,7 +168,7 @@ func (r *PGRepository) ListIncidentsByMonitorID(ctx context.Context, tx pgx.Tx, 
 // GetIncidentByID fetches an incident scoped to the given monitor.
 func (r *PGRepository) GetIncidentByID(ctx context.Context, tx pgx.Tx, monitorID, incidentID int64) (*models.Incident, error) {
 	const query = `
-		SELECT i.id, i.status, i.is_public, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		WHERE i.id = $1 AND im.monitor_id = $2
@@ -186,7 +188,7 @@ func (r *PGRepository) GetIncidentByID(ctx context.Context, tx pgx.Tx, monitorID
 // ListIncidentsByTeamID returns all incidents for a team via monitor membership.
 func (r *PGRepository) ListIncidentsByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.Incident, error) {
 	const query = `
-		SELECT DISTINCT i.id, i.status, i.is_public, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT DISTINCT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		INNER JOIN monitors m ON m.id = im.monitor_id
@@ -204,7 +206,7 @@ func (r *PGRepository) ListIncidentsByTeamID(ctx context.Context, tx pgx.Tx, tea
 // GetIncidentByIDForTeam fetches an incident ensuring it belongs to the team via monitor association.
 func (r *PGRepository) GetIncidentByIDForTeam(ctx context.Context, tx pgx.Tx, teamID, incidentID int64) (*models.Incident, error) {
 	const query = `
-		SELECT i.id, i.status, i.is_public, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		INNER JOIN monitors m ON m.id = im.monitor_id
