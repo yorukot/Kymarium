@@ -1,10 +1,9 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Chart from '$lib/components/ui/chart/index.js';
 	import { scaleBand } from 'd3-scale';
-	import { BarChart, Highlight, type ChartContextValue } from 'layerchart';
-	import TrendingUpIcon from '@lucide/svelte/icons/trending-up';
+	import { BarChart, type ChartContextValue } from 'layerchart';
 	import { cubicInOut } from 'svelte/easing';
+	import MonitorStatsCards from '$lib/components/monitor/detail/stats-cards.svelte';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
@@ -35,55 +34,7 @@
 <div class="flex flex-col gap-4">
 	<h1 class="text-2xl font-bold">Monitor Analytics</h1>
 	<!-- There should be a button that can select time for example last 7 days last 24 hours last 14 days last 30 days last 90 days -->
-	<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-		<Card.Root class="py-2 px-4 gap-0 border-success bg-success/20">
-			<div class="text-md text-success">UPTIME</div>
-			<div class="text-lg">99.9%</div>
-		</Card.Root>
-
-		<Card.Root class="py-2 px-4 gap-0 border-destructive bg-destructive/20">
-			<div class="text-md text-destructive">Failed request</div>
-			<div class="text-lg">1k</div>
-		</Card.Root>
-		<Card.Root class="py-2 px-4 gap-0">
-			<div class="text-md text-foreground/50">Total request</div>
-			<div class="text-lg">100k</div>
-		</Card.Root>
-
-		<Card.Root class="py-2 px-4 gap-0">
-			<div class="text-md text-foreground/50">Total incident</div>
-			<div class="text-lg">0</div>
-		</Card.Root>
-
-		<Card.Root class="py-2 px-4 gap-0 border-success bg-transparent border-none">
-			<div class="text-md text-card-foreground/50">Latest check</div>
-			<div class="text-lg">10s ago</div>
-		</Card.Root>
-		<Card.Root class="py-2 px-4 gap-0">
-			<div class="text-md text-card-foreground/50">P50</div>
-			<div class="text-lg">50ms</div>
-		</Card.Root>
-
-		<Card.Root class="py-2 px-4 gap-0">
-			<div class="text-md text-card-foreground/50">P75</div>
-			<div class="text-lg">50ms</div>
-		</Card.Root>
-
-		<Card.Root class="py-2 px-4 gap-0">
-			<div class="text-md text-card-foreground/50">P90</div>
-			<div class="text-lg">50ms</div>
-		</Card.Root>
-
-		<Card.Root class="py-2 px-4 gap-0">
-			<div class="text-md text-card-foreground/50">P95</div>
-			<div class="text-lg">50ms</div>
-		</Card.Root>
-
-		<Card.Root class="py-2 px-4 gap-0">
-			<div class="text-md text-card-foreground/50">P99</div>
-			<div class="text-lg">50ms</div>
-		</Card.Root>
-	</div>
+	<MonitorStatsCards analytics={data.analytics} />
 
 	<div>
 		<h1 class="text-2xl font-bold">Uptime</h1>
