@@ -15,6 +15,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import HttpMonitor from './http-monitor.svelte';
 	import PingMonitor from './ping-monitor.svelte';
+	import Icon from '@iconify/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { createMonitor, updateMonitor } from '$lib/api/monitor';
@@ -324,6 +325,11 @@
 		setFields('regions', selectedRegionIds);
 	}
 
+	function regionFlagIcon(region: Region): string | null {
+		const countryCode = region.name.split('-')[0]?.trim().toLowerCase();
+		return countryCode ? `cif:${countryCode}` : null;
+	}
+
 	const failureThresholdLabel = $derived.by(() => {
 		const match = thresholdOptions.find(
 			(option) => option.value.toString() === failureThresholdValue
@@ -483,12 +489,16 @@
 					<Field.Description>Select at least one region to run checks from.</Field.Description>
 					<div class="grid gap-2 sm:grid-cols-2">
 						{#each regions as region (region.id)}
+							{@const flagIcon = regionFlagIcon(region)}
 							<button
 								type="button"
 								class="flex items-start gap-3 rounded-md border px-3 py-2 text-left transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 								onclick={() => toggleRegion(region.id)}
 							>
 								<Checkbox checked={selectedRegionIds.includes(region.id)} class="mt-1" />
+								{#if flagIcon}
+									<Icon icon={flagIcon} class="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+								{/if}
 								<div class="space-y-0.5">
 									<Field.Title>{region.displayName ?? region.name}</Field.Title>
 									<Field.Description class="text-xs text-muted-foreground">

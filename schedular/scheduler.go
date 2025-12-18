@@ -127,22 +127,22 @@ func batchUpdateLastChecked(repo repository.Repository, monitors []models.Monito
 // Detail: This basically going insert the monitor task into asynq queue
 // Creates one task per monitor per region
 func scheduleMonitors(monitors []models.Monitor, asynqClient *asynq.Client) {
-	regions := config.Regions()
 
 	for _, monitor := range monitors {
 		// Create a task for each region
-		for _, region := range regions {
+		
+		for _, regionID := range monitor.RegionIDs {
 			// Create asynq task with region
-			task, err := tasks.NewMonitorPing(monitor, region.ID)
+			task, err := tasks.NewMonitorPing(monitor, regionID)
 			if err != nil {
 				zap.L().Error("Failed to create monitor task payload",
 					zap.Int64("monitor_id", monitor.ID),
-					zap.String("region", region.DisplayName),
+					zap.Int64("region_id", regionID),
 					zap.Error(err))
 				continue
 			}
 
-			regionIDString := fmt.Sprintf("%d", region.ID)
+			regionIDString := fmt.Sprintf("%d", regionID)
 
 			// Enqueue the task
 			info, err := asynqClient.Enqueue(
@@ -154,14 +154,14 @@ func scheduleMonitors(monitors []models.Monitor, asynqClient *asynq.Client) {
 			if err != nil {
 				zap.L().Error("Failed to enqueue monitor task",
 					zap.Int64("monitor_id", monitor.ID),
-					zap.String("region", region.DisplayName),
+					zap.Int64("region_id", regionID),
 					zap.Error(err))
 				continue
 			}
 
 			zap.L().Debug("Enqueued monitor task",
 				zap.Int64("monitor_id", monitor.ID),
-				zap.String("region", region.DisplayName),
+				zap.Int64("region_id", regionID),
 				zap.String("task_id", info.ID))
 		}
 	}

@@ -339,7 +339,7 @@ func (r *PGRepository) CreateMonitorRegions(ctx context.Context, tx pgx.Tx, moni
 
 	query := `
 		INSERT INTO monitor_regions (id, monitor_id, region_id)
-		VALUES ($1, $2, $3, $4)
+		VALUES ($1, $2, $3)
 	`
 
 	for _, region := range regions {

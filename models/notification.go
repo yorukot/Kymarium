@@ -25,3 +25,9 @@ type TelegramNotificationConfig struct {
 	BotToken string `json:"bot_token"`
 	ChatID   string `json:"chat_id"`
 }
+
+type MonitorNotification struct {
+	ID             int64 `json:"id,string" db:"id"`
+	MonitorID      int64 `json:"monitor_id,string" db:"monitor_id"`
+	NotificationID int64 `json:"notification_id,string" db:"notification_id"`
+}

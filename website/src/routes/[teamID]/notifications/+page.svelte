@@ -13,7 +13,7 @@
 	let editingNotification = $state<Notification | null>(null);
 	type SupportedNotificationType = Extract<NotificationType, 'discord' | 'telegram'>;
 	let selectedType = $state<SupportedNotificationType>('discord');
-	let notifications = $derived(data.notifications);
+	let notifications = $derived<Notification[]>(data.notifications ?? []);
 
 	const pickerOrder: SupportedNotificationType[] = ['telegram', 'discord'];
 	const typeOptions = pickerOrder.map((type) => ({

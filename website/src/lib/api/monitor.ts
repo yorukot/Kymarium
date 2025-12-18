@@ -1,4 +1,4 @@
-import type { Monitor, MonitorWithIncidents } from '../../types';
+import type { Monitor, MonitorAnalytics, MonitorWithIncidents } from '../../types';
 import { apiRequest } from './utils';
 
 export type MonitorResponse = {
@@ -54,6 +54,11 @@ export type MonitorDeleteResponse = {
 	message: string;
 };
 
+export type MonitorAnalyticsResponse = {
+	message: string;
+	data: MonitorAnalytics;
+};
+
 export function getMonitors(teamID: string): Promise<MonitorResponse> {
 	return apiRequest<MonitorResponse>(`/teams/${teamID}/monitors`, {
 		defaultError: 'Failed to fetch monitors'
@@ -94,4 +99,16 @@ export function deleteMonitor(teamID: string, monitorID: string): Promise<Monito
 		method: 'DELETE',
 		defaultError: 'Failed to delete monitor'
 	});
+}
+
+export function getMonitorAnalytics(
+	teamID: string,
+	monitorID: string
+): Promise<MonitorAnalyticsResponse> {
+	return apiRequest<MonitorAnalyticsResponse>(
+		`/teams/${teamID}/monitors/${monitorID}/analytics`,
+		{
+			defaultError: 'Failed to fetch monitor analytics'
+		}
+	);
 }

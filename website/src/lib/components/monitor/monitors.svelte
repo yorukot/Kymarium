@@ -81,7 +81,7 @@
 							</DropdownMenu.Trigger>
 							<DropdownMenu.Content>
 								<DropdownMenu.Group>
-									<DropdownMenu.Item>
+									<DropdownMenu.Item onclick={() => goto(`monitors/${monitor.id}/detail`)}>
 										<Icon icon="lucide:eye" /> View details
 									</DropdownMenu.Item>
 									<DropdownMenu.Item onclick={() => goto(`monitors/${monitor.id}/edit`)}>

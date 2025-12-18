@@ -312,3 +312,15 @@ func (m *MockRepository) ListAllRegions(ctx context.Context, tx pgx.Tx) ([]model
 	regions, _ := args.Get(0).([]models.Region)
 	return regions, args.Error(1)
 }
+
+func (m *MockRepository) GetMonitorAnalytics(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time, regionID *int64) ([]models.MonitorAnalyticsBucket, error) {
+	args := m.Called(ctx, tx, monitorID, start, end, regionID)
+	buckets, _ := args.Get(0).([]models.MonitorAnalyticsBucket)
+	return buckets, args.Error(1)
+}
+
+func (m *MockRepository) ListIncidentsByMonitorIDWithinRange(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time) ([]models.Incident, error) {
+	args := m.Called(ctx, tx, monitorID, start, end)
+	incidents, _ := args.Get(0).([]models.Incident)
+	return incidents, args.Error(1)
+}

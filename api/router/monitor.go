@@ -19,4 +19,5 @@ func MonitorRouter(api *echo.Group, repo repository.Repository) {
 	r.GET("/:id", monitorHandler.GetMonitor)
 	r.PUT("/:id", monitorHandler.UpdateMonitor)
 	r.DELETE("/:id", monitorHandler.DeleteMonitor)
+	r.GET("/:id/analytics", monitorHandler.GetAnalytics)
 }
