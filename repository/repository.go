@@ -16,6 +16,16 @@ type Repository interface {
 	DeferRollback(tx pgx.Tx, ctx context.Context)
 	CommitTransaction(tx pgx.Tx, ctx context.Context) error
 
+	// Status pages
+	CreateStatusPage(ctx context.Context, tx pgx.Tx, statusPage models.StatusPage) error
+	UpdateStatusPage(ctx context.Context, tx pgx.Tx, statusPage models.StatusPage) (*models.StatusPage, error)
+	GetStatusPageByID(ctx context.Context, tx pgx.Tx, teamID, statusPageID int64) (*models.StatusPage, error)
+	GetStatusPageBySlug(ctx context.Context, tx pgx.Tx, slug string) (*models.StatusPage, error)
+	CreateStatusPageGroups(ctx context.Context, tx pgx.Tx, groups []models.StatusPageGroup) error
+	CreateStatusPageMonitors(ctx context.Context, tx pgx.Tx, monitors []models.StatusPageMonitor) error
+	DeleteStatusPageMonitorsByStatusPageID(ctx context.Context, tx pgx.Tx, statusPageID int64) error
+	DeleteStatusPageGroupsByStatusPageID(ctx context.Context, tx pgx.Tx, statusPageID int64) error
+
 	// Auth
 	GetUserByEmail(ctx context.Context, tx pgx.Tx, email string) (*models.User, error)
 	GetAccountByEmail(ctx context.Context, tx pgx.Tx, email string) (*models.Account, error)

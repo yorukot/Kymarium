@@ -1081,6 +1081,63 @@ paths:
       summary: Update a monitor
       tags:
       - monitors
+  /teams/{teamID}/monitors/{id}/analytics:
+    get:
+      description: Returns uptime and latency analytics for a monitor within a window
+        (default last 24h, bucket 30m)
+      parameters:
+      - description: Team ID
+        in: path
+        name: teamID
+        required: true
+        type: string
+      - description: Monitor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start time (ISO8601)
+        in: query
+        name: start
+        type: string
+      - description: End time (ISO8601)
+        in: query
+        name: end
+        type: string
+      - description: Bucket duration, only 30m supported
+        in: query
+        name: bucket
+        type: string
+      - description: Region ID to filter
+        in: query
+        name: region_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Analytics returned
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Monitor or team not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get monitor analytics
+      tags:
+      - monitors
   /teams/{teamID}/notifications:
     get:
       description: Lists notifications for a team the user belongs to

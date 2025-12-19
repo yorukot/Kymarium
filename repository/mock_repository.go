@@ -29,6 +29,49 @@ func (m *MockRepository) CommitTransaction(tx pgx.Tx, ctx context.Context) error
 	return args.Error(0)
 }
 
+func (m *MockRepository) CreateStatusPage(ctx context.Context, tx pgx.Tx, statusPage models.StatusPage) error {
+	args := m.Called(ctx, tx, statusPage)
+	return args.Error(0)
+}
+
+func (m *MockRepository) UpdateStatusPage(ctx context.Context, tx pgx.Tx, statusPage models.StatusPage) (*models.StatusPage, error) {
+	args := m.Called(ctx, tx, statusPage)
+	page, _ := args.Get(0).(*models.StatusPage)
+	return page, args.Error(1)
+}
+
+func (m *MockRepository) GetStatusPageByID(ctx context.Context, tx pgx.Tx, teamID, statusPageID int64) (*models.StatusPage, error) {
+	args := m.Called(ctx, tx, teamID, statusPageID)
+	page, _ := args.Get(0).(*models.StatusPage)
+	return page, args.Error(1)
+}
+
+func (m *MockRepository) GetStatusPageBySlug(ctx context.Context, tx pgx.Tx, slug string) (*models.StatusPage, error) {
+	args := m.Called(ctx, tx, slug)
+	page, _ := args.Get(0).(*models.StatusPage)
+	return page, args.Error(1)
+}
+
+func (m *MockRepository) CreateStatusPageGroups(ctx context.Context, tx pgx.Tx, groups []models.StatusPageGroup) error {
+	args := m.Called(ctx, tx, groups)
+	return args.Error(0)
+}
+
+func (m *MockRepository) CreateStatusPageMonitors(ctx context.Context, tx pgx.Tx, monitors []models.StatusPageMonitor) error {
+	args := m.Called(ctx, tx, monitors)
+	return args.Error(0)
+}
+
+func (m *MockRepository) DeleteStatusPageMonitorsByStatusPageID(ctx context.Context, tx pgx.Tx, statusPageID int64) error {
+	args := m.Called(ctx, tx, statusPageID)
+	return args.Error(0)
+}
+
+func (m *MockRepository) DeleteStatusPageGroupsByStatusPageID(ctx context.Context, tx pgx.Tx, statusPageID int64) error {
+	args := m.Called(ctx, tx, statusPageID)
+	return args.Error(0)
+}
+
 func (m *MockRepository) GetUserByEmail(ctx context.Context, tx pgx.Tx, email string) (*models.User, error) {
 	args := m.Called(ctx, tx, email)
 	user, _ := args.Get(0).(*models.User)

@@ -10,6 +10,7 @@
 	import type { Page } from '@sveltejs/kit';
 	import type { SidebarData } from './+layout';
 	import type { Monitor } from '../../types/monitor';
+	import type { MonitorAnalytics } from '../../types/analytics';
 
 	type Crumb = {
 		label: string;
@@ -19,6 +20,7 @@
 	type BreadcrumbPageData = {
 		monitor?: Monitor;
 		monitors?: Monitor[];
+		analytics?: MonitorAnalytics;
 	};
 
 	/** @type {import('./$types').PageProps} */
@@ -30,7 +32,7 @@
 		const segments = currentPage.url.pathname.split('/').filter(Boolean);
 		const pageData = currentPage.data as BreadcrumbPageData | undefined;
 		const monitors = pageData?.monitors ?? [];
-		const monitor = pageData?.monitor;
+		const monitor = pageData?.monitor ?? pageData?.analytics?.monitor;
 
 		if (!segments.length) return [];
 
