@@ -71,6 +71,30 @@
 		return filled;
 	});
 
+	const MAX_AXIS_TICKS = 8;
+
+	const xAxisTicks = $derived.by(() => {
+		const labels = aggregated.map((bucket) => bucket.label);
+		if (labels.length <= 2) {
+			return labels;
+		}
+
+		const interval = Math.max(1, Math.ceil(labels.length / MAX_AXIS_TICKS));
+		const ticks = labels.filter((_, index) => index % interval === 0);
+		const first = labels[0];
+		const last = labels[labels.length - 1];
+
+		if (!ticks.includes(first)) {
+			ticks.unshift(first);
+		}
+
+		if (!ticks.includes(last)) {
+			ticks.push(last);
+		}
+
+		return Array.from(new Set(ticks));
+	});
+
 	function buildBucketEntry(
 		timestamp: number,
 		bucket: { total: number; good: number }
@@ -131,7 +155,7 @@
 	} satisfies Chart.ChartConfig;
 </script>
 
-<Chart.Container config={chartConfig} class="h-36 w-full">
+<Chart.Container config={chartConfig} class="h-20 w-full">
 	<BarChart
 		data={aggregated}
 		xScale={scaleBand().padding(0.2)}
@@ -161,6 +185,10 @@
 					y: { type: 'tween', duration: 400, easing: cubicInOut },
 					height: { type: 'tween', duration: 400, easing: cubicInOut }
 				}
+			},
+			xAxis: {
+				ticks: xAxisTicks.length ? xAxisTicks : undefined,
+				tickSpacing: 64
 			}
 		}}
 	>

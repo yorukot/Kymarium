@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LatencyChart from '$lib/components/monitor/detail/latency-chart.svelte';
 	import MonitorStatsCards from '$lib/components/monitor/detail/stats-cards.svelte';
 	import UptimeChart from '$lib/components/monitor/detail/uptime-chart.svelte';
 
@@ -14,5 +15,6 @@
 	<div>
 		<h1 class="text-2xl font-bold">Uptime</h1>
 		<UptimeChart analytics={data.analytics} />
+		<LatencyChart />
 	</div>
 </div>
