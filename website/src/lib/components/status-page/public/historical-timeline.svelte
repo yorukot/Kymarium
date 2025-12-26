@@ -1,48 +1,31 @@
 <script lang="ts">
-	import * as HoverCard from '$lib/components/ui/hover-card';
-	import { formatDate, formatUpTo2Decimals, timelineTone } from '$lib/styles/status';
 	import type { PublicTimelinePoint } from '../../../types';
+	import HistoricalTimelinePoint from './historical-timeline-point.svelte';
 
-	let { timeline, days = 90 }: { timeline: PublicTimelinePoint[]; days?: number } = $props();
+	let {
+		sli,
+		timeline,
+		days = 90
+	}: {
+		sli: string;
+		timeline: PublicTimelinePoint[];
+		days?: number;
+	} = $props();
 
 	const visibleTimeline = $derived.by(() => (days ? timeline.slice(-days) : timeline));
 </script>
 
-<div class="mt-3 grid grid-flow-col auto-cols-fr gap-1">
-	{#each visibleTimeline as point (point.day)}
-		<HoverCard.Root openDelay={0} closeDelay={0}>
-			<HoverCard.Trigger>
-				<div
-					class={`h-6 rounded-none ${timelineTone(point)}`}
-					title={`${formatDate(point.day)} · ${point.success} success / ${point.fail} fail`}
-				></div>
-			</HoverCard.Trigger>
-			<HoverCard.Content class="p-0">
-				<div class="p-4 flex flex-col space-y-2">
-					<div class="flex justify-between space-x-4">
-						<span class="font-medium text-foreground">{formatDate(point.day)}</span>
-						<span class="font-medium text-foreground">
-							{#if point.fail + point.success === 0}
-								<span class="font-medium text-foreground/50">No data</span>
-							{:else}
-								<span class="font-medium text-foreground/50">
-									{formatUpTo2Decimals((point.success / (point.success + point.fail)) * 100)}%
-									uptime
-								</span>
-							{/if}
-						</span>
-					</div>
-					<div>
-						{#if point.fail === 0}
-							<span class="font-medium text-foreground/50">No down recoard found</span>
-						{:else}
-							<span class="font-medium text-foreground/50">
-								{Math.round((point.success / (point.success + point.fail)) * 100)}% uptime
-							</span>
-						{/if}
-					</div>
-				</div>
-			</HoverCard.Content>
-		</HoverCard.Root>
-	{/each}
+<div class="flex flex-col gap-2">
+	<div class="mt-3 grid grid-flow-col auto-cols-fr gap-1">
+		{#each visibleTimeline as point (point.day)}
+			<HistoricalTimelinePoint {point} />
+		{/each}
+	</div>
+	<div class="relative flex justify-between gap-2 text-xs text-foreground/70
+            before:content-[''] before:absolute before:left-0 before:right-0
+            before:top-1/2 before:h-px before:bg-foreground/30">
+  <p class="relative z-10 bg-background pr-2">{days} days</p>
+  <p class="relative z-10 bg-background px-2">{sli}</p>
+  <p class="relative z-10 bg-background pl-2">now</p>
+</div>
 </div>

@@ -18,6 +18,18 @@
 	} = $props();
 
 	let typeValue = $derived<StatusPageElementType>(monitor.type);
+	let typeInput = $state<HTMLInputElement | null>(null);
+
+	$effect(() => {
+		typeValue = monitor.type;
+	});
+
+	$effect(() => {
+		if (!typeInput) return;
+		typeInput.value = typeValue;
+		typeInput.dispatchEvent(new Event('input', { bubbles: true }));
+		typeInput.dispatchEvent(new Event('change', { bubbles: true }));
+	});
 
 	const typeLabel = (t: StatusPageElementType) =>
 		t === 'historical_timeline' ? 'Historical Timeline' : 'Only Current Status';
@@ -27,10 +39,11 @@
 </script>
 
 <div class="flex justify-between items-center p-2 gap-2">
+  <Icon icon="lucide:grip-vertical" class="size-4 shrink-0" />
+
 	<InputGroup.Root class="w-full">
 		<InputGroup.Input
 			name={`${namePrefix}.name`}
-			value={monitor.name}
 			placeholder="Please enter element name"
 		/>
 		<input type="hidden" name={`${namePrefix}.sortOrder`} value={monitor.sortOrder} />
@@ -62,7 +75,7 @@
 				</Select.Group>
 			</Select.Content>
 		</Select.Root>
-		<input type="hidden" name={`${namePrefix}.type`} bind:value={typeValue} />
+		<input type="hidden" name={`${namePrefix}.type`} bind:this={typeInput} />
 
 		<Button size="icon" variant="destructive" onclick={() => onDelete?.(monitor.id)}>
 			<Icon icon="lucide:trash" />

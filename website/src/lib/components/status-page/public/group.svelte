@@ -18,9 +18,9 @@
 	let open = $state(false);
 
 	function selectSli() {
-		if (days <= 30) return { value: group.uptimeSli30 };
-		if (days <= 60) return { value: group.uptimeSli60 };
-		return { value: group.uptimeSli90 };
+		if (days <= 30) return formatSli(group.uptimeSli30);
+		if (days <= 60) return formatSli(group.uptimeSli60);
+		return formatSli(group.uptimeSli90);
 	}
 </script>
 
@@ -32,19 +32,12 @@
 			</Button>
 			{group.name}
 		</h2>
-		{#if group.type === 'current_status_indicator'}
 			<span class={`text-sm font-medium ${statusMeta[group.status ?? 'up'].tone}`}>
 				{statusMeta[group.status ?? 'up'].label}
 			</span>
-		{:else}
-			{@const sli = selectSli()}
-			<span class="text-xs text-muted-foreground">
-				Uptime {formatSli(sli.value)}
-			</span>
-		{/if}
 	</div>
 	{#if group.type === 'historical_timeline' && group.timeline?.length}
-		<HistoricalTimeline timeline={group.timeline} {days} />
+		<HistoricalTimeline sli={selectSli()} timeline={group.timeline} {days} />
 	{/if}
 
 	{#if open}

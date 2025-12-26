@@ -21,18 +21,15 @@
 	const sortedElements = $derived.by(() =>
 		[...(statusPage.elements ?? [])].sort((a, b) => a.sortOrder - b.sortOrder)
 	);
-	const groupElements = $derived.by(() => sortedElements.filter((element) => !element.monitor));
-	const ungroupedElements = $derived.by(() => sortedElements.filter((element) => element.monitor));
-
-	const ungroupedMonitors = $derived.by(() =>
-		ungroupedElements.map((element) => toPublicMonitor(element))
-	);
-
 	const groupedMonitors = $derived.by(() =>
-		groupElements.flatMap((group) => group.monitors ?? [])
+		sortedElements.filter((element) => !element.monitor).flatMap((group) => group.monitors ?? [])
 	);
 
-	const allMonitors = $derived.by(() => [...ungroupedMonitors, ...groupedMonitors]);
+	const topLevelMonitors = $derived.by(() =>
+		sortedElements.filter((element) => element.monitor).map((element) => toPublicMonitor(element))
+	);
+
+	const allMonitors = $derived.by(() => [...topLevelMonitors, ...groupedMonitors]);
 
 	const openIncidents = $derived.by(() =>
 		statusPage.incidents.filter((incident) => incident.status !== 'resolved')
@@ -92,7 +89,6 @@
 		};
 	}
 </script>
-
 <div class="min-h-screen bg-muted/30">
 	<div class="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 md:px-8">
 		<header class="flex flex-col gap-4">
@@ -102,31 +98,30 @@
 					Status updates for {statusPage.statusPage.slug}
 				</p>
 			</div>
-			<div
-				class="flex items-center gap-3 w-full bg-success p-4 ${statusMeta[overallStatus]
-					.dot} rounded"
-			>
+			<div class="flex items-center gap-3 w-full p-4 {statusMeta[overallStatus].dot} rounded">
 				<p class="text-sm font-semibold uppercase">
-					{statusMeta[overallStatus].label}
+					{#if overallStatus === 'up'}
+						All systems operational
+					{:else if overallStatus === 'down'}
+						Some systems are experiencing issues
+					{/if}
 				</p>
 			</div>
 		</header>
-
+		
 		<section class="flex flex-col gap-4">
-			{#if groupElements.length === 0 && ungroupedMonitors.length === 0}
+			{#if sortedElements.length === 0}
 				<Card.Root class="p-6 text-sm text-muted-foreground">
 					No monitors are configured for this status page yet.
 				</Card.Root>
 			{/if}
 
-			{#if ungroupedMonitors.length}
-				{#each ungroupedMonitors as monitor (monitor.id)}
-					<HistoricalMonitor {monitor} {days} />
-				{/each}
-			{/if}
-
-			{#each groupElements as group (group.id)}
-				<Group {group} {days} />
+			{#each sortedElements as element (element.id)}
+				{#if element.monitor}
+					<HistoricalMonitor monitor={toPublicMonitor(element)} {days} />
+				{:else}
+					<Group group={element} {days} />
+				{/if}
 			{/each}
 		</section>
 	</div>

@@ -6,9 +6,9 @@
 	let { monitor, days = 90 }: { monitor: PublicStatusPageMonitor; days?: number } = $props();
 
 	function selectSli() {
-		if (days <= 30) return { value: monitor.uptimeSli30 };
-		if (days <= 60) return { value: monitor.uptimeSli60 };
-		return { value: monitor.uptimeSli90 };
+		if (days <= 30) return formatSli(monitor.uptimeSli30);
+		if (days <= 60) return formatSli(monitor.uptimeSli60);
+		return formatSli(monitor.uptimeSli90);
 	}
 </script>
 
@@ -17,18 +17,11 @@
 		<div class="flex items-center gap-2">
 			<span class="text-lg font-semibold">{monitor.name}</span>
 		</div>
-		{#if monitor.type === 'current_status_indicator'}
-			<span class={`text-sm font-medium ${statusMeta[monitor.status ?? 'up'].tone}`}>
-				{statusMeta[monitor.status ?? 'up'].label}
-			</span>
-		{:else}
-			{@const sli = selectSli()}
-			<span class="text-xs text-muted-foreground">
-				Uptime {formatSli(sli.value)}
-			</span>
-		{/if}
+		<span class={`text-sm font-medium ${statusMeta[monitor.status ?? 'up'].tone}`}>
+			{statusMeta[monitor.status ?? 'up'].label}
+		</span>
 	</div>
 	{#if monitor.type === 'historical_timeline' && monitor.timeline?.length}
-		<HistoricalTimeline timeline={monitor.timeline} {days} />
+		<HistoricalTimeline sli={selectSli()} timeline={monitor.timeline} {days} />
 	{/if}
 </div>

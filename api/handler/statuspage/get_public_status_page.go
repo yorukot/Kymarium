@@ -48,7 +48,8 @@ type publicStatusPageElement struct {
 
 type publicIncidentResponse struct {
 	models.Incident
-	MonitorID string `json:"monitor_id"`
+	Timeline  []models.EventTimeline `json:"timeline"`
+	MonitorID string                 `json:"monitor_id"`
 }
 
 type publicStatusPageResponse struct {
@@ -130,12 +131,24 @@ func (h *Handler) GetPublicStatusPage(c echo.Context) error {
 
 	openPublicIncident := make(map[int64]bool)
 	incidentResponses := make([]publicIncidentResponse, 0, len(incidents))
+	incidentTimelines := make(map[int64][]models.EventTimeline, len(incidents))
 	for _, incident := range incidents {
 		if incident.Status != models.IncidentStatusResolved {
 			openPublicIncident[incident.MonitorID] = true
 		}
+		timeline, ok := incidentTimelines[incident.ID]
+		if !ok {
+			events, err := h.Repo.ListEventTimelinesByIncidentID(c.Request().Context(), tx, incident.ID)
+			if err != nil {
+				zap.L().Error("Failed to list incident timeline events", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to list incident events")
+			}
+			timeline = filterAdminTimelineEvents(events)
+			incidentTimelines[incident.ID] = timeline
+		}
 		incidentResponses = append(incidentResponses, publicIncidentResponse{
 			Incident:  incident.Incident,
+			Timeline:  timeline,
 			MonitorID: formatID(incident.MonitorID),
 		})
 	}
@@ -378,6 +391,19 @@ func computeGroupStatus(monitorIDs []int64, monitorByID map[int64]models.Monitor
 
 func formatID(id int64) string {
 	return strconv.FormatInt(id, 10)
+}
+
+func filterAdminTimelineEvents(events []models.EventTimeline) []models.EventTimeline {
+	if len(events) == 0 {
+		return []models.EventTimeline{}
+	}
+	filtered := make([]models.EventTimeline, 0, len(events))
+	for _, event := range events {
+		if event.CreatedBy != nil {
+			filtered = append(filtered, event)
+		}
+	}
+	return filtered
 }
 
 func percentage(good int64, total int64) float64 {
