@@ -7,6 +7,7 @@
 	import * as Field from '$lib/components/ui/field';
 	import * as Select from '$lib/components/ui/select';
 	import { Switch } from '$lib/components/ui/switch';
+	import { Input } from '$lib/components/ui/input';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
 	import { createIncidentEvent, updateIncident, updateIncidentStatus } from '$lib/api/incident';
 	import { toast } from 'svelte-sonner';
@@ -25,6 +26,7 @@
 
 	let isPublic = $derived(data.incident.isPublic);
 	let autoResolve = $derived(data.incident.autoResolve);
+	let title = $derived(data.incident.title ?? '');
 	let isSubmittingSettings = $state(false);
 
 	let eventType = $state<IncidentEventType>('update');
@@ -169,6 +171,7 @@
 			status = res.data.incident.status;
 			isPublic = res.data.incident.isPublic;
 			autoResolve = res.data.incident.autoResolve;
+			title = res.data.incident.title ?? '';
 			events = [res.data.event, ...events];
 			statusMessage = '';
 			toast.success('Incident status updated');
@@ -228,6 +231,7 @@
 		isSubmittingSettings = true;
 		try {
 			const res = await updateIncident(teamID, incident.id, {
+				title: title.trim() || null,
 				public: isPublic,
 				auto_resolve: autoResolve
 			});
@@ -235,6 +239,7 @@
 			incident = res.data;
 			isPublic = res.data.isPublic;
 			autoResolve = res.data.autoResolve;
+			title = res.data.title ?? '';
 			toast.success('Incident settings updated');
 		} catch (error) {
 			const message = error instanceof Error ? error.message : 'Failed to update incident settings.';
@@ -251,7 +256,12 @@
 			<div class="flex flex-col gap-1">
 				<p class="text-sm text-muted-foreground">Incident detail</p>
 				<div class="flex items-center gap-2 flex-wrap">
-					<h1 class="text-2xl font-bold">Incident #{incident.id}</h1>
+					<h1 class="text-2xl font-bold">
+						{incident.title ?? `Incident #${incident.id}`}
+					</h1>
+					{#if incident.title}
+						<span class="text-sm text-muted-foreground">#{incident.id}</span>
+					{/if}
 					<Badge class={badgeClass(incident.severity)}>{severityMeta[incident.severity].label}</Badge>
 					<span class={`text-sm font-medium ${statusMeta[incident.status].color}`}>
 						{statusMeta[incident.status].label}
@@ -306,7 +316,7 @@
 					{:else}
 						<div class="flex flex-wrap gap-2">
 							{#each monitorNames as name (name)}
-								<Badge variant="secondary" class="truncate max-w-[14rem]">{name}</Badge>
+								<Badge variant="secondary" class="truncate max-w-56">{name}</Badge>
 							{/each}
 						</div>
 					{/if}
@@ -322,20 +332,14 @@
 					{#if orderedEvents.length === 0}
 						<p class="text-sm text-muted-foreground">No timeline updates yet.</p>
 					{:else}
-						<div class="relative mt-4 space-y-4 border-l border-border pl-6">
+						<div class="relative mt-4 space-y-4">
 							{#each orderedEvents as event (event.id)}
-								<div class="relative">
-									<span
-										class={`absolute -left-[9px] top-2 size-2 rounded-full ring-4 ring-card ${dotClass(
-											incident.severity
-										)}`}
-									></span>
 									<div class="flex flex-col gap-1">
 										<div class="flex flex-wrap items-center justify-between gap-2">
 											<div class="flex flex-wrap items-center gap-2">
-												<Badge class={eventTypeMetaSafe(event.eventType).badge}>
-													{eventTypeMetaSafe(event.eventType).label}
-												</Badge>
+												<span class="font-semibold text-sm">
+													{eventTypeMetaSafe(event.eventType).label}:
+												</span>
 												<span class="text-sm font-medium">{event.message || '—'}</span>
 											</div>
 											<span class="text-xs text-muted-foreground">
@@ -346,7 +350,6 @@
 											{event.createdBy ? `By ${event.createdBy}` : 'System update'}
 										</p>
 									</div>
-								</div>
 							{/each}
 						</div>
 					{/if}
@@ -407,10 +410,20 @@
 			<Card.Root class="p-6">
 				<Card.Header class="p-0">
 					<Card.Title class="text-lg">Visibility & automation</Card.Title>
-					<Card.Description>Control whether the incident is public and auto-resolves.</Card.Description>
+					<Card.Description>Control incident title, visibility, and auto-resolve.</Card.Description>
 				</Card.Header>
 				<Card.Content class="p-0">
 					<form class="space-y-4" onsubmit={handleSettingsSubmit}>
+						<div class="space-y-2">
+							<Field.Label for="incident-title">Title (optional)</Field.Label>
+							<Input
+								id="incident-title"
+								name="title"
+								placeholder="Short summary for this incident"
+								bind:value={title}
+							/>
+						</div>
+
 						<div class="flex flex-col gap-3">
 							<div class="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
 								<div>

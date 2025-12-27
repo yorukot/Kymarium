@@ -1,4 +1,4 @@
-import type { Monitor, MonitorAnalytics, MonitorWithIncidents } from '../../types';
+import type { Monitor, MonitorAnalytics, MonitorWithIncidents } from '$lib/types';
 import { apiRequest } from './utils';
 
 export type MonitorResponse = {

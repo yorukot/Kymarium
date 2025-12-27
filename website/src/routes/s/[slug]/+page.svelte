@@ -7,6 +7,7 @@
 	} from '$lib/types';
 	import HistoricalMonitor from '$lib/components/status-page/public/historical-monitor.svelte';
 	import Group from '$lib/components/status-page/public/group.svelte';
+	import IncidentList from '$lib/components/status-page/public/incident-list.svelte';
 	import { statusMeta } from '$lib/styles/status';
 
 	type Props = {
@@ -30,9 +31,16 @@
 	);
 
 	const allMonitors = $derived.by(() => [...topLevelMonitors, ...groupedMonitors]);
+	const monitorNameById = $derived.by(() => {
+		const map: Record<string, string> = {};
+		for (const monitor of allMonitors) {
+			map[monitor.monitorId] = monitor.name;
+		}
+		return map;
+	});
 
 	const openIncidents = $derived.by(() =>
-		statusPage.incidents.filter((incident) => incident.status !== 'resolved')
+		(statusPage.incidents ?? []).filter((incident) => incident.status !== 'resolved')
 	);
 
 	const overallStatus = $derived.by(() => {
@@ -109,7 +117,12 @@
 			</div>
 		</header>
 		
-		<section class="flex flex-col gap-4">
+		<section class="flex flex-col gap-6">
+			<IncidentList
+				incidents={statusPage.incidents ?? []}
+				monitorNameById={monitorNameById}
+			/>
+
 			{#if sortedElements.length === 0}
 				<Card.Root class="p-6 text-sm text-muted-foreground">
 					No monitors are configured for this status page yet.

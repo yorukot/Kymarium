@@ -48,8 +48,8 @@ type publicStatusPageElement struct {
 
 type publicIncidentResponse struct {
 	models.Incident
-	Timeline []models.EventTimeline `json:"timelone"`
-	MonitorID string `json:"monitor_id"`
+	Timeline  []models.EventTimeline `json:"timeline"`
+	MonitorID string                 `json:"monitor_id"`
 }
 
 type publicStatusPageResponse struct {
@@ -130,15 +130,23 @@ func (h *Handler) GetPublicStatusPage(c echo.Context) error {
 	}
 
 	openPublicIncident := make(map[int64]bool)
+	incidentIDs := make([]int64, 0, len(incidents))
 	incidentResponses := make([]publicIncidentResponse, 0, len(incidents))
 	for _, incident := range incidents {
 		if incident.Status != models.IncidentStatusResolved {
 			openPublicIncident[incident.MonitorID] = true
 		}
+		incidentIDs = append(incidentIDs, incident.ID)
 		incidentResponses = append(incidentResponses, publicIncidentResponse{
 			Incident:  incident.Incident,
 			MonitorID: formatID(incident.MonitorID),
 		})
+	}
+
+	eventTimelines, err := h.Repo.ListPublicEventTimelinesByIncidentIDs(c.Request().Context(), tx, incidentIDs)
+	if err != nil {
+		zap.L().Error("Failed to list public incident timelines", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to list incident timelines")
 	}
 
 	start, end := publicTimelineWindow()
@@ -153,6 +161,19 @@ func (h *Handler) GetPublicStatusPage(c echo.Context) error {
 	}
 
 	days := buildTimelineDays(start, end)
+	publicTimelinesByIncident := make(map[int64][]models.EventTimeline)
+	for _, event := range eventTimelines {
+		publicTimelinesByIncident[event.IncidentID] = append(publicTimelinesByIncident[event.IncidentID], event)
+	}
+
+	for i := range incidentResponses {
+		incidentID := incidentResponses[i].Incident.ID
+		if timeline, ok := publicTimelinesByIncident[incidentID]; ok {
+			incidentResponses[i].Timeline = timeline
+		} else {
+			incidentResponses[i].Timeline = []models.EventTimeline{}
+		}
+	}
 	perMonitorDaily := buildDailyIndex(dailySummaries)
 
 	groupMonitorIDs := make(map[int64][]int64, len(groups))

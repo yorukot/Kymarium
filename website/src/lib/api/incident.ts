@@ -87,6 +87,7 @@ export function updateIncidentStatus(
 }
 
 export type IncidentUpdateRequest = {
+	title?: string | null;
 	public?: boolean;
 	auto_resolve?: boolean;
 };
@@ -109,6 +110,7 @@ export function updateIncident(
 }
 
 export type IncidentCreateRequest = {
+	title?: string | null;
 	status?: Incident['status'];
 	severity?: Incident['severity'];
 	message?: string;

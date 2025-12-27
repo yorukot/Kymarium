@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -19,13 +20,14 @@ import (
 type monitorIDList = utils.IDList
 
 type createIncidentRequest struct {
-	Status     models.IncidentStatus `json:"status" validate:"omitempty,oneof=detected investigating identified monitoring resolved"`
-	Severity   models.IncidentSeverity `json:"severity" validate:"omitempty,oneof=emergency critical major minor info"`
-	Message    string                `json:"message" validate:"omitempty,min=1"`
-	StartedAt  *time.Time            `json:"started_at,omitempty"`
-	Public     *bool                 `json:"public"`
-	AutoResolve *bool                `json:"auto_resolve"`
-	MonitorIDs monitorIDList         `json:"monitor_ids" validate:"required,min=1"`
+	Title       *string                 `json:"title" validate:"omitempty,min=1,max=255"`
+	Status      models.IncidentStatus   `json:"status" validate:"omitempty,oneof=detected investigating identified monitoring resolved"`
+	Severity    models.IncidentSeverity `json:"severity" validate:"omitempty,oneof=emergency critical major minor info"`
+	Message     string                  `json:"message" validate:"omitempty,min=1"`
+	StartedAt   *time.Time              `json:"started_at,omitempty"`
+	Public      *bool                   `json:"public"`
+	AutoResolve *bool                   `json:"auto_resolve"`
+	MonitorIDs  monitorIDList           `json:"monitor_ids" validate:"required,min=1"`
 }
 
 // CreateIncident godoc
@@ -142,6 +144,14 @@ func (h *IncidentHandler) CreateIncident(c echo.Context) error {
 		resolvedAt = &now
 	}
 
+	var title *string
+	if req.Title != nil {
+		trimmed := strings.TrimSpace(*req.Title)
+		if trimmed != "" {
+			title = &trimmed
+		}
+	}
+
 	incidentID, err := id.GetID()
 	if err != nil {
 		zap.L().Error("Failed to generate incident ID", zap.Error(err))
@@ -150,6 +160,7 @@ func (h *IncidentHandler) CreateIncident(c echo.Context) error {
 
 	incident := models.Incident{
 		ID:          incidentID,
+		Title:       title,
 		Status:      status,
 		Severity:    severity,
 		IsPublic:    isPublic,

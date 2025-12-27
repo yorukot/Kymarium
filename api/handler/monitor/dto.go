@@ -30,6 +30,7 @@ type monitorResponse struct {
 type incidentResponse struct {
 	ID         string                `json:"id"`
 	MonitorID  string                `json:"monitor_id"`
+	Title      *string               `json:"title,omitempty"`
 	Status     models.IncidentStatus `json:"status"`
 	StartedAt  time.Time             `json:"started_at"`
 	ResolvedAt *time.Time            `json:"resolved_at,omitempty"`
@@ -116,6 +117,7 @@ func formatIncidents(monitorID int64, incidents []models.Incident) []incidentRes
 		result[i] = incidentResponse{
 			ID:         strconv.FormatInt(incident.ID, 10),
 			MonitorID:  strconv.FormatInt(monitorID, 10),
+			Title:      incident.Title,
 			Status:     incident.Status,
 			StartedAt:  incident.StartedAt,
 			ResolvedAt: incident.ResolvedAt,

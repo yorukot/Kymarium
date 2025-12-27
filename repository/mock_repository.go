@@ -350,6 +350,12 @@ func (m *MockRepository) ListPublicIncidentsByMonitorIDs(ctx context.Context, tx
 	return incidents, args.Error(1)
 }
 
+func (m *MockRepository) ListPublicEventTimelinesByIncidentIDs(ctx context.Context, tx pgx.Tx, incidentIDs []int64) ([]models.EventTimeline, error) {
+	args := m.Called(ctx, tx, incidentIDs)
+	events, _ := args.Get(0).([]models.EventTimeline)
+	return events, args.Error(1)
+}
+
 func (m *MockRepository) GetIncidentByID(ctx context.Context, tx pgx.Tx, monitorID, incidentID int64) (*models.Incident, error) {
 	args := m.Called(ctx, tx, monitorID, incidentID)
 	incident, _ := args.Get(0).(*models.Incident)
@@ -374,8 +380,8 @@ func (m *MockRepository) UpdateIncidentStatus(ctx context.Context, tx pgx.Tx, in
 	return incident, args.Error(1)
 }
 
-func (m *MockRepository) UpdateIncidentSettings(ctx context.Context, tx pgx.Tx, incidentID int64, isPublic bool, autoResolve bool, updatedAt time.Time) (*models.Incident, error) {
-	args := m.Called(ctx, tx, incidentID, isPublic, autoResolve, updatedAt)
+func (m *MockRepository) UpdateIncidentSettings(ctx context.Context, tx pgx.Tx, incidentID int64, isPublic bool, autoResolve bool, title *string, updatedAt time.Time) (*models.Incident, error) {
+	args := m.Called(ctx, tx, incidentID, isPublic, autoResolve, title, updatedAt)
 	incident, _ := args.Get(0).(*models.Incident)
 	return incident, args.Error(1)
 }

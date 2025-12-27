@@ -8,8 +8,9 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import type { Team } from '../../types';
+	import AddTeamDialog from './add-team-dialog.svelte';
 
-	const teamID = page.params.teamID;
+	const teamID = $derived.by(() => page.params.teamID);
 	let { teams }: { teams: Team[] } = $props();
 
 	const sidebar = useSidebar();
@@ -36,6 +37,8 @@
 		const key = team.id ?? team.name;
 		return avatarMap[key];
 	});
+
+	let addTeamOpen = $state(false);
 </script>
 
 <Sidebar.Menu>
@@ -84,7 +87,7 @@
 					</DropdownMenu.Item>
 				{/each}
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item class="gap-2 p-2">
+				<DropdownMenu.Item class="gap-2 p-2" onSelect={() => (addTeamOpen = true)}>
 					<div class="flex size-6 items-center justify-center rounded-md border bg-transparent">
 						<Icon icon="lucide:plus" />
 					</div>
@@ -94,3 +97,5 @@
 		</DropdownMenu.Root>
 	</Sidebar.MenuItem>
 </Sidebar.Menu>
+
+<AddTeamDialog bind:open={addTeamOpen} />

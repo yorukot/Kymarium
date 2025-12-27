@@ -19,6 +19,7 @@
 	import { toast } from 'svelte-sonner';
 
 	type FormValues = {
+		title: string;
 		status: Incident['status'];
 		severity: Incident['severity'];
 		message: string;
@@ -56,6 +57,7 @@
 	);
 
 	const initialValues: FormValues = {
+		title: '',
 		status: 'detected',
 		severity: 'major',
 		message: '',
@@ -66,6 +68,7 @@
 	};
 
 	const schema = z.object({
+		title: z.string().max(255).optional().default(''),
 		status: z.enum(['detected', 'investigating', 'identified', 'monitoring', 'resolved']),
 		severity: z.enum(['emergency', 'critical', 'major', 'minor', 'info']),
 		message: z.string().max(2000).optional().default(''),
@@ -83,6 +86,7 @@
 
 	let status = $state<Incident['status']>(initialValues.status);
 	let severity = $state<Incident['severity']>(initialValues.severity);
+	let title = $state(initialValues.title);
 	let message = $state(initialValues.message);
 	let startedAt = $state(initialValues.startedAt);
 	let isPublic = $state(initialValues.isPublic);
@@ -111,6 +115,7 @@
 
 		try {
 			const payload = {
+				title: values.title?.trim() || undefined,
 				status: values.status,
 				severity: values.severity,
 				message: values.message || undefined,
@@ -187,6 +192,19 @@
 					{/if}
 				</div>
 			</Field.Set>
+
+			<div class="space-y-2">
+				<Field.Label for="title">Incident title (optional)</Field.Label>
+				<Input
+					id="title"
+					name="title"
+					placeholder="Short summary, e.g. API latency spike"
+					bind:value={title}
+				/>
+				{#if $errors.title}
+					<Field.Description class="text-destructive">{$errors.title[0]}</Field.Description>
+				{/if}
+			</div>
 
 			<div class="space-y-2">
 				<Field.Label for="message">Message (optional)</Field.Label>

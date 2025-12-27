@@ -14,7 +14,7 @@ import (
 // GetOpenIncidentByMonitorID fetches the latest non-resolved incident for a monitor, if any.
 func (r *PGRepository) GetOpenIncidentByMonitorID(ctx context.Context, tx pgx.Tx, monitorID int64) (*models.Incident, error) {
 	const query = `
-		SELECT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT i.id, i.title, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		WHERE im.monitor_id = $1
@@ -43,6 +43,7 @@ func (r *PGRepository) ListPublicIncidentsByMonitorIDs(ctx context.Context, tx p
 	const query = `
 		SELECT
 			i.id,
+			i.title,
 			i.status,
 			i.severity,
 			i.is_public,
@@ -67,11 +68,34 @@ func (r *PGRepository) ListPublicIncidentsByMonitorIDs(ctx context.Context, tx p
 	return incidents, nil
 }
 
+// ListPublicEventTimelinesByIncidentIDs returns human-authored timeline events for incidents.
+func (r *PGRepository) ListPublicEventTimelinesByIncidentIDs(ctx context.Context, tx pgx.Tx, incidentIDs []int64) ([]models.EventTimeline, error) {
+	if len(incidentIDs) == 0 {
+		return []models.EventTimeline{}, nil
+	}
+
+	const query = `
+		SELECT id, event_id, created_by, message, event_type, created_at, updated_at
+		FROM event_timelines
+		WHERE event_id = ANY($1)
+		  AND created_by IS NOT NULL
+		  AND message <> ''
+		ORDER BY created_at ASC, id ASC
+	`
+
+	var events []models.EventTimeline
+	if err := pgxscan.Select(ctx, tx, &events, query, incidentIDs); err != nil {
+		return nil, err
+	}
+
+	return events, nil
+}
+
 // CreateIncident inserts a new incident row.
 func (r *PGRepository) CreateIncident(ctx context.Context, tx pgx.Tx, incident models.Incident) error {
 	const query = `
-		INSERT INTO incidents (id, status, severity, is_public, auto_resolve, started_at, resolved_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO incidents (id, title, status, severity, is_public, auto_resolve, started_at, resolved_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
 	idVal := incident.ID
@@ -87,6 +111,7 @@ func (r *PGRepository) CreateIncident(ctx context.Context, tx pgx.Tx, incident m
 
 	_, err := tx.Exec(ctx, query,
 		incident.ID,
+		incident.Title,
 		incident.Status,
 		incident.Severity,
 		incident.IsPublic,
@@ -183,7 +208,7 @@ func (r *PGRepository) GetLastEventTimeline(ctx context.Context, tx pgx.Tx, inci
 // ListIncidentsByMonitorID returns all incidents for a monitor.
 func (r *PGRepository) ListIncidentsByMonitorID(ctx context.Context, tx pgx.Tx, monitorID int64) ([]models.Incident, error) {
 	const query = `
-		SELECT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT i.id, i.title, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		WHERE im.monitor_id = $1
@@ -201,7 +226,7 @@ func (r *PGRepository) ListIncidentsByMonitorID(ctx context.Context, tx pgx.Tx, 
 // GetIncidentByID fetches an incident scoped to the given monitor.
 func (r *PGRepository) GetIncidentByID(ctx context.Context, tx pgx.Tx, monitorID, incidentID int64) (*models.Incident, error) {
 	const query = `
-		SELECT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT i.id, i.title, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		WHERE i.id = $1 AND im.monitor_id = $2
@@ -221,7 +246,7 @@ func (r *PGRepository) GetIncidentByID(ctx context.Context, tx pgx.Tx, monitorID
 // ListIncidentsByTeamID returns all incidents for a team via monitor membership.
 func (r *PGRepository) ListIncidentsByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.Incident, error) {
 	const query = `
-		SELECT DISTINCT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT DISTINCT i.id, i.title, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		INNER JOIN monitors m ON m.id = im.monitor_id
@@ -239,7 +264,7 @@ func (r *PGRepository) ListIncidentsByTeamID(ctx context.Context, tx pgx.Tx, tea
 // GetIncidentByIDForTeam fetches an incident ensuring it belongs to the team via monitor association.
 func (r *PGRepository) GetIncidentByIDForTeam(ctx context.Context, tx pgx.Tx, teamID, incidentID int64) (*models.Incident, error) {
 	const query = `
-		SELECT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT i.id, i.title, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		INNER JOIN monitors m ON m.id = im.monitor_id
@@ -282,7 +307,7 @@ func (r *PGRepository) UpdateIncidentStatus(ctx context.Context, tx pgx.Tx, inci
 		    resolved_at = $3,
 		    updated_at = $4
 		WHERE id = $1
-		RETURNING id, status, severity, is_public, auto_resolve, started_at, resolved_at, created_at, updated_at
+		RETURNING id, title, status, severity, is_public, auto_resolve, started_at, resolved_at, created_at, updated_at
 	`
 
 	var incident models.Incident
@@ -296,19 +321,20 @@ func (r *PGRepository) UpdateIncidentStatus(ctx context.Context, tx pgx.Tx, inci
 	return &incident, nil
 }
 
-// UpdateIncidentSettings updates visibility/auto-resolve flags for an incident.
-func (r *PGRepository) UpdateIncidentSettings(ctx context.Context, tx pgx.Tx, incidentID int64, isPublic bool, autoResolve bool, updatedAt time.Time) (*models.Incident, error) {
+// UpdateIncidentSettings updates visibility, auto-resolve flags, and title for an incident.
+func (r *PGRepository) UpdateIncidentSettings(ctx context.Context, tx pgx.Tx, incidentID int64, isPublic bool, autoResolve bool, title *string, updatedAt time.Time) (*models.Incident, error) {
 	const query = `
 		UPDATE incidents
 		SET is_public = $2,
 		    auto_resolve = $3,
-		    updated_at = $4
+		    title = $4,
+		    updated_at = $5
 		WHERE id = $1
-		RETURNING id, status, severity, is_public, auto_resolve, started_at, resolved_at, created_at, updated_at
+		RETURNING id, title, status, severity, is_public, auto_resolve, started_at, resolved_at, created_at, updated_at
 	`
 
 	var incident models.Incident
-	if err := pgxscan.Get(ctx, tx, &incident, query, incidentID, isPublic, autoResolve, updatedAt); err != nil {
+	if err := pgxscan.Get(ctx, tx, &incident, query, incidentID, isPublic, autoResolve, title, updatedAt); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}

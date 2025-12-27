@@ -2,8 +2,10 @@ package incident
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -13,8 +15,9 @@ import (
 )
 
 type updateIncidentRequest struct {
-	Public      *bool `json:"public"`
-	AutoResolve *bool `json:"auto_resolve"`
+	Title       *string `json:"title"`
+	Public      *bool   `json:"public"`
+	AutoResolve *bool   `json:"auto_resolve"`
 }
 
 // UpdateIncident godoc
@@ -44,11 +47,33 @@ func (h *IncidentHandler) UpdateIncident(c echo.Context) error {
 	}
 
 	var req updateIncidentRequest
-	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
 
-	if req.Public == nil && req.AutoResolve == nil {
+	if err := json.Unmarshal(body, &req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+
+	_, titleProvided := raw["title"]
+	_, publicProvided := raw["public"]
+	_, autoResolveProvided := raw["auto_resolve"]
+
+	if publicProvided && req.Public == nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Public must be a boolean")
+	}
+
+	if autoResolveProvided && req.AutoResolve == nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Auto-resolve must be a boolean")
+	}
+
+	if !titleProvided && !publicProvided && !autoResolveProvided {
 		return echo.NewHTTPError(http.StatusBadRequest, "At least one field must be provided to update")
 	}
 
@@ -96,12 +121,29 @@ func (h *IncidentHandler) UpdateIncident(c echo.Context) error {
 	}
 
 	autoResolve := existing.AutoResolve
-	if req.AutoResolve != nil {
+	if autoResolveProvided && req.AutoResolve != nil {
 		autoResolve = *req.AutoResolve
 	}
 
+	title := existing.Title
+	if titleProvided {
+		if req.Title == nil {
+			title = nil
+		} else {
+			trimmed := strings.TrimSpace(*req.Title)
+			if len(trimmed) > 255 {
+				return echo.NewHTTPError(http.StatusBadRequest, "Title must be 255 characters or fewer")
+			}
+			if trimmed == "" {
+				title = nil
+			} else {
+				title = &trimmed
+			}
+		}
+	}
+
 	now := time.Now().UTC()
-	updated, err := h.Repo.UpdateIncidentSettings(ctx, tx, existing.ID, isPublic, autoResolve, now)
+	updated, err := h.Repo.UpdateIncidentSettings(ctx, tx, existing.ID, isPublic, autoResolve, title, now)
 	if err != nil {
 		zap.L().Error("Failed to update incident settings", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update incident")

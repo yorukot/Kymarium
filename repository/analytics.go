@@ -78,7 +78,7 @@ func (r *PGRepository) ListMonitorDailySummaryByMonitorIDs(ctx context.Context, 
 // ListIncidentsByMonitorIDWithinRange returns incidents overlapping the provided window for a monitor.
 func (r *PGRepository) ListIncidentsByMonitorIDWithinRange(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time) ([]models.Incident, error) {
 	const query = `
-		SELECT i.id, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
+		SELECT i.id, i.title, i.status, i.severity, i.is_public, i.auto_resolve, i.started_at, i.resolved_at, i.created_at, i.updated_at
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		WHERE im.monitor_id = $1

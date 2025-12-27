@@ -5,6 +5,14 @@
   import { Button } from '$lib/components/ui/button';
   import { Separator } from '$lib/components/ui/separator/index.js';
   import type { Incident } from '../../../lib/types/index.js';
+  import {
+    formatIncidentDate,
+    formatIncidentDuration,
+    severityBadgeClass,
+    severityLabel,
+    statusLabel,
+    statusTone
+  } from '$lib/styles/incident';
   import type { IncidentWithMonitors } from './+page';
 
   /** @type {import('./$types').PageProps} */
@@ -21,73 +29,6 @@
       return bTime - aTime;
     });
   }
-
-  function formatDate(value?: string) {
-    if (!value) return '—';
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
-  }
-
-  function formatDuration(incident: Incident) {
-    const start = new Date(incident.startedAt).getTime();
-    const end = new Date(incident.resolvedAt ?? Date.now()).getTime();
-    if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return '—';
-    const diffMs = end - start;
-    const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours < 24) return `${hours}h ${mins}m`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ${hours % 24}h`;
-  }
-
-  const severityMeta: Record<Incident['severity'], { label: string; badge: string; dot: string }> = {
-    emergency: {
-      label: 'Emergency',
-      badge: '!bg-destructive !text-destructive-foreground border-transparent',
-      dot: 'bg-destructive'
-    },
-    critical: {
-      label: 'Critical',
-      badge: '!bg-destructive/80 !text-destructive-foreground border-transparent',
-      dot: 'bg-destructive/80'
-    },
-    major: {
-      label: 'Major',
-      badge: '!bg-amber-500 !text-amber-950 border-transparent',
-      dot: 'bg-amber-500'
-    },
-    minor: {
-      label: 'Minor',
-      badge: '!bg-secondary !text-secondary-foreground border-transparent',
-      dot: 'bg-secondary'
-    },
-    info: {
-      label: 'Info',
-      badge: '!bg-muted !text-foreground border-transparent',
-      dot: 'bg-muted'
-    }
-  };
-
-  const severityMetaSafe = (severity: Incident['severity']) =>
-    severityMeta[severity] ?? {
-      label: severity,
-      badge: '!bg-muted !text-foreground border-transparent',
-      dot: 'bg-muted'
-    };
-
-  const statusMeta: Record<Incident['status'], { label: string; color: string }> = {
-    detected: { label: 'Detected', color: 'text-amber-600' },
-    investigating: { label: 'Investigating', color: 'text-amber-700' },
-    identified: { label: 'Identified', color: 'text-amber-700' },
-    monitoring: { label: 'Monitoring', color: 'text-sky-700' },
-    resolved: { label: 'Resolved', color: 'text-success' }
-  };
-
-  const dotClass = (severity: Incident['severity']) => severityMetaSafe(severity).dot;
-  const badgeClass = (severity: Incident['severity']) => severityMetaSafe(severity).badge;
-  const severityLabel = (severity: Incident['severity']) => severityMetaSafe(severity).label;
 
 </script>
 
@@ -160,10 +101,17 @@
     <div class="flex items-start gap-3 flex-wrap">
       <div class="flex-1 min-w-0 flex flex-col gap-1">
         <div class="flex items-center gap-2 flex-wrap">
-          <p class="text-lg font-semibold truncate">Incident #{incident.id}</p>
-          <Badge>{severityMeta[incident.severity].label}</Badge>
-          <span class={`text-sm font-medium ${statusMeta[incident.status].color}`}>
-            {statusMeta[incident.status].label}
+          <p class="text-lg font-semibold truncate">
+            {incident.title ?? `Incident #${incident.id}`}
+          </p>
+          {#if incident.title}
+            <span class="text-sm text-muted-foreground">#{incident.id}</span>
+          {/if}
+          <Badge class={severityBadgeClass(incident.severity)}>
+            {severityLabel(incident.severity)}
+          </Badge>
+          <span class={`text-sm font-medium ${statusTone(incident.status)}`}>
+            {statusLabel(incident.status)}
           </span>
           {#if incident.isPublic}
             <Badge variant="outline" class="gap-1">
@@ -179,19 +127,19 @@
         <div class="text-sm text-muted-foreground flex gap-3 flex-wrap">
           <span class="flex items-center gap-1">
             <Icon icon="lucide:play-circle" class="size-4" />
-            Started {formatDate(incident.startedAt)}
+            Started {formatIncidentDate(incident.startedAt)}
           </span>
           <span class="flex items-center gap-1">
             <Icon icon="lucide:flag" class="size-4" />
-            Resolved {formatDate(incident.resolvedAt)}
+            Resolved {formatIncidentDate(incident.resolvedAt)}
           </span>
           <span class="flex items-center gap-1">
             <Icon icon="lucide:timer" class="size-4" />
-            Duration {formatDuration(incident)}
+            Duration {formatIncidentDuration(incident)}
           </span>
           <span class="flex items-center gap-1">
             <Icon icon="lucide:clock" class="size-4" />
-            Updated {formatDate(incident.updatedAt)}
+            Updated {formatIncidentDate(incident.updatedAt)}
           </span>
         </div>
       </div>

@@ -4,7 +4,7 @@
 	import type { NavItem } from './type';
 	import { page } from '$app/state';
 	let { items }: { items: NavItem[] } = $props();
-	const teamID = page.params.teamID;
+	const teamID = $derived.by(() => page.params.teamID);
 </script>
 
 <Sidebar.Group>

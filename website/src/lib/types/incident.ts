@@ -25,6 +25,7 @@ export type IncidentEventType =
 
 export interface Incident {
 	id: string;
+	title?: string | null;
 	status: IncidentStatus;
 	severity: IncidentSeverity;
 	isPublic: boolean;
@@ -37,6 +38,7 @@ export interface Incident {
 
 export interface PublicIncident extends Incident {
 	monitorId: string;
+	timeline?: IncidentEvent[];
 }
 
 export interface IncidentMonitor {

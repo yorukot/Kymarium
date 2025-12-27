@@ -40,6 +40,7 @@ const (
 // Incident represents an incident record in the database
 type Incident struct {
 	ID          int64            `json:"id,string" db:"id"`
+	Title       *string          `json:"title,omitempty" db:"title"`
 	Status      IncidentStatus   `json:"status" db:"status"`
 	Severity    IncidentSeverity `json:"severity" db:"severity"`
 	IsPublic    bool             `json:"is_public" db:"is_public"`
@@ -67,7 +68,7 @@ type IncidentMonitor struct {
 type EventTimeline struct {
 	ID         int64     `json:"id,string" db:"id"`
 	IncidentID int64     `json:"incident_id,string" db:"event_id"`
-	CreatedBy  *int64    `json:"created_by,omitempty" db:"created_by"`
+	CreatedBy  *int64    `json:"created_by,string,omitempty" db:"created_by"`
 	Message    string    `json:"message" db:"message"`
 	EventType  EventType `json:"event_type" db:"event_type"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
