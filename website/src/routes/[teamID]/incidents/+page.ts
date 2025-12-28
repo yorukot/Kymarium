@@ -20,7 +20,7 @@ export const load: PageLoad<IncidentsPageData> = async ({ params }) => {
   const monitors = monitorsRes.data ?? [];
   const monitorNamesByIncident: Record<string, Set<string>> = buildMonitorLookup(monitors);
 
-  const incidents = incidentsRes.data.map((incident) => ({
+  const incidents = (incidentsRes.data ?? []).map((incident) => ({
     ...incident,
     monitorNames: Array.from(monitorNamesByIncident[incident.id] ?? [])
   }));

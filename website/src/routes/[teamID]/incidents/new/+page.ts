@@ -1,5 +1,5 @@
 import { getMonitors } from '$lib/api/monitor';
-import type { Monitor } from '../../../../types';
+import type { Monitor } from '$lib/types';
 import type { PageLoad } from './$types';
 
 export type NewIncidentPageData = {

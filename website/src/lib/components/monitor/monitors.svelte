@@ -49,6 +49,9 @@
 
 <div>
 	<div class="flex flex-col gap-2">
+		{#if monitors.length === 0}
+			<Card class="py-6 px-4 text-sm text-muted-foreground">No monitors yet.</Card>
+		{/if}
 		{#each monitors as monitor, monitorIndex (monitor.id)}
 			<Card id={'monitor-card-' + monitorIndex} class="py-2 px-4">
 				<div class="flex justify-between items-center gap-2">
@@ -71,8 +74,7 @@
 						</div>
 					</div>
 					<div>
-					<div>
-					</div>
+						<div></div>
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger class="shrink-0">
 								<Button variant="ghost" size="icon">

@@ -7,7 +7,7 @@
 	let { data } = $props();
 </script>
 
-<div class="flex flex-col gap-5">
+<header class="flex flex-col gap-3">
 	<div class="flex justify-between">
 		<h1 class="text-2xl font-bold">Monitors</h1>
 
@@ -16,8 +16,11 @@
 			New monitor
 		</Button>
 	</div>
+	<p class="text-sm text-muted-foreground">
+		Create and manage status pages to provide users with real-time updates.
+	</p>
+</header>
 
-	<div>
-		<Monitors monitors={data.monitors} />
-	</div>
+<div class="mt-7">
+	<Monitors monitors={data.monitors} />
 </div>

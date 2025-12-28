@@ -161,7 +161,7 @@
       {:else}
         <div class="flex flex-wrap gap-2">
           {#each incident.monitorNames as name (name)}
-            <Badge variant="secondary" class="truncate max-w-[14rem]">
+            <Badge variant="secondary" class="truncate max-w-56">
               {name}
             </Badge>
           {/each}
