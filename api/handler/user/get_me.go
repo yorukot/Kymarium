@@ -15,6 +15,7 @@ type userResponse struct {
 	ID          int64     `json:"id,string" example:"175928847299117063"`
 	DisplayName string    `json:"display_name" example:"John Doe"`
 	Avatar      *string   `json:"avatar,omitempty" example:"https://example.com/avatar.jpg"`
+	Verified    bool      `json:"verified" example:"false"`
 	CreatedAt   time.Time `json:"created_at" example:"2023-01-01T12:00:00Z"`
 	UpdatedAt   time.Time `json:"updated_at" example:"2023-01-02T15:30:00Z"`
 }
@@ -24,6 +25,7 @@ func newUserResponse(user *models.User) userResponse {
 		ID:          user.ID,
 		DisplayName: user.DisplayName,
 		Avatar:      user.Avatar,
+		Verified:    user.Verified,
 		CreatedAt:   user.CreatedAt,
 		UpdatedAt:   user.UpdatedAt,
 	}

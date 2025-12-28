@@ -34,6 +34,14 @@ definitions:
     - email
     - password
     type: object
+  auth.resendVerificationRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+    required:
+    - email
+    type: object
   incident.createIncidentEventRequest:
     properties:
       event_type:
@@ -90,6 +98,10 @@ definitions:
         - identified
         - monitoring
         - resolved
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
     required:
     - monitor_ids
     type: object
@@ -99,6 +111,8 @@ definitions:
         type: boolean
       public:
         type: boolean
+      title:
+        type: string
     type: object
   incident.updateIncidentStatusRequest:
     properties:
@@ -386,6 +400,10 @@ paths:
           description: Invalid request body or invalid credentials
           schema:
             $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Email not verified
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error (transaction, database, or password verification
             failure)
@@ -396,6 +414,23 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: User login
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Logs the user out by invalidating refresh token and clearing cookies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged out
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Logout
       tags:
       - auth
   /auth/oauth/{provider}:
@@ -497,7 +532,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new user account with email and password
+      description: Creates a new user account with email and password; sends verification
+        email when SMTP is enabled
       parameters:
       - description: Registration request
         in: body
@@ -509,7 +545,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: User registered successfully
+          description: Registration successful
           schema:
             $ref: '#/definitions/response.SuccessResponse'
         "400":
@@ -544,6 +580,63 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: Check authentication status
+      tags:
+      - auth
+  /auth/verify:
+    get:
+      description: Verifies a user's email address using the verification token
+      parameters:
+      - description: Verification token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: User not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Verify email
+      tags:
+      - auth
+  /auth/verify/resend:
+    post:
+      consumes:
+      - application/json
+      description: Resends the email verification link
+      parameters:
+      - description: Resend verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.resendVerificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Verification email sent
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Resend verification email
       tags:
       - auth
   /regions:

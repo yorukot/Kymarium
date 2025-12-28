@@ -46,6 +46,18 @@ type EnvConfig struct {
 	AccessTokenExpiresAt  int `env:"ACCESS_TOKEN_EXPIRES_AT" envDefault:"900"`       // 15 minutes
 	RefreshTokenExpiresAt int `env:"REFRESH_TOKEN_EXPIRES_AT" envDefault:"31536000"` // 365 days
 
+	// Email Verification
+	EmailVerifyExpiresAt int    `env:"EMAIL_VERIFY_EXPIRES_AT" envDefault:"900"` // 15 minutes
+	BackendURL           string `env:"BACKEND_URL" envDefault:"http://localhost:8000"`
+
+	// SMTP Settings
+	SMTPEnabled  bool   `env:"SMTP_ENABLED" envDefault:"false"`
+	SMTPHost     string `env:"SMTP_HOST"`
+	SMTPPort     string `env:"SMTP_PORT"`
+	SMTPUsername string `env:"SMTP_USERNAME"`
+	SMTPPassword string `env:"SMTP_PASSWORD"`
+	SMTPFrom     string `env:"SMTP_FROM"`
+
 	GoogleClientID     string `env:"GOOGLE_CLIENT_ID,required"`
 	GoogleClientSecret string `env:"GOOGLE_CLIENT_SECRET,required"`
 	GoogleRedirectURL  string `env:"GOOGLE_REDIRECT_URL,required"`

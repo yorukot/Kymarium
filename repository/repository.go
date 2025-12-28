@@ -44,6 +44,7 @@ type Repository interface {
 
 	// Users
 	GetUserByID(ctx context.Context, tx pgx.Tx, userID int64) (*models.User, error)
+	UpdateUserVerification(ctx context.Context, tx pgx.Tx, userID int64, verified bool, verifyCode *string, updatedAt time.Time) error
 
 	// Teams
 	ListTeamsByUserID(ctx context.Context, tx pgx.Tx, userID int64) ([]models.TeamWithRole, error)

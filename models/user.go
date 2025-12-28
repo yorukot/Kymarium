@@ -8,6 +8,8 @@ type User struct {
 	PasswordHash *string   `json:"password_hash,omitempty" db:"password_hash" example:"hashed_password"`  // Hashed password (omitted in responses)
 	DisplayName  string    `json:"display_name" db:"display_name" example:"John Doe"`                     // Display name for the user
 	Avatar       *string   `json:"avatar,omitempty" db:"avatar" example:"https://example.com/avatar.jpg"` // URL to user's avatar image
+	Verified     bool      `json:"verified" db:"verified" example:"false"`                                // Whether the user is verified
+	VerifyCode   *string   `json:"-" db:"verify_code"`                                                    // Verification token for email
 	CreatedAt    time.Time `json:"created_at" db:"created_at" example:"2023-01-01T12:00:00Z"`             // Timestamp when the user was created
 	UpdatedAt    time.Time `json:"updated_at" db:"updated_at" example:"2023-01-01T12:00:00Z"`             // Timestamp when the user was last updated
 }
@@ -19,6 +21,7 @@ type Account struct {
 	ProviderUserID string    `json:"provider_user_id" db:"provider_user_id" example:"user123"`  // User ID from the provider
 	UserID         int64     `json:"user_id,string" db:"user_id" example:"175928847299117063"`  // Associated user ID
 	Email          string    `json:"email" db:"email" example:"user@example.com"`               // User's email address
+	Primary        bool      `json:"primary" db:"primary" example:"true"`                       // Whether this is the primary account
 	CreatedAt      time.Time `json:"created_at" db:"created_at" example:"2023-01-01T12:00:00Z"` // Timestamp when the account was created
 	UpdatedAt      time.Time `json:"updated_at" db:"updated_at" example:"2023-01-01T12:00:00Z"` // Timestamp when the account was last updated
 }

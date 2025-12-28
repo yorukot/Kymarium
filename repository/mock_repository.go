@@ -107,6 +107,11 @@ func (m *MockRepository) GetUserByID(ctx context.Context, tx pgx.Tx, userID int6
 	return user, args.Error(1)
 }
 
+func (m *MockRepository) UpdateUserVerification(ctx context.Context, tx pgx.Tx, userID int64, verified bool, verifyCode *string, updatedAt time.Time) error {
+	args := m.Called(ctx, tx, userID, verified, verifyCode, updatedAt)
+	return args.Error(0)
+}
+
 func (m *MockRepository) GetAccountByEmail(ctx context.Context, tx pgx.Tx, email string) (*models.Account, error) {
 	args := m.Called(ctx, tx, email)
 	account, _ := args.Get(0).(*models.Account)

@@ -1,5 +1,6 @@
 import { PUBLIC_API_BASE } from '$env/static/public';
 import { apiRequest, type ApiDefaultBody } from './utils';
+import { publicApiRequest } from './utils';
 
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -45,5 +46,20 @@ export async function registerUser(
 		method: 'POST',
 		body: { display_name: displayName, email, password },
 		defaultError: 'Registration failed'
+	});
+}
+
+export async function logout(): Promise<ApiDefaultBody> {
+	return apiRequest<ApiDefaultBody>('/auth/logout', {
+		method: 'POST',
+		defaultError: 'Logout failed'
+	});
+}
+
+export async function resendVerification(email: string): Promise<ApiDefaultBody> {
+	return publicApiRequest<ApiDefaultBody>('/auth/verify/resend', {
+		method: 'POST',
+		body: { email },
+		defaultError: 'Resend verification failed'
 	});
 }

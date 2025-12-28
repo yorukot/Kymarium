@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/yorukot/knocker/utils/config"
 	"github.com/yorukot/knocker/utils/response"
 	"go.uber.org/zap"
 )
@@ -22,12 +23,12 @@ type registerRequest struct {
 
 // Register godoc
 // @Summary Register a new user
-// @Description Creates a new user account with email and password
+// @Description Creates a new user account with email and password; sends verification email when SMTP is enabled
 // @Tags auth
 // @Accept json
 // @Produce json
 // @Param request body registerRequest true "Registration request"
-// @Success 200 {object} response.SuccessResponse "User registered successfully"
+// @Success 200 {object} response.SuccessResponse "Registration successful"
 // @Failure 400 {object} response.ErrorResponse "Invalid request body or email already in use"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /auth/register [post]
@@ -71,10 +72,39 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate user")
 	}
 
+	smtpEnabled := config.Env().SMTPEnabled
+	var verifyToken string
+	if smtpEnabled {
+		verifyToken, err = generateEmailVerificationToken(user.ID, registerRequest.Email)
+		if err != nil {
+			zap.L().Error("Failed to generate verification token", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate verification token")
+		}
+		user.Verified = false
+		user.VerifyCode = &verifyToken
+	} else {
+		user.Verified = true
+		user.VerifyCode = nil
+	}
+
 	// Create the user and account in the database
 	if err = h.Repo.CreateUserAndAccount(c.Request().Context(), tx, user, account); err != nil {
 		zap.L().Error("Failed to create user", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create user")
+	}
+
+	if smtpEnabled {
+		if err := sendVerificationEmail(registerRequest.Email, verifyToken); err != nil {
+			zap.L().Error("Failed to send verification email", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to send verification email")
+		}
+
+		if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+			zap.L().Error("Failed to commit transaction", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
+		}
+
+		return c.JSON(http.StatusOK, response.SuccessMessage("Verification email sent"))
 	}
 
 	// Generate the refresh token

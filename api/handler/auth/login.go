@@ -3,9 +3,11 @@ package auth
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/yorukot/knocker/utils/config"
 	"github.com/yorukot/knocker/utils/encrypt"
 	"github.com/yorukot/knocker/utils/response"
 	"go.uber.org/zap"
@@ -30,6 +32,7 @@ type LoginRequest struct {
 // @Param request body LoginRequest true "Login request with email and password"
 // @Success 200 {object} response.SuccessResponse "Login successful, refresh token set in cookie"
 // @Failure 400 {object} response.ErrorResponse "Invalid request body or invalid credentials"
+// @Failure 403 {object} response.ErrorResponse "Email not verified"
 // @Failure 500 {object} response.ErrorResponse "Internal server error (transaction, database, or password verification failure)"
 // @Failure 502 {object} response.ErrorResponse "Invalid request body format"
 // @Router /auth/login [post]
@@ -62,7 +65,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 
 	// TODO: Need to change this
 	// If the user is not found, return an error
-	if user == nil {
+	if user == nil || user.PasswordHash == nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid credentials")
 	}
 
@@ -76,6 +79,54 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	// If the password is not correct, return an error
 	if !match {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid credentials")
+	}
+
+	if !user.Verified {
+		if !config.Env().SMTPEnabled {
+			if err := h.Repo.UpdateUserVerification(c.Request().Context(), tx, user.ID, true, nil, time.Now()); err != nil {
+				zap.L().Error("Failed to auto-verify user", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to verify user")
+			}
+		} else {
+			shouldResend := false
+			if user.VerifyCode == nil {
+				shouldResend = true
+			} else {
+				valid, _, err := validateEmailVerificationToken(*user.VerifyCode)
+				if err != nil {
+					zap.L().Error("Failed to validate verification token", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "Failed to validate verification token")
+				}
+				if !valid {
+					shouldResend = true
+				}
+			}
+
+			if shouldResend {
+				verifyToken, err := generateEmailVerificationToken(user.ID, loginRequest.Email)
+				if err != nil {
+					zap.L().Error("Failed to generate verification token", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate verification token")
+				}
+
+				if err := h.Repo.UpdateUserVerification(c.Request().Context(), tx, user.ID, false, &verifyToken, time.Now()); err != nil {
+					zap.L().Error("Failed to update verification token", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update verification token")
+				}
+
+				if err := sendVerificationEmail(loginRequest.Email, verifyToken); err != nil {
+					zap.L().Error("Failed to send verification email", zap.Error(err))
+					return echo.NewHTTPError(http.StatusInternalServerError, "Failed to send verification email")
+				}
+			}
+
+			if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+				zap.L().Error("Failed to commit transaction", zap.Error(err))
+				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
+			}
+
+			return echo.NewHTTPError(http.StatusForbidden, "Email not verified")
+		}
 	}
 
 	// Generate the refresh token

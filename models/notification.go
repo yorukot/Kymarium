@@ -26,6 +26,10 @@ type TelegramNotificationConfig struct {
 	ChatID   string `json:"chat_id"`
 }
 
+type EmailNotificationConfig struct {
+	EmailAddress []string `json:"email_address"`
+}
+
 type MonitorNotification struct {
 	ID             int64 `json:"id,string" db:"id"`
 	MonitorID      int64 `json:"monitor_id,string" db:"monitor_id"`

@@ -2,6 +2,7 @@ package encrypt
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -153,4 +154,68 @@ func (j *JWTSecret) ValidateOAuthStateAndGetClaims(token string) (bool, OAuthSta
 	}
 
 	return true, oauthStateClaims, nil
+}
+
+// EmailVerificationClaims is the claims for email verification tokens.
+type EmailVerificationClaims struct {
+	Subject   string `json:"sub"`
+	Email     string `json:"email"`
+	ExpiresAt int64  `json:"exp"`
+}
+
+// GenerateEmailVerificationToken generates an email verification token.
+func (j *JWTSecret) GenerateEmailVerificationToken(userID int64, email string, expiresAt time.Time) (string, error) {
+	claims := EmailVerificationClaims{
+		Subject:   strconv.FormatInt(userID, 10),
+		Email:     email,
+		ExpiresAt: expiresAt.Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub":   claims.Subject,
+		"email": claims.Email,
+		"exp":   claims.ExpiresAt,
+	})
+
+	return token.SignedString([]byte(j.Secret))
+}
+
+// ValidateEmailVerificationToken validates the verification token and extracts claims.
+func (j *JWTSecret) ValidateEmailVerificationToken(token string) (bool, EmailVerificationClaims, error) {
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (any, error) {
+		return []byte(j.Secret), nil
+	})
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenInvalidClaims) {
+			return false, EmailVerificationClaims{}, nil
+		}
+		return false, EmailVerificationClaims{}, err
+	}
+
+	subject, ok := claims["sub"].(string)
+	if !ok || subject == "" {
+		return false, EmailVerificationClaims{}, nil
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok || email == "" {
+		return false, EmailVerificationClaims{}, nil
+	}
+
+	expiresAt, ok := claims["exp"].(float64)
+	if !ok {
+		return false, EmailVerificationClaims{}, nil
+	}
+
+	if time.Now().Unix() > int64(expiresAt) {
+		return false, EmailVerificationClaims{}, nil
+	}
+
+	return true, EmailVerificationClaims{
+		Subject:   subject,
+		Email:     email,
+		ExpiresAt: int64(expiresAt),
+	}, nil
 }

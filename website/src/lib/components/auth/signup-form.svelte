@@ -35,7 +35,11 @@
 		extend: validator({ schema: signupSchema }),
 		onSubmit: async (values) => {
 			try {
-				await registerUser(values.displayName, values.email, values.password);
+				const response = await registerUser(values.displayName, values.email, values.password);
+				if (response?.message?.toLowerCase().includes('verification email sent')) {
+					await goto(`/auth/verify/sent?email=${encodeURIComponent(values.email)}`);
+					return;
+				}
 				await goto(redirectTo);
 			} catch (error) {
 				return {

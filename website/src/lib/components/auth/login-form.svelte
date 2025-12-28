@@ -35,6 +35,13 @@
 				await login(values.email, values.password);
 				await goto(redirectTo);
 			} catch (error) {
+				if (
+					error instanceof Error &&
+					error.message.toLowerCase().includes('email not verified')
+				) {
+					await goto(`/auth/verify/sent?email=${encodeURIComponent(values.email)}`);
+					return;
+				}
 				return {
 					FORM_ERROR:
 						error instanceof Error ? error.message : 'Unable to log in right now. Please try again.'

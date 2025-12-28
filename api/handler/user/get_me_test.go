@@ -28,6 +28,7 @@ func TestGetMe_Success(t *testing.T) {
 			ID:          123,
 			DisplayName: "Jane Doe",
 			Avatar:      &avatar,
+			Verified:    true,
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		}, nil)
@@ -49,6 +50,7 @@ func TestGetMe_Success(t *testing.T) {
 	require.Equal(t, "123", data["id"])
 	require.Equal(t, "Jane Doe", data["display_name"])
 	require.Equal(t, "https://example.com/avatar.png", data["avatar"])
+	require.Equal(t, true, data["verified"])
 	require.Contains(t, data, "created_at")
 	require.Contains(t, data, "updated_at")
 	require.NotContains(t, data, "password_hash")

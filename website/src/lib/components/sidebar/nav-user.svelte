@@ -1,9 +1,11 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { goto } from '$app/navigation';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
+	import { logout } from '$lib/api/auth.js';
 	import { createAvatar } from '@dicebear/core';
 	import { thumbs } from '@dicebear/collection';
 	import type { User } from '../../types';
@@ -21,6 +23,15 @@
 	);
 
 	const avatarSrc = $derived(user.avatar || generatedAvatar);
+
+	const handleLogout = async () => {
+		try {
+			await logout();
+		} catch {
+			// Ignore logout errors; we'll still clear client state by redirecting.
+		}
+		await goto('/auth/login');
+	};
 </script>
 
 <Sidebar.Menu>
@@ -84,7 +95,7 @@
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item>
+				<DropdownMenu.Item onclick={handleLogout}>
 					<Icon icon="lucide:log-out" />
 					Log out
 				</DropdownMenu.Item>

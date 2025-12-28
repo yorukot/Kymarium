@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -46,6 +48,8 @@ func GenerateUser(registerRequest registerRequest) (models.User, models.Account,
 		ID:           userID,
 		PasswordHash: &passwordHash,
 		DisplayName:  registerRequest.DisplayName,
+		Verified:     false,
+		VerifyCode:   nil,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -142,6 +146,49 @@ func generateAccessTokenCookie(accessToken string) http.Cookie {
 		Expires:  time.Now().Add(time.Duration(config.Env().AccessTokenExpiresAt) * time.Second),
 		SameSite: http.SameSiteLaxMode,
 	}
+}
+
+func generateEmailVerificationToken(userID int64, email string) (string, error) {
+	secret := encrypt.JWTSecret{
+		Secret: config.Env().JWTSecretKey,
+	}
+
+	expiresAt := time.Now().Add(time.Duration(config.Env().EmailVerifyExpiresAt) * time.Second)
+	return secret.GenerateEmailVerificationToken(userID, email, expiresAt)
+}
+
+func validateEmailVerificationToken(token string) (bool, encrypt.EmailVerificationClaims, error) {
+	secret := encrypt.JWTSecret{
+		Secret: config.Env().JWTSecretKey,
+	}
+
+	return secret.ValidateEmailVerificationToken(token)
+}
+
+func buildEmailVerificationURL(token string) (string, error) {
+	base := strings.TrimSpace(config.Env().BackendURL)
+	if base == "" {
+		return "", fmt.Errorf("missing backend url")
+	}
+
+	separator := "?"
+	if strings.Contains(base, "?") {
+		separator = "&"
+	}
+
+	return strings.TrimRight(base, "/") + "/api/auth/verify" + separator + "token=" + url.QueryEscape(token), nil
+}
+
+func sendVerificationEmail(toEmail string, token string) error {
+	verifyURL, err := buildEmailVerificationURL(token)
+	if err != nil {
+		return err
+	}
+
+	subject := fmt.Sprintf("Verify your %s account", config.Env().AppName)
+
+	body := fmt.Sprintf("Please verify your email by clicking the link below:\n\n%s\n\nIf you did not request this, you can ignore this email.", verifyURL)
+	return config.SendEmail(toEmail, nil, nil, subject, body)
 }
 
 // generateTokenAndSaveRefreshToken generates a refresh token and saves it to the database
@@ -269,6 +316,8 @@ func generateUserFromOAuthUserInfo(userInfo *oidc.UserInfo, provider models.Prov
 		PasswordHash: nil,
 		DisplayName:  displayName,
 		Avatar:       picture,
+		Verified:     true,
+		VerifyCode:   nil,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}

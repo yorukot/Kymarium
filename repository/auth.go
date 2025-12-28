@@ -12,7 +12,7 @@ import (
 // GetUserByEmail retrieves a user by email address (through the accounts table)
 func (r *PGRepository) GetUserByEmail(ctx context.Context, tx pgx.Tx, email string) (*models.User, error) {
 	query := `
-		SELECT u.id, u.password_hash, u.display_name, u.avatar, u.created_at, u.updated_at
+		SELECT u.id, u.password_hash, u.display_name, u.avatar, u.verified, u.verify_code, u.created_at, u.updated_at
 		FROM users u
 		JOIN accounts a ON u.id = a.user_id
 		WHERE a.email = $1 AND a.provider = $2
@@ -24,6 +24,8 @@ func (r *PGRepository) GetUserByEmail(ctx context.Context, tx pgx.Tx, email stri
 		&user.PasswordHash,
 		&user.DisplayName,
 		&user.Avatar,
+		&user.Verified,
+		&user.VerifyCode,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -73,7 +75,7 @@ func (r *PGRepository) GetAccountWithUserByProviderUserID(ctx context.Context, d
 	query := `
 		SELECT
 			a.id AS "a.id", a.provider AS "a.provider", a.provider_user_id AS "a.provider_user_id", a.user_id AS "a.user_id",
-			u.id AS "u.id", u.created_at AS "u.created_at", u.updated_at AS "u.updated_at"
+			u.id AS "u.id", u.verified AS "u.verified", u.verify_code AS "u.verify_code", u.created_at AS "u.created_at", u.updated_at AS "u.updated_at"
 		FROM accounts a
 		JOIN users u ON a.user_id = u.id
 		WHERE a.provider = $1 AND a.provider_user_id = $2
@@ -145,14 +147,16 @@ func (r *PGRepository) CreateAccount(ctx context.Context, tx pgx.Tx, account mod
 // CreateUserAndAccount creates a new user and associated account in a transaction
 func (r *PGRepository) CreateUserAndAccount(ctx context.Context, tx pgx.Tx, user models.User, account models.Account) error {
 	// Insert user
-	userQuery := `INSERT INTO users (id, password_hash, display_name, avatar, created_at, updated_at)
-	              VALUES ($1, $2, $3, $4, $5, $6)`
+	userQuery := `INSERT INTO users (id, password_hash, display_name, avatar, verified, verify_code, created_at, updated_at)
+	              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	_, err := tx.Exec(ctx, userQuery,
 		user.ID,
 		user.PasswordHash,
 		user.DisplayName,
 		user.Avatar,
+		user.Verified,
+		user.VerifyCode,
 		user.CreatedAt,
 		user.UpdatedAt,
 	)
