@@ -11,7 +11,8 @@
 		{ title: 'Status pages', url: 'status-pages', icon: 'lucide:layout-template' },
 		{ title: 'Incidents', url: 'incidents', icon: 'lucide:alert-triangle' },
 		{ title: 'Notifications', url: 'notifications', icon: 'lucide:bell' },
-		{ title: 'Members', url: 'members', icon: 'lucide:users' }
+		{ title: 'Members', url: 'members', icon: 'lucide:users' },
+		{ title: 'Settings', url: 'setting', icon: 'lucide:settings' }
 	];
 
 	let { user, teams }: { user: User; teams: Team[]; } =  $props();

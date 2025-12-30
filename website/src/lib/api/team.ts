@@ -1,4 +1,4 @@
-import type { MemberRole, Team, TeamInvite, TeamMemberWithUser } from '../../types';
+import type { MemberRole, Team, TeamInvite, TeamMemberWithUser, TeamWithRole } from '../../types';
 import { apiRequest } from './utils';
 
 export type TeamsResponse = {
@@ -8,6 +8,17 @@ export type TeamsResponse = {
 
 export function getTeams(): Promise<TeamsResponse> {
 	return apiRequest<TeamsResponse>("/teams", { defaultError: 'Failed to fetch teams' });
+}
+
+export type TeamResponse = {
+	message: string;
+	data: TeamWithRole;
+};
+
+export function getTeam(teamID: string): Promise<TeamResponse> {
+	return apiRequest<TeamResponse>(`/teams/${teamID}`, {
+		defaultError: 'Failed to fetch team'
+	});
 }
 
 export type CreateTeamResponse = {
@@ -20,6 +31,41 @@ export function createTeam(name: string): Promise<CreateTeamResponse> {
 		method: 'POST',
 		body: { name },
 		defaultError: 'Failed to create team'
+	});
+}
+
+export type UpdateTeamResponse = {
+	message: string;
+	data: Team;
+};
+
+export function updateTeam(teamID: string, name: string): Promise<UpdateTeamResponse> {
+	return apiRequest<UpdateTeamResponse>(`/teams/${teamID}`, {
+		method: 'PUT',
+		body: { name },
+		defaultError: 'Failed to update team'
+	});
+}
+
+export type DeleteTeamResponse = {
+	message: string;
+};
+
+export function deleteTeam(teamID: string): Promise<DeleteTeamResponse> {
+	return apiRequest<DeleteTeamResponse>(`/teams/${teamID}`, {
+		method: 'DELETE',
+		defaultError: 'Failed to delete team'
+	});
+}
+
+export type LeaveTeamResponse = {
+	message: string;
+};
+
+export function leaveTeam(teamID: string): Promise<LeaveTeamResponse> {
+	return apiRequest<LeaveTeamResponse>(`/teams/${teamID}/leave`, {
+		method: 'POST',
+		defaultError: 'Failed to leave team'
 	});
 }
 

@@ -19,4 +19,5 @@ func TeamRouter(api *echo.Group, repo repository.Repository) {
 	r.GET("/:id", teamHandler.GetTeam)
 	r.PUT("/:id", teamHandler.UpdateTeam)
 	r.DELETE("/:id", teamHandler.DeleteTeam)
+	r.POST("/:id/leave", teamHandler.LeaveTeam)
 }
