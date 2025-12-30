@@ -16,7 +16,7 @@ import (
 )
 
 type createNotificationRequest struct {
-	Type   models.NotificationType `json:"type" validate:"required,oneof=discord telegram email"`
+	Type   models.NotificationType `json:"type" validate:"required,oneof=discord telegram slack email"`
 	Name   string                  `json:"name" validate:"required,min=1,max=255"`
 	Config json.RawMessage         `json:"config" validate:"required"`
 }
@@ -53,6 +53,10 @@ func (h *NotificationHandler) New(c echo.Context) error {
 
 	if len(req.Config) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Notification config is required")
+	}
+
+	if err := validateNotificationConfig(req.Type, req.Config); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid notification config")
 	}
 
 	userID, err := authutil.GetUserIDFromContext(c)

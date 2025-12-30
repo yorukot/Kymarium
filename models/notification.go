@@ -17,17 +17,22 @@ type Notification struct {
 
 // DiscordNotificationConfig describes the stored config for a Discord notification channel.
 type DiscordNotificationConfig struct {
-	WebhookURL string `json:"webhook_url"`
+	WebhookURL string `json:"webhook_url" validate:"required,url"`
+}
+
+// SlackNotificationConfig describes the stored config for a Slack notification channel.
+type SlackNotificationConfig struct {
+	WebhookURL string `json:"webhook_url" validate:"required,url"`
 }
 
 // TelegramNotificationConfig describes the stored config for a Telegram notification channel.
 type TelegramNotificationConfig struct {
-	BotToken string `json:"bot_token"`
-	ChatID   string `json:"chat_id"`
+	BotToken string `json:"bot_token" validate:"required,max=500"`
+	ChatID   string `json:"chat_id" validate:"required,max=100"`
 }
 
 type EmailNotificationConfig struct {
-	EmailAddress []string `json:"email_address"`
+	EmailAddress []string `json:"email_address" validate:"required,min=1,dive,required,email"`
 }
 
 type MonitorNotification struct {

@@ -3,7 +3,11 @@
 	import { validator } from '@felte/validator-zod';
 	import { z } from 'zod';
 	import { page } from '$app/state';
-	import { createNotification, updateNotification, deleteNotification } from '$lib/api/notification';
+	import {
+		createNotification,
+		updateNotification,
+		deleteNotification
+	} from '$lib/api/notification';
 	import { Input } from '$lib/components/ui/input';
 	import * as Field from '$lib/components/ui/field';
 	import { Button } from '$lib/components/ui/button';
@@ -70,7 +74,7 @@
 		setFields('config', { webhookUrl: '' });
 	}
 
-async function handleSubmit(values: FormValues) {
+	async function handleSubmit(values: FormValues) {
 		const teamID = page.params.teamID;
 		if (!teamID) {
 			toast.error('Missing team id');
@@ -101,11 +105,15 @@ async function handleSubmit(values: FormValues) {
 			onSaved?.(saved);
 		} catch (err) {
 			const message =
-				err instanceof Error ? err.message : notification ? 'Failed to update notification' : 'Failed to create notification';
+				err instanceof Error
+					? err.message
+					: notification
+						? 'Failed to update notification'
+						: 'Failed to create notification';
 			toast.error(message);
 			return { FORM_ERROR: message };
 		}
-}
+	}
 
 	async function handleDelete() {
 		if (!notification) return;
@@ -130,17 +138,19 @@ async function handleSubmit(values: FormValues) {
 		}
 	}
 
-$effect(() => {
-	if (notification) {
-		setFields('name', notification.name);
-		const cfg = notification.config as Partial<DiscordNotificationConfig> & {
-			webhook_url?: string;
-		};
-		setFields('config', { webhookUrl: cfg.webhookUrl ?? cfg.webhook_url ?? '' } as FormValues['config']);
-	} else {
-		resetForm();
-	}
-});
+	$effect(() => {
+		if (notification) {
+			setFields('name', notification.name);
+			const cfg = notification.config as Partial<DiscordNotificationConfig> & {
+				webhook_url?: string;
+			};
+			setFields('config', {
+				webhookUrl: cfg.webhookUrl ?? cfg.webhook_url ?? ''
+			} as FormValues['config']);
+		} else {
+			resetForm();
+		}
+	});
 </script>
 
 <form class="flex flex-col gap-4 h-full" use:form>
@@ -173,7 +183,12 @@ $effect(() => {
 		{#if notification}
 			<AlertDialog.Root bind:open={deleteOpen}>
 				<AlertDialog.Trigger>
-					<Button variant="destructive" type="button" disabled={isDeleting || $isSubmitting}>
+					<Button
+						class="w-full"
+						variant="destructive"
+						type="button"
+						disabled={isDeleting || $isSubmitting}
+					>
 						{isDeleting ? 'Deleting…' : 'Delete'}
 					</Button>
 				</AlertDialog.Trigger>
@@ -183,7 +198,8 @@ $effect(() => {
 						<AlertDialog.Header>
 							<AlertDialog.Title>Delete notification</AlertDialog.Title>
 							<AlertDialog.Description>
-								Are you sure you want to delete <strong>{notification.name}</strong>? This action cannot be undone.
+								Are you sure you want to delete <strong>{notification.name}</strong>? This action
+								cannot be undone.
 							</AlertDialog.Description>
 						</AlertDialog.Header>
 						<AlertDialog.Footer>
@@ -201,7 +217,13 @@ $effect(() => {
 			</AlertDialog.Root>
 		{/if}
 		<Button type="submit" disabled={$isSubmitting}>
-			{$isSubmitting ? (notification ? 'Saving…' : 'Creating…') : notification ? 'Save changes' : 'Create'}
+			{$isSubmitting
+				? notification
+					? 'Saving…'
+					: 'Creating…'
+				: notification
+					? 'Save changes'
+					: 'Create'}
 		</Button>
 	</Sheet.Footer>
 </form>

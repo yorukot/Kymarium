@@ -196,11 +196,13 @@ definitions:
     enum:
     - discord
     - telegram
+    - slack
     - email
     type: string
     x-enum-varnames:
     - NotificationTypeDiscord
     - NotificationTypeTelegram
+    - NotificationTypeSlack
     - NotificationTypeEmail
   models.StatusPageElementType:
     enum:

@@ -8,7 +8,7 @@
   import { cn } from '$lib/utils';
 	import { decidedNotificationIcon, notificationTypeMeta } from '$lib/utils/notification';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import type { Notification } from '../../types';
+	import type { EmailNotificationConfig, Notification } from '../../types';
 	import { testNotification, deleteNotification } from '$lib/api/notification';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';
@@ -26,10 +26,21 @@
 		switch (notification.type) {
 			case 'discord':
 				return 'Webhook';
+			case 'slack':
+				return 'Webhook';
 			case 'telegram':
 				return 'Bot & Chat';
 			case 'email':
-				return 'Email';
+				{
+					const cfg = notification.config as Partial<EmailNotificationConfig> & {
+						email_address?: string[];
+					};
+					const recipients = cfg.emailAddress ?? cfg.email_address ?? [];
+					if (recipients.length === 0) {
+						return 'Email';
+					}
+					return `${recipients.length} recipient${recipients.length > 1 ? 's' : ''}`;
+				}
 		}
 	}
 

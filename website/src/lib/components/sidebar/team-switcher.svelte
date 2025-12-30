@@ -77,13 +77,12 @@
 				sideOffset={4}
 			>
 				<DropdownMenu.Label class="text-muted-foreground text-xs">Teams</DropdownMenu.Label>
-				{#each teams as team, index (team.name)}
+				{#each teams as team (team.name)}
 					<DropdownMenu.Item onSelect={() => goto(`/${team.id}`)} class="gap-2 p-2">
 						<div class="flex size-6 items-center justify-center">
 							<img src={avatarMap[team.id]} alt={team.name} class="rounded-sm" loading="lazy" />
 						</div>
 						<span class="truncate">{team.name}</span>
-						<DropdownMenu.Shortcut>⌘{index + 1}</DropdownMenu.Shortcut>
 					</DropdownMenu.Item>
 				{/each}
 				<DropdownMenu.Separator />

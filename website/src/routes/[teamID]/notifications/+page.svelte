@@ -11,11 +11,11 @@
 
 	let createOpen = $state(false);
 	let editingNotification = $state<Notification | null>(null);
-	type SupportedNotificationType = Extract<NotificationType, 'discord' | 'telegram'>;
+	type SupportedNotificationType = Extract<NotificationType, 'discord' | 'slack' | 'telegram' | 'email'>;
 	let selectedType = $state<SupportedNotificationType>('discord');
 	let notifications = $derived<Notification[]>(data.notifications ?? []);
 
-	const pickerOrder: SupportedNotificationType[] = ['telegram', 'discord'];
+	const pickerOrder: SupportedNotificationType[] = ['email', 'slack', 'telegram', 'discord'];
 	const typeOptions = pickerOrder.map((type) => ({
 		type,
 		...notificationTypeMeta[type]
@@ -28,7 +28,6 @@
 	}
 
 	function startEdit(notification: Notification) {
-		if (notification.type === 'email') return;
 		selectedType = notification.type as SupportedNotificationType;
 		editingNotification = notification;
 		createOpen = true;

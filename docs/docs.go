@@ -2625,11 +2625,13 @@ const docTemplate = `{
             "enum": [
                 "discord",
                 "telegram",
+                "slack",
                 "email"
             ],
             "x-enum-varnames": [
                 "NotificationTypeDiscord",
                 "NotificationTypeTelegram",
+                "NotificationTypeSlack",
                 "NotificationTypeEmail"
             ]
         },

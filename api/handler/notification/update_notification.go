@@ -16,9 +16,9 @@ import (
 )
 
 type updateNotificationRequest struct {
-	Type   *models.NotificationType `json:"type" validate:"omitempty,oneof=discord telegram email"`
-	Name   *string                  `json:"name" validate:"omitempty,min=1,max=255"`
-	Config *json.RawMessage         `json:"config"`
+	Type   models.NotificationType `json:"type" validate:"omitempty,oneof=discord telegram slack email"`
+	Name   string                  `json:"name" validate:"omitempty,min=1,max=255"`
+	Config json.RawMessage         `json:"config"`
 }
 
 // UpdateNotification godoc
@@ -53,16 +53,16 @@ func (h *NotificationHandler) UpdateNotification(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
 
-	if req.Type == nil && req.Name == nil && req.Config == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "At least one field must be provided to update")
-	}
-
 	if err := validator.New().Struct(req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
 
-	if req.Config != nil && len(*req.Config) == 0 {
+	if len(req.Config) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Notification config cannot be empty")
+	}
+
+	if err := validateNotificationConfig(req.Type, req.Config); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid notification config")
 	}
 
 	userID, err := authutil.GetUserIDFromContext(c)
@@ -106,17 +106,9 @@ func (h *NotificationHandler) UpdateNotification(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Notification not found")
 	}
 
-	if req.Type != nil {
-		existing.Type = *req.Type
-	}
-
-	if req.Name != nil {
-		existing.Name = *req.Name
-	}
-
-	if req.Config != nil {
-		existing.Config = *req.Config
-	}
+	existing.Type = req.Type
+	existing.Name = req.Name
+	existing.Config = req.Config
 
 	existing.UpdatedAt = time.Now()
 

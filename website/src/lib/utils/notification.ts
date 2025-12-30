@@ -1,13 +1,15 @@
-import type { Notification, NotificationType } from '../../types';
+import type { Notification, NotificationType } from '$lib/types';
 
 export function decidedNotificationIcon(notification: Notification): string {
 	switch (notification.type) {
 		case 'discord':
 			return 'ri:discord-fill';
+		case 'slack':
+			return 'ri:slack-fill';
 		case 'telegram':
 			return 'ri:telegram-fill';
 		case 'email':
-			return 'ri:mail-fill';
+			return 'lucide:mail';
 		default:
 			return 'ri:notification-4-fill';
 	}
@@ -31,9 +33,14 @@ export const notificationTypeMeta: Record<
 		icon: 'ri:discord-fill',
 		description: 'Send alerts to a Discord webhook'
 	},
+	slack: {
+		label: 'Slack',
+		icon: 'ri:slack-fill',
+		description: 'Send alerts to a Slack webhook'
+	},
 	email: {
 		label: 'Email',
-		icon: 'ri:mail-fill',
+		icon: 'lucide:mail',
 		description: 'Send alerts to inboxes'
 	}
 };

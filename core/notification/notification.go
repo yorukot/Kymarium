@@ -27,10 +27,12 @@ func SendWithClient(ctx context.Context, client *http.Client, notification model
 	switch notification.Type {
 	case models.NotificationTypeDiscord:
 		return sendDiscord(ctx, client, notification, title, description, status)
+	case models.NotificationTypeSlack:
+		return sendSlack(ctx, client, notification, title, description, status)
 	case models.NotificationTypeTelegram:
 		return sendTelegram(ctx, client, notification, title, description, status)
 	case models.NotificationTypeEmail:
-		return fmt.Errorf("email notification not implemented")
+		return sendEmail(ctx, client, notification, title, description, status)
 	default:
 		return fmt.Errorf("unsupported notification type %q", notification.Type)
 	}

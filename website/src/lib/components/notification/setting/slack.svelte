@@ -3,11 +3,7 @@
 	import { validator } from '@felte/validator-zod';
 	import { z } from 'zod';
 	import { page } from '$app/state';
-	import {
-		createNotification,
-		updateNotification,
-		deleteNotification
-	} from '$lib/api/notification';
+	import { createNotification, updateNotification, deleteNotification } from '$lib/api/notification';
 	import { Input } from '$lib/components/ui/input';
 	import * as Field from '$lib/components/ui/field';
 	import { Button } from '$lib/components/ui/button';
@@ -15,7 +11,7 @@
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { cn } from '$lib/utils';
 	import { toast } from 'svelte-sonner';
-	import type { Notification, TelegramNotificationConfig } from '../../../types';
+	import type { Notification, SlackNotificationConfig } from '../../../types';
 
 	let {
 		notification = null,
@@ -30,11 +26,10 @@
 	} = $props();
 
 	const formSchema = z.object({
-		type: z.literal('telegram'),
+		type: z.literal('slack'),
 		name: z.string().min(1, 'Name is required'),
 		config: z.object({
-			botToken: z.string().min(1, 'Bot token is required'),
-			chatId: z.string().min(1, 'Chat ID is required')
+			webhookUrl: z.string().url('Enter a valid webhook URL')
 		})
 	});
 
@@ -42,23 +37,19 @@
 
 	function deriveInitialValues(): FormValues {
 		if (notification) {
-			const cfg = notification.config as Partial<TelegramNotificationConfig> & {
-				bot_token?: string;
-				chat_id?: string;
+			const cfg = notification.config as Partial<SlackNotificationConfig> & {
+				webhook_url?: string;
 			};
 			return {
-				type: 'telegram',
+				type: 'slack',
 				name: notification.name,
-				config: {
-					botToken: cfg.botToken ?? cfg.bot_token ?? '',
-					chatId: cfg.chatId ?? cfg.chat_id ?? ''
-				}
+				config: { webhookUrl: cfg.webhookUrl ?? cfg.webhook_url ?? '' }
 			};
 		}
 		return {
-			type: 'telegram',
+			type: 'slack',
 			name: '',
-			config: { botToken: '', chatId: '' }
+			config: { webhookUrl: '' }
 		};
 	}
 
@@ -76,7 +67,7 @@
 	function resetForm() {
 		reset();
 		setFields('name', '');
-		setFields('config', { botToken: '', chatId: '' });
+		setFields('config', { webhookUrl: '' });
 	}
 
 	async function handleSubmit(values: FormValues) {
@@ -90,8 +81,7 @@
 			const payload = {
 				name: values.name,
 				config: {
-					bot_token: values.config.botToken,
-					chat_id: values.config.chatId
+					webhook_url: values.config.webhookUrl
 				}
 			};
 
@@ -101,7 +91,7 @@
 				saved = res.data;
 				toast.success('Notification updated');
 			} else {
-				const res = await createNotification(teamID, { type: 'telegram', ...payload });
+				const res = await createNotification(teamID, { type: 'slack', ...payload });
 				saved = res.data;
 				toast.success('Notification created');
 			}
@@ -111,11 +101,7 @@
 			onSaved?.(saved);
 		} catch (err) {
 			const message =
-				err instanceof Error
-					? err.message
-					: notification
-						? 'Failed to update notification'
-						: 'Failed to create notification';
+				err instanceof Error ? err.message : notification ? 'Failed to update notification' : 'Failed to create notification';
 			toast.error(message);
 			return { FORM_ERROR: message };
 		}
@@ -146,15 +132,11 @@
 
 	$effect(() => {
 		if (notification) {
-			const cfg = notification.config as Partial<TelegramNotificationConfig> & {
-				bot_token?: string;
-				chat_id?: string;
-			};
 			setFields('name', notification.name);
-			setFields('config', {
-				botToken: cfg.botToken ?? cfg.bot_token ?? '',
-				chatId: cfg.chatId ?? cfg.chat_id ?? ''
-			} as FormValues['config']);
+			const cfg = notification.config as Partial<SlackNotificationConfig> & {
+				webhook_url?: string;
+			};
+			setFields('config', { webhookUrl: cfg.webhookUrl ?? cfg.webhook_url ?? '' } as FormValues['config']);
 		} else {
 			resetForm();
 		}
@@ -165,24 +147,24 @@
 	<Field.Set>
 		<div class="space-y-2">
 			<Field.Label for="name">Name</Field.Label>
-			<Input id="name" name="name" placeholder="On-call alerts" />
+			<Input id="name" name="name" placeholder="Slack alerts" />
 			{#if $errors.name}
 				<Field.Description class="text-destructive">{$errors.name[0]}</Field.Description>
 			{/if}
 		</div>
 
 		<div class="space-y-2">
-			<Field.Label for="config.botToken">Bot token</Field.Label>
-			<Input id="config.botToken" name="config.botToken" placeholder="123456:ABC-DEF" />
-			{#if $errors.config?.botToken}
-				<Field.Description class="text-destructive">{$errors.config.botToken[0]}</Field.Description>
-			{/if}
-		</div>
-		<div class="space-y-2">
-			<Field.Label for="config.chatId">Chat ID</Field.Label>
-			<Input id="config.chatId" name="config.chatId" placeholder="-1001234567890" />
-			{#if $errors.config?.chatId}
-				<Field.Description class="text-destructive">{$errors.config.chatId[0]}</Field.Description>
+			<Field.Label for="config.webhookUrl">Webhook URL</Field.Label>
+			<Input
+				id="config.webhookUrl"
+				name="config.webhookUrl"
+				type="url"
+				placeholder="https://hooks.slack.com/services/..."
+			/>
+			{#if $errors.config?.webhookUrl}
+				<Field.Description class="text-destructive">
+					{$errors.config.webhookUrl[0]}
+				</Field.Description>
 			{/if}
 		</div>
 	</Field.Set>
@@ -191,12 +173,7 @@
 		{#if notification}
 			<AlertDialog.Root bind:open={deleteOpen}>
 				<AlertDialog.Trigger>
-					<Button
-						class="w-full"
-						variant="destructive"
-						type="button"
-						disabled={isDeleting || $isSubmitting}
-					>
+					<Button variant="destructive" type="button" disabled={isDeleting || $isSubmitting}>
 						{isDeleting ? 'Deleting…' : 'Delete'}
 					</Button>
 				</AlertDialog.Trigger>
@@ -206,8 +183,7 @@
 						<AlertDialog.Header>
 							<AlertDialog.Title>Delete notification</AlertDialog.Title>
 							<AlertDialog.Description>
-								Are you sure you want to delete <strong>{notification.name}</strong>? This action
-								cannot be undone.
+								Are you sure you want to delete <strong>{notification.name}</strong>? This action cannot be undone.
 							</AlertDialog.Description>
 						</AlertDialog.Header>
 						<AlertDialog.Footer>
@@ -225,13 +201,7 @@
 			</AlertDialog.Root>
 		{/if}
 		<Button type="submit" disabled={$isSubmitting}>
-			{$isSubmitting
-				? notification
-					? 'Saving…'
-					: 'Creating…'
-				: notification
-					? 'Save changes'
-					: 'Create'}
+			{$isSubmitting ? (notification ? 'Saving…' : 'Creating…') : notification ? 'Save changes' : 'Create'}
 		</Button>
 	</Sheet.Footer>
 </form>

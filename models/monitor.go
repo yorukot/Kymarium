@@ -28,6 +28,7 @@ type NotificationType string
 const (
 	NotificationTypeDiscord  NotificationType = "discord"
 	NotificationTypeTelegram NotificationType = "telegram"
+	NotificationTypeSlack    NotificationType = "slack"
 	NotificationTypeEmail    NotificationType = "email"
 )
 

@@ -16,6 +16,9 @@ export type NotificationCreateRequest = {
 		| {
 				bot_token: string;
 				chat_id: string;
+		  }
+		| {
+				email_address: string[];
 		  };
 };
 
@@ -42,6 +45,9 @@ export type NotificationUpdateRequest = Partial<{
 		| {
 				bot_token: string;
 				chat_id: string;
+		  }
+		| {
+				email_address: string[];
 		  };
 }>;
 

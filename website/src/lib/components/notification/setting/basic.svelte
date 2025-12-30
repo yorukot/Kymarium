@@ -3,10 +3,12 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import Icon from '@iconify/svelte';
 	import DiscordForm from './discord.svelte';
+	import SlackForm from './slack.svelte';
 	import TelegramForm from './telegram.svelte';
+	import EmailForm from './email.svelte';
 	import type { NotificationType, Notification } from '../../../types';
 
-	type SupportedNotificationType = Extract<NotificationType, 'discord' | 'telegram'>;
+	type SupportedNotificationType = Extract<NotificationType, 'discord' | 'slack' | 'telegram' | 'email'>;
 
 	let {
 		open = $bindable(false),
@@ -45,9 +47,19 @@
 
 			{#if selectedType === 'discord'}
 				<DiscordForm
-					notification={notification}
-					onSaved={onSaved}
-					onDeleted={onDeleted}
+					{notification}
+					{onSaved}
+					{onDeleted}
+					onClose={() => {
+						open = false;
+						notification = null;
+					}}
+				/>
+			{:else if selectedType === 'slack'}
+				<SlackForm
+					{notification}
+					{onSaved}
+					{onDeleted}
 					onClose={() => {
 						open = false;
 						notification = null;
@@ -55,9 +67,19 @@
 				/>
 			{:else if selectedType === 'telegram'}
 				<TelegramForm
-					notification={notification}
-					onSaved={onSaved}
-					onDeleted={onDeleted}
+					{notification}
+					{onSaved}
+					{onDeleted}
+					onClose={() => {
+						open = false;
+						notification = null;
+					}}
+				/>
+			{:else if selectedType === 'email'}
+				<EmailForm
+					{notification}
+					{onSaved}
+					{onDeleted}
 					onClose={() => {
 						open = false;
 						notification = null;

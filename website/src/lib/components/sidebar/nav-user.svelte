@@ -72,12 +72,7 @@
 						</div>
 					</div>
 				</DropdownMenu.Label>
-				<DropdownMenu.Separator />
 				<DropdownMenu.Group>
-					<DropdownMenu.Item>
-						<Icon icon="lucide:sparkles" />
-						Upgrade to Pro
-					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Group>
@@ -85,17 +80,9 @@
 						<Icon icon="lucide:badge-check" />
 						Account
 					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<Icon icon="lucide:credit-card" />
-						Billing
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<Icon icon="lucide:bell" />
-						Notifications
-					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item onclick={handleLogout}>
+				<DropdownMenu.Item onclick={handleLogout} variant="destructive">
 					<Icon icon="lucide:log-out" />
 					Log out
 				</DropdownMenu.Item>

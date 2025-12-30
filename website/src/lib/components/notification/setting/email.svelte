@@ -8,14 +8,15 @@
 		updateNotification,
 		deleteNotification
 	} from '$lib/api/notification';
-	import { Input } from '$lib/components/ui/input';
 	import * as Field from '$lib/components/ui/field';
 	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { cn } from '$lib/utils';
 	import { toast } from 'svelte-sonner';
-	import type { Notification, TelegramNotificationConfig } from '../../../types';
+	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
+	import type { EmailNotificationConfig, Notification } from '../../../types';
 
 	let {
 		notification = null,
@@ -29,12 +30,27 @@
 		onClose: () => void;
 	} = $props();
 
+	const emailSchema = z.string().email();
+
+	function parseEmailList(value: string): string[] {
+		return value
+			.split(/[,\n]/)
+			.map((email) => email.trim())
+			.filter((email) => email.length > 0);
+	}
+
 	const formSchema = z.object({
-		type: z.literal('telegram'),
+		type: z.literal('email'),
 		name: z.string().min(1, 'Name is required'),
 		config: z.object({
-			botToken: z.string().min(1, 'Bot token is required'),
-			chatId: z.string().min(1, 'Chat ID is required')
+			emailAddress: z
+				.string()
+				.min(1, 'At least one email is required')
+				.refine((value) => {
+					const emails = parseEmailList(value);
+					if (emails.length === 0) return false;
+					return emails.every((email) => emailSchema.safeParse(email).success);
+				}, 'Enter valid email addresses')
 		})
 	});
 
@@ -42,23 +58,22 @@
 
 	function deriveInitialValues(): FormValues {
 		if (notification) {
-			const cfg = notification.config as Partial<TelegramNotificationConfig> & {
-				bot_token?: string;
-				chat_id?: string;
+			const cfg = notification.config as Partial<EmailNotificationConfig> & {
+				email_address?: string[];
 			};
+			const recipients = cfg.emailAddress ?? cfg.email_address ?? [];
 			return {
-				type: 'telegram',
+				type: 'email',
 				name: notification.name,
 				config: {
-					botToken: cfg.botToken ?? cfg.bot_token ?? '',
-					chatId: cfg.chatId ?? cfg.chat_id ?? ''
+					emailAddress: recipients.join('\n')
 				}
 			};
 		}
 		return {
-			type: 'telegram',
+			type: 'email',
 			name: '',
-			config: { botToken: '', chatId: '' }
+			config: { emailAddress: '' }
 		};
 	}
 
@@ -76,7 +91,7 @@
 	function resetForm() {
 		reset();
 		setFields('name', '');
-		setFields('config', { botToken: '', chatId: '' });
+		setFields('config', { emailAddress: '' });
 	}
 
 	async function handleSubmit(values: FormValues) {
@@ -86,12 +101,17 @@
 			return;
 		}
 
+		const recipients = parseEmailList(values.config.emailAddress);
+		if (recipients.length === 0) {
+			toast.error('Add at least one valid email');
+			return;
+		}
+
 		try {
 			const payload = {
 				name: values.name,
 				config: {
-					bot_token: values.config.botToken,
-					chat_id: values.config.chatId
+					email_address: recipients
 				}
 			};
 
@@ -101,7 +121,7 @@
 				saved = res.data;
 				toast.success('Notification updated');
 			} else {
-				const res = await createNotification(teamID, { type: 'telegram', ...payload });
+				const res = await createNotification(teamID, { type: 'email', ...payload });
 				saved = res.data;
 				toast.success('Notification created');
 			}
@@ -146,15 +166,12 @@
 
 	$effect(() => {
 		if (notification) {
-			const cfg = notification.config as Partial<TelegramNotificationConfig> & {
-				bot_token?: string;
-				chat_id?: string;
+			const cfg = notification.config as Partial<EmailNotificationConfig> & {
+				email_address?: string[];
 			};
+			const recipients = cfg.emailAddress ?? cfg.email_address ?? [];
 			setFields('name', notification.name);
-			setFields('config', {
-				botToken: cfg.botToken ?? cfg.bot_token ?? '',
-				chatId: cfg.chatId ?? cfg.chat_id ?? ''
-			} as FormValues['config']);
+			setFields('config', { emailAddress: recipients.join('\n') } as FormValues['config']);
 		} else {
 			resetForm();
 		}
@@ -165,24 +182,25 @@
 	<Field.Set>
 		<div class="space-y-2">
 			<Field.Label for="name">Name</Field.Label>
-			<Input id="name" name="name" placeholder="On-call alerts" />
+			<Input id="name" name="name" placeholder="On-call email" />
 			{#if $errors.name}
 				<Field.Description class="text-destructive">{$errors.name[0]}</Field.Description>
 			{/if}
 		</div>
 
 		<div class="space-y-2">
-			<Field.Label for="config.botToken">Bot token</Field.Label>
-			<Input id="config.botToken" name="config.botToken" placeholder="123456:ABC-DEF" />
-			{#if $errors.config?.botToken}
-				<Field.Description class="text-destructive">{$errors.config.botToken[0]}</Field.Description>
-			{/if}
-		</div>
-		<div class="space-y-2">
-			<Field.Label for="config.chatId">Chat ID</Field.Label>
-			<Input id="config.chatId" name="config.chatId" placeholder="-1001234567890" />
-			{#if $errors.config?.chatId}
-				<Field.Description class="text-destructive">{$errors.config.chatId[0]}</Field.Description>
+			<Field.Label for="config.emailAddress">Recipients</Field.Label>
+			<Field.Description>One email per line or comma-separated.</Field.Description>
+			<Textarea
+				id="config.emailAddress"
+				name="config.emailAddress"
+				placeholder="alerts@example.com\nstatus@example.com"
+				rows={4}
+			/>
+			{#if $errors.config?.emailAddress}
+				<Field.Description class="text-destructive"
+					>{$errors.config.emailAddress[0]}</Field.Description
+				>
 			{/if}
 		</div>
 	</Field.Set>
