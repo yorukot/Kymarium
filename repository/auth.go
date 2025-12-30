@@ -43,7 +43,7 @@ func (r *PGRepository) GetUserByEmail(ctx context.Context, tx pgx.Tx, email stri
 
 // GetAccountByEmail retrieves an account by email address
 func (r *PGRepository) GetAccountByEmail(ctx context.Context, tx pgx.Tx, email string) (*models.Account, error) {
-	query := `SELECT id, provider, provider_user_id, user_id, email, created_at, updated_at
+	query := `SELECT id, provider, provider_user_id, user_id, email, is_primary, created_at, updated_at
 	          FROM accounts
 	          WHERE email = $1
 	          LIMIT 1`
@@ -55,6 +55,7 @@ func (r *PGRepository) GetAccountByEmail(ctx context.Context, tx pgx.Tx, email s
 		&account.ProviderUserID,
 		&account.UserID,
 		&account.Email,
+		&account.IsPrimary,
 		&account.CreatedAt,
 		&account.UpdatedAt,
 	)
@@ -70,11 +71,31 @@ func (r *PGRepository) GetAccountByEmail(ctx context.Context, tx pgx.Tx, email s
 	return &account, nil
 }
 
+// GetUserIDByEmail retrieves the distinct user ID for an email if it exists.
+func (r *PGRepository) GetUserIDByEmail(ctx context.Context, tx pgx.Tx, email string) (*int64, error) {
+	query := `SELECT DISTINCT user_id FROM accounts WHERE email = $1`
+
+	var userIDs []int64
+	if err := pgxscan.Select(ctx, tx, &userIDs, query, email); err != nil {
+		return nil, err
+	}
+
+	if len(userIDs) == 0 {
+		return nil, nil
+	}
+
+	if len(userIDs) > 1 {
+		return nil, errors.New("email belongs to multiple users")
+	}
+
+	return &userIDs[0], nil
+}
+
 // GetAccountWithUserByProviderUserID retrieves the account and its associated user
 func (r *PGRepository) GetAccountWithUserByProviderUserID(ctx context.Context, db pgx.Tx, provider models.Provider, providerUserID string) (*models.Account, *models.User, error) {
 	query := `
 		SELECT
-			a.id AS "a.id", a.provider AS "a.provider", a.provider_user_id AS "a.provider_user_id", a.user_id AS "a.user_id",
+			a.id AS "a.id", a.provider AS "a.provider", a.provider_user_id AS "a.provider_user_id", a.user_id AS "a.user_id", a.is_primary AS "a.is_primary",
 			u.id AS "u.id", u.verified AS "u.verified", u.verify_code AS "u.verify_code", u.created_at AS "u.created_at", u.updated_at AS "u.updated_at"
 		FROM accounts a
 		JOIN users u ON a.user_id = u.id
@@ -128,8 +149,8 @@ func (r *PGRepository) GetRefreshTokenByToken(ctx context.Context, tx pgx.Tx, to
 
 // CreateAccount creates a new account
 func (r *PGRepository) CreateAccount(ctx context.Context, tx pgx.Tx, account models.Account) error {
-	query := `INSERT INTO accounts (id, provider, provider_user_id, user_id, email, created_at, updated_at)
-	          VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	query := `INSERT INTO accounts (id, provider, provider_user_id, user_id, email, is_primary, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	_, err := tx.Exec(ctx, query,
 		account.ID,
@@ -137,6 +158,7 @@ func (r *PGRepository) CreateAccount(ctx context.Context, tx pgx.Tx, account mod
 		account.ProviderUserID,
 		account.UserID,
 		account.Email,
+		account.IsPrimary,
 		account.CreatedAt,
 		account.UpdatedAt,
 	)
@@ -165,8 +187,8 @@ func (r *PGRepository) CreateUserAndAccount(ctx context.Context, tx pgx.Tx, user
 	}
 
 	// Insert account
-	accountQuery := `INSERT INTO accounts (id, provider, provider_user_id, user_id, email, created_at, updated_at)
-	                 VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	accountQuery := `INSERT INTO accounts (id, provider, provider_user_id, user_id, email, is_primary, created_at, updated_at)
+	                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 
 	_, err = tx.Exec(ctx, accountQuery,
 		account.ID,
@@ -174,6 +196,7 @@ func (r *PGRepository) CreateUserAndAccount(ctx context.Context, tx pgx.Tx, user
 		account.ProviderUserID,
 		account.UserID,
 		account.Email,
+		account.IsPrimary,
 		account.CreatedAt,
 		account.UpdatedAt,
 	)

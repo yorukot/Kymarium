@@ -118,6 +118,12 @@ func (m *MockRepository) GetAccountByEmail(ctx context.Context, tx pgx.Tx, email
 	return account, args.Error(1)
 }
 
+func (m *MockRepository) GetUserIDByEmail(ctx context.Context, tx pgx.Tx, email string) (*int64, error) {
+	args := m.Called(ctx, tx, email)
+	userID, _ := args.Get(0).(*int64)
+	return userID, args.Error(1)
+}
+
 func (m *MockRepository) GetAccountWithUserByProviderUserID(ctx context.Context, tx pgx.Tx, provider models.Provider, providerUserID string) (*models.Account, *models.User, error) {
 	args := m.Called(ctx, tx, provider, providerUserID)
 	account, _ := args.Get(0).(*models.Account)
@@ -181,6 +187,11 @@ func (m *MockRepository) CreateTeam(ctx context.Context, tx pgx.Tx, team models.
 
 func (m *MockRepository) CreateTeamMember(ctx context.Context, tx pgx.Tx, member models.TeamMember) error {
 	args := m.Called(ctx, tx, member)
+	return args.Error(0)
+}
+
+func (m *MockRepository) DeleteTeamMemberByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64) error {
+	args := m.Called(ctx, tx, teamID, userID)
 	return args.Error(0)
 }
 
@@ -424,4 +435,39 @@ func (m *MockRepository) ListIncidentsByMonitorIDWithinRange(ctx context.Context
 	args := m.Called(ctx, tx, monitorID, start, end)
 	incidents, _ := args.Get(0).([]models.Incident)
 	return incidents, args.Error(1)
+}
+
+func (m *MockRepository) CreateTeamInvite(ctx context.Context, tx pgx.Tx, invite models.TeamInvite) error {
+	args := m.Called(ctx, tx, invite)
+	return args.Error(0)
+}
+
+func (m *MockRepository) GetTeamInviteByID(ctx context.Context, tx pgx.Tx, teamID, inviteID int64) (*models.TeamInvite, error) {
+	args := m.Called(ctx, tx, teamID, inviteID)
+	invite, _ := args.Get(0).(*models.TeamInvite)
+	return invite, args.Error(1)
+}
+
+func (m *MockRepository) GetTeamInviteByToken(ctx context.Context, tx pgx.Tx, token string) (*models.TeamInvite, error) {
+	args := m.Called(ctx, tx, token)
+	invite, _ := args.Get(0).(*models.TeamInvite)
+	return invite, args.Error(1)
+}
+
+func (m *MockRepository) GetPendingTeamInviteByTeamAndUser(ctx context.Context, tx pgx.Tx, teamID, userID int64) (*models.TeamInvite, error) {
+	args := m.Called(ctx, tx, teamID, userID)
+	invite, _ := args.Get(0).(*models.TeamInvite)
+	return invite, args.Error(1)
+}
+
+func (m *MockRepository) ListTeamInvitesByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.TeamInvite, error) {
+	args := m.Called(ctx, tx, teamID)
+	invites, _ := args.Get(0).([]models.TeamInvite)
+	return invites, args.Error(1)
+}
+
+func (m *MockRepository) UpdateTeamInviteStatus(ctx context.Context, tx pgx.Tx, inviteID int64, status models.InviteStatus, updatedAt time.Time, acceptedAt, rejectedAt, canceledAt *time.Time) (*models.TeamInvite, error) {
+	args := m.Called(ctx, tx, inviteID, status, updatedAt, acceptedAt, rejectedAt, canceledAt)
+	invite, _ := args.Get(0).(*models.TeamInvite)
+	return invite, args.Error(1)
 }

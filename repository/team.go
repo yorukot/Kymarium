@@ -103,6 +103,20 @@ func (r *PGRepository) CreateTeamMember(ctx context.Context, tx pgx.Tx, member m
 	return err
 }
 
+// DeleteTeamMemberByUserID removes a team member by user ID.
+func (r *PGRepository) DeleteTeamMemberByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64) error {
+	result, err := tx.Exec(ctx, `DELETE FROM team_members WHERE team_id = $1 AND user_id = $2`, teamID, userID)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	return nil
+}
+
 // UpdateTeamName updates a team's name.
 func (r *PGRepository) UpdateTeamName(ctx context.Context, tx pgx.Tx, teamID int64, name string, updatedAt time.Time) (*models.Team, error) {
 	query := `

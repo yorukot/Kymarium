@@ -61,6 +61,7 @@ func GenerateUser(registerRequest registerRequest) (models.User, models.Account,
 		ProviderUserID: strconv.FormatInt(userID, 10),
 		UserID:         userID,
 		Email:          registerRequest.Email,
+		IsPrimary:      true,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}
@@ -334,6 +335,7 @@ func generateUserFromOAuthUserInfo(userInfo *oidc.UserInfo, provider models.Prov
 		Provider:       provider,
 		ProviderUserID: userInfo.Subject,
 		Email:          userInfo.Email,
+		IsPrimary:      true,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}
@@ -355,6 +357,7 @@ func generateUserAccountFromOAuthUserInfo(userInfo *oidc.UserInfo, provider mode
 		Provider:       provider,
 		ProviderUserID: userInfo.Subject,
 		Email:          userInfo.Email,
+		IsPrimary:      false,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}

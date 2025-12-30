@@ -21,7 +21,7 @@ type Account struct {
 	ProviderUserID string    `json:"provider_user_id" db:"provider_user_id" example:"user123"`  // User ID from the provider
 	UserID         int64     `json:"user_id,string" db:"user_id" example:"175928847299117063"`  // Associated user ID
 	Email          string    `json:"email" db:"email" example:"user@example.com"`               // User's email address
-	Primary        bool      `json:"primary" db:"primary" example:"true"`                       // Whether this is the primary account
+	IsPrimary      bool      `json:"is_primary" db:"is_primary" example:"true"`                 // Whether this is the primary account
 	CreatedAt      time.Time `json:"created_at" db:"created_at" example:"2023-01-01T12:00:00Z"` // Timestamp when the account was created
 	UpdatedAt      time.Time `json:"updated_at" db:"updated_at" example:"2023-01-01T12:00:00Z"` // Timestamp when the account was last updated
 }

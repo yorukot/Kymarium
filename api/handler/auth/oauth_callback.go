@@ -112,8 +112,26 @@ func (h *AuthHandler) OAuthCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get account")
 	}
 
+	emailUserID, err := h.Repo.GetUserIDByEmail(c.Request().Context(), tx, userInfo.Email)
+	if err != nil {
+		zap.L().Error("Failed to check email ownership", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to check email ownership")
+	}
+
+	if emailUserID != nil && userID != 0 && *emailUserID != userID {
+		return echo.NewHTTPError(http.StatusConflict, "Email is already linked to another user")
+	}
+
+	if emailUserID != nil && account != nil && *emailUserID != account.UserID {
+		return echo.NewHTTPError(http.StatusConflict, "Email is already linked to another user")
+	}
+
 	// If the account is not found and the userID is not zero, it means the user is already registered
 	// so we need to link the account to the user
+	if user == nil && userID == 0 && emailUserID != nil {
+		userID = *emailUserID
+	}
+
 	if user == nil && userID != 0 {
 		// Link the account to the user
 		newAccount, err := generateUserAccountFromOAuthUserInfo(userInfo, provider, userID)

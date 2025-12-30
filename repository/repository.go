@@ -34,6 +34,7 @@ type Repository interface {
 	// Auth
 	GetUserByEmail(ctx context.Context, tx pgx.Tx, email string) (*models.User, error)
 	GetAccountByEmail(ctx context.Context, tx pgx.Tx, email string) (*models.Account, error)
+	GetUserIDByEmail(ctx context.Context, tx pgx.Tx, email string) (*int64, error)
 	GetAccountWithUserByProviderUserID(ctx context.Context, tx pgx.Tx, provider models.Provider, providerUserID string) (*models.Account, *models.User, error)
 	GetRefreshTokenByToken(ctx context.Context, tx pgx.Tx, token string) (*models.RefreshToken, error)
 	CreateAccount(ctx context.Context, tx pgx.Tx, account models.Account) error
@@ -52,8 +53,17 @@ type Repository interface {
 	GetTeamMemberByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64) (*models.TeamMember, error)
 	CreateTeam(ctx context.Context, tx pgx.Tx, team models.Team) error
 	CreateTeamMember(ctx context.Context, tx pgx.Tx, member models.TeamMember) error
+	DeleteTeamMemberByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64) error
 	UpdateTeamName(ctx context.Context, tx pgx.Tx, teamID int64, name string, updatedAt time.Time) (*models.Team, error)
 	DeleteTeam(ctx context.Context, tx pgx.Tx, teamID int64) error
+
+	// Team Invites
+	CreateTeamInvite(ctx context.Context, tx pgx.Tx, invite models.TeamInvite) error
+	GetTeamInviteByID(ctx context.Context, tx pgx.Tx, teamID, inviteID int64) (*models.TeamInvite, error)
+	GetTeamInviteByToken(ctx context.Context, tx pgx.Tx, token string) (*models.TeamInvite, error)
+	GetPendingTeamInviteByTeamAndUser(ctx context.Context, tx pgx.Tx, teamID, userID int64) (*models.TeamInvite, error)
+	ListTeamInvitesByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.TeamInvite, error)
+	UpdateTeamInviteStatus(ctx context.Context, tx pgx.Tx, inviteID int64, status models.InviteStatus, updatedAt time.Time, acceptedAt, rejectedAt, canceledAt *time.Time) (*models.TeamInvite, error)
 
 	// Notifications
 	ListNotificationsByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.Notification, error)
