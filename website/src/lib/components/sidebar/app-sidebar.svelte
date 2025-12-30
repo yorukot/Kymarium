@@ -10,7 +10,8 @@
 		{ title: 'Monitors', url: 'monitors', icon: 'lucide:monitor' },
 		{ title: 'Status pages', url: 'status-pages', icon: 'lucide:layout-template' },
 		{ title: 'Incidents', url: 'incidents', icon: 'lucide:alert-triangle' },
-		{ title: 'Notifications', url: 'notifications', icon: 'lucide:bell' }
+		{ title: 'Notifications', url: 'notifications', icon: 'lucide:bell' },
+		{ title: 'Members', url: 'members', icon: 'lucide:users' }
 	];
 
 	let { user, teams }: { user: User; teams: Team[]; } =  $props();

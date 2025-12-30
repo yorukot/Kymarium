@@ -51,6 +51,7 @@ type Repository interface {
 	ListTeamsByUserID(ctx context.Context, tx pgx.Tx, userID int64) ([]models.TeamWithRole, error)
 	GetTeamForUser(ctx context.Context, tx pgx.Tx, teamID, userID int64) (*models.TeamWithRole, error)
 	GetTeamMemberByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64) (*models.TeamMember, error)
+	ListTeamMembersByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.TeamMemberWithUser, error)
 	CreateTeam(ctx context.Context, tx pgx.Tx, team models.Team) error
 	CreateTeamMember(ctx context.Context, tx pgx.Tx, member models.TeamMember) error
 	DeleteTeamMemberByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64) error

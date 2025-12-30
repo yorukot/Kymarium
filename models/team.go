@@ -27,6 +27,14 @@ type TeamMember struct {
 	CreatedAt time.Time  `json:"created_at" db:"created_at"`
 }
 
+// TeamMemberWithUser represents a team member along with user info.
+type TeamMemberWithUser struct {
+	TeamMember
+	DisplayName string  `json:"display_name" db:"display_name"`
+	Email       string  `json:"email" db:"email"`
+	Avatar      *string `json:"avatar,omitempty" db:"avatar"`
+}
+
 type TeamInvite struct {
 	ID           int64        `json:"id,string" db:"id"`
 	TeamID       int64        `json:"team_id,string" db:"team_id"`

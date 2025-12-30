@@ -81,6 +81,26 @@ func (r *PGRepository) GetTeamMemberByUserID(ctx context.Context, tx pgx.Tx, tea
 	return &member, nil
 }
 
+// ListTeamMembersByTeamID returns all members of a team with user info.
+func (r *PGRepository) ListTeamMembersByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.TeamMemberWithUser, error) {
+	query := `
+		SELECT tm.id, tm.team_id, tm.user_id, tm.role, tm.updated_at, tm.created_at,
+			u.display_name, u.avatar, a.email
+		FROM team_members tm
+		INNER JOIN users u ON u.id = tm.user_id
+		LEFT JOIN accounts a ON a.user_id = u.id AND a.is_primary = true
+		WHERE tm.team_id = $1
+		ORDER BY tm.created_at ASC
+	`
+
+	var members []models.TeamMemberWithUser
+	if err := pgxscan.Select(ctx, tx, &members, query, teamID); err != nil {
+		return nil, err
+	}
+
+	return members, nil
+}
+
 // CreateTeam inserts a new team record.
 func (r *PGRepository) CreateTeam(ctx context.Context, tx pgx.Tx, team models.Team) error {
 	query := `

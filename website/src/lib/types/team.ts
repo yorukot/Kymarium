@@ -25,8 +25,21 @@ export interface TeamInvite {
 	teamId: string;
 	invitedBy: string;
 	invitedTo: string;
+	invitedEmail: string;
+	role: MemberRole;
+	status: 'pending' | 'accepted' | 'rejected' | 'canceled';
+	expiresAt: string;
+	acceptedAt?: string | null;
+	rejectedAt?: string | null;
+	canceledAt?: string | null;
 	updatedAt: string;
 	createdAt: string;
+}
+
+export interface TeamMemberWithUser extends TeamMember {
+	displayName: string;
+	email: string;
+	avatar?: string;
 }
 
 export interface TeamWithRole extends Team {

@@ -12,5 +12,6 @@ func TeamMemberRouter(api *echo.Group, repo repository.Repository) {
 	teamHandler := &team.TeamHandler{Repo: repo}
 
 	r := api.Group("/teams/:teamID/members", middleware.AuthRequiredMiddleware)
+	r.GET("", teamHandler.ListMembers)
 	r.DELETE("/:userID", teamHandler.RemoveMember)
 }

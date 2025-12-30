@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
@@ -96,7 +97,7 @@ func (r *PGRepository) GetPendingTeamInviteByTeamAndUser(ctx context.Context, tx
 
 	var invite models.TeamInvite
 	err := pgxscan.Get(ctx, tx, &invite, query, teamID, userID, models.InviteStatusPending)
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {

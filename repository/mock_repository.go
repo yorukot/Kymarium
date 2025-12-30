@@ -180,6 +180,12 @@ func (m *MockRepository) GetTeamMemberByUserID(ctx context.Context, tx pgx.Tx, t
 	return member, args.Error(1)
 }
 
+func (m *MockRepository) ListTeamMembersByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.TeamMemberWithUser, error) {
+	args := m.Called(ctx, tx, teamID)
+	members, _ := args.Get(0).([]models.TeamMemberWithUser)
+	return members, args.Error(1)
+}
+
 func (m *MockRepository) CreateTeam(ctx context.Context, tx pgx.Tx, team models.Team) error {
 	args := m.Called(ctx, tx, team)
 	return args.Error(0)

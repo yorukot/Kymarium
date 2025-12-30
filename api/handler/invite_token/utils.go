@@ -19,6 +19,11 @@ func buildFrontendInviteURL(result string, teamID int64, email string) string {
 	}
 
 	base = strings.TrimRight(base, "/")
+
+	if result == "success" && teamID != 0 {
+		return base + "/" + strconv.FormatInt(teamID, 10)
+	}
+
 	path := "/invites/" + result
 
 	values := url.Values{}

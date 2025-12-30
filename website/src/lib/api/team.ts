@@ -1,4 +1,4 @@
-import type { Team } from '../../types';
+import type { MemberRole, Team, TeamInvite, TeamMemberWithUser } from '../../types';
 import { apiRequest } from './utils';
 
 export type TeamsResponse = {
@@ -20,5 +20,63 @@ export function createTeam(name: string): Promise<CreateTeamResponse> {
 		method: 'POST',
 		body: { name },
 		defaultError: 'Failed to create team'
+	});
+}
+
+export type TeamMembersResponse = {
+	message: string;
+	data: TeamMemberWithUser[];
+};
+
+export function getTeamMembers(teamID: string): Promise<TeamMembersResponse> {
+	return apiRequest<TeamMembersResponse>(`/teams/${teamID}/members`, {
+		defaultError: 'Failed to fetch team members'
+	});
+}
+
+export type TeamInvitesResponse = {
+	message: string;
+	data: TeamInvite[];
+};
+
+export function getTeamInvites(teamID: string): Promise<TeamInvitesResponse> {
+	return apiRequest<TeamInvitesResponse>(`/teams/${teamID}/invites`, {
+		defaultError: 'Failed to fetch team invites'
+	});
+}
+
+export type CreateTeamInviteResponse = {
+	message: string;
+	data: TeamInvite;
+};
+
+export function createTeamInvite(teamID: string, email: string, role?: MemberRole): Promise<CreateTeamInviteResponse> {
+	return apiRequest<CreateTeamInviteResponse>(`/teams/${teamID}/invites`, {
+		method: 'POST',
+		body: { email, role },
+		defaultError: 'Failed to send invite'
+	});
+}
+
+export type CancelTeamInviteResponse = {
+	message: string;
+	data: TeamInvite;
+};
+
+export function cancelTeamInvite(teamID: string, inviteID: string): Promise<CancelTeamInviteResponse> {
+	return apiRequest<CancelTeamInviteResponse>(`/teams/${teamID}/invites/${inviteID}`, {
+		method: 'DELETE',
+		defaultError: 'Failed to cancel invite'
+	});
+}
+
+export type RemoveTeamMemberResponse = {
+	message: string;
+};
+
+export function removeTeamMember(teamID: string, userID: string): Promise<RemoveTeamMemberResponse> {
+	return apiRequest<RemoveTeamMemberResponse>(`/teams/${teamID}/members/${userID}`, {
+		method: 'DELETE',
+		defaultError: 'Failed to remove team member'
 	});
 }
