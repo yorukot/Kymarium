@@ -23,6 +23,12 @@ type ApiOptions = {
 
 let redirectingToLogin = false;
 
+function isAuthExpiredResponse(res: Response, errorBody: ApiErrorBody | null): boolean {
+	if (res.status === 401) return true;
+	const message = typeof errorBody?.message === 'string' ? errorBody.message : '';
+	return message.toLowerCase().includes('refresh token not found');
+}
+
 async function redirectToLogin() {
 	if (!browser || redirectingToLogin) return;
 
@@ -37,6 +43,10 @@ async function parseJson(res: Response): Promise<unknown> {
 	} catch {
 		return null;
 	}
+}
+
+export function isAuthExpiredError(err: unknown): boolean {
+	return err instanceof Error && err.message === 'AUTH_EXPIRED';
 }
 
 function normalizeResponse<T>(data: unknown): T {
@@ -88,6 +98,10 @@ export async function apiRequest<T>(url: string, options: ApiOptions = {}): Prom
 
 	if (!res.ok) {
 		const errorBody = responseBody as ApiErrorBody | null;
+		if (isAuthExpiredResponse(res, errorBody)) {
+			await redirectToLogin();
+			throw new Error('AUTH_EXPIRED');
+		}
 		const message =
 			typeof errorBody?.message === 'string'
 				? `${defaultError}: ${errorBody.message}`

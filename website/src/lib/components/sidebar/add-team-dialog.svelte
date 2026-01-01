@@ -3,7 +3,6 @@
 	import { validator } from '@felte/validator-zod';
 	import { z } from 'zod';
 	import { goto } from '$app/navigation';
-	import { invalidateAll } from '$app/navigation';
 	import { createTeam } from '$lib/api/team';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button';

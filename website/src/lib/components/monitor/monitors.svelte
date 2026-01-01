@@ -11,6 +11,7 @@
 	import { goto } from '$app/navigation';
 	import Button from '../ui/button/button.svelte';
 	import { monitorTarget } from '$lib/utils/monitor';
+	import { statusMeta } from '$lib/styles/status';
 
 	let { monitors }: { monitors: Monitor[] } = $props();
 
@@ -57,7 +58,9 @@
 				<div class="flex justify-between items-center gap-2">
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 min-w-0">
-							<span class="w-3 h-3 rounded-full bg-success shrink-0"></span>
+							<span
+								class={`w-3 h-3 rounded-full shrink-0 ${statusMeta[monitor.status]?.dot ?? 'bg-muted'}`}
+							></span>
 
 							<h2 class="text-md font-semibold truncate min-w-0 flex-1">
 								{monitor.name}

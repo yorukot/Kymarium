@@ -36,6 +36,10 @@ export interface TeamInvite {
 	createdAt: string;
 }
 
+export interface TeamInviteWithTeam extends TeamInvite {
+	teamName: string;
+}
+
 export interface TeamMemberWithUser extends TeamMember {
 	displayName: string;
 	email: string;

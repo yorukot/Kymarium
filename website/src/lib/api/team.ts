@@ -116,6 +116,23 @@ export function cancelTeamInvite(teamID: string, inviteID: string): Promise<Canc
 	});
 }
 
+export type UpdateTeamInviteResponse = {
+	message: string;
+	data: TeamInvite;
+};
+
+export function updateTeamInvite(
+	teamID: string,
+	inviteID: string,
+	status: 'accepted' | 'rejected'
+): Promise<UpdateTeamInviteResponse> {
+	return apiRequest<UpdateTeamInviteResponse>(`/teams/${teamID}/invites/${inviteID}`, {
+		method: 'PATCH',
+		body: { status },
+		defaultError: 'Failed to update invite'
+	});
+}
+
 export type RemoveTeamMemberResponse = {
 	message: string;
 };

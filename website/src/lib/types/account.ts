@@ -10,6 +10,7 @@ export interface Account {
 	providerUserId: string;
 	userId: string;
 	email: string;
+	isPrimary: boolean;
 	createdAt: string;
 	updatedAt: string;
 }

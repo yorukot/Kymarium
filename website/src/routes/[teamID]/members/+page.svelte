@@ -10,15 +10,20 @@
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import { NativeSelect, NativeSelectOption } from '$lib/components/ui/native-select/index.js';
 	import * as Empty from '$lib/components/ui/empty/index.js';
-	import { cancelTeamInvite, createTeamInvite, getTeamInvites, removeTeamMember } from '$lib/api/team';
-	import type { MemberRole, TeamInvite, TeamMemberWithUser } from '../../../types';
+	import {
+		cancelTeamInvite,
+		createTeamInvite,
+		getTeamInvites,
+		removeTeamMember
+	} from '$lib/api/team';
+	import type { MemberRole, TeamInvite, TeamMemberWithUser } from '$lib/types';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 	const teamID = $derived(page.params.teamID ?? '');
-	let members = $state<TeamMemberWithUser[]>(data.members ?? []);
-	let invites = $state<TeamInvite[]>(data.invites ?? []);
+	let members = $derived<TeamMemberWithUser[]>(data.members ?? []);
+	let invites = $derived<TeamInvite[]>(data.invites ?? []);
 
 	let inviteEmail = $state('');
 	let inviteRole = $state<MemberRole>('member');
@@ -32,9 +37,7 @@
 	let memberActionError = $state('');
 	let memberActionLoading = $state<string | null>(null);
 
-	const currentMember = $derived(
-		members.find((member) => member.userId === data.user?.id)
-	);
+	const currentMember = $derived(members.find((member) => member.userId === data.user?.id));
 
 	const canManageInvites = $derived(
 		currentMember?.role === 'owner' || currentMember?.role === 'admin'
@@ -105,8 +108,7 @@
 			const response = await cancelTeamInvite(teamID, invite.id);
 			invites = invites.map((item) => (item.id === invite.id ? response.data : item));
 		} catch (error) {
-			memberActionError =
-				error instanceof Error ? error.message : 'Failed to cancel invite.';
+			memberActionError = error instanceof Error ? error.message : 'Failed to cancel invite.';
 		} finally {
 			memberActionLoading = null;
 		}
@@ -125,8 +127,7 @@
 			await removeTeamMember(teamID, member.userId);
 			members = members.filter((item) => item.userId !== member.userId);
 		} catch (error) {
-			memberActionError =
-				error instanceof Error ? error.message : 'Failed to remove member.';
+			memberActionError = error instanceof Error ? error.message : 'Failed to remove member.';
 		} finally {
 			memberActionLoading = null;
 		}
@@ -141,7 +142,7 @@
 </header>
 
 <div class="grid gap-6 mt-6">
-	<Card.Root>
+  <Card.Root class="overflow-hidden">
 		<Card.Header>
 			<Card.Title>Team members</Card.Title>
 			<Card.Description>Everyone with access to this team.</Card.Description>
@@ -151,57 +152,57 @@
 				<p class="text-sm text-destructive mb-3">{memberActionError}</p>
 			{/if}
 			{#if members.length}
-				<Table.Root>
-					<Table.Header>
-						<Table.Row>
-							<Table.Head>Member</Table.Head>
-							<Table.Head>Email</Table.Head>
-							<Table.Head>Role</Table.Head>
-							<Table.Head class="text-right">Actions</Table.Head>
-						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#each members as member (member.id)}
+					<Table.Root>
+						<Table.Header>
 							<Table.Row>
-								<Table.Cell>
-									<div class="flex items-center gap-3">
-										<Avatar.Root class="size-9">
-											{#if member.avatar}
-												<Avatar.Image src={member.avatar} alt={member.displayName} />
-											{/if}
-											<Avatar.Fallback>
-												{member.displayName.slice(0, 1).toUpperCase()}
-											</Avatar.Fallback>
-										</Avatar.Root>
-										<div>
-											<p class="font-medium">{member.displayName}</p>
-											<p class="text-xs text-muted-foreground">ID {member.userId}</p>
-										</div>
-									</div>
-								</Table.Cell>
-								<Table.Cell>{member.email}</Table.Cell>
-								<Table.Cell>
-									<Badge variant={roleBadgeVariant[member.role]}>{roleLabels[member.role]}</Badge>
-								</Table.Cell>
-								<Table.Cell class="text-right">
-									{#if canManageInvites && member.userId !== data.user?.id}
-										<Button
-											variant="destructive"
-											size="sm"
-											disabled={memberActionLoading === member.userId}
-											onclick={() => handleRemoveMember(member)}
-										>
-											<Icon icon="lucide:user-x" />
-											Remove
-										</Button>
-									{:else}
-										<span class="text-xs text-muted-foreground">—</span>
-									{/if}
-								</Table.Cell>
+								<Table.Head>Member</Table.Head>
+								<Table.Head>Email</Table.Head>
+								<Table.Head>Role</Table.Head>
+								<Table.Head class="text-right">Actions</Table.Head>
 							</Table.Row>
-						{/each}
-					</Table.Body>
-				</Table.Root>
+						</Table.Header>
+						<Table.Body>
+							{#each members as member (member.id)}
+								<Table.Row>
+									<Table.Cell>
+										<div class="flex items-center gap-3">
+											<Avatar.Root class="size-9">
+												{#if member.avatar}
+													<Avatar.Image src={member.avatar} alt={member.displayName} />
+												{/if}
+												<Avatar.Fallback>
+													{member.displayName.slice(0, 1).toUpperCase()}
+												</Avatar.Fallback>
+											</Avatar.Root>
+											<div>
+												<p class="font-medium">{member.displayName}</p>
+												<p class="text-xs text-muted-foreground">ID {member.userId}</p>
+											</div>
+										</div>
+									</Table.Cell>
+									<Table.Cell>{member.email}</Table.Cell>
+									<Table.Cell>
+										<Badge variant={roleBadgeVariant[member.role]}>{roleLabels[member.role]}</Badge>
+									</Table.Cell>
+									<Table.Cell class="text-right">
+										{#if canManageInvites && member.userId !== data.user?.id}
+											<Button
+												variant="destructive"
+												size="sm"
+												disabled={memberActionLoading === member.userId}
+												onclick={() => handleRemoveMember(member)}
+											>
+												<Icon icon="lucide:user-x" />
+												Remove
+											</Button>
+										{:else}
+											<span class="text-xs text-muted-foreground">—</span>
+										{/if}
+									</Table.Cell>
+								</Table.Row>
+							{/each}
+						</Table.Body>
+					</Table.Root>
 			{:else}
 				<Empty.Root>
 					<Empty.Title>No members yet</Empty.Title>

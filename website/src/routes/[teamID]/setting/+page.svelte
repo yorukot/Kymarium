@@ -8,23 +8,23 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { deleteTeam, leaveTeam, updateTeam } from '$lib/api/team';
-	import type { TeamWithRole } from '../../../types';
+	import type { TeamWithRole } from '$lib/types';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 	const teamID = $derived(page.params.teamID ?? '');
-	let team = $state<TeamWithRole>(data.team);
-	let name = $state(data.team?.name ?? '');
+	let team = $derived<TeamWithRole>(data.team);
+	let name = $derived(data.team?.name ?? '');
 	let saveError = $state('');
 	let saveSuccess = $state('');
 	let saveLoading = $state(false);
 	let deleteError = $state('');
 	let deleteLoading = $state(false);
 	let deleteOpen = $state(false);
-		let leaveError = $state('');
-		let leaveLoading = $state(false);
-		let leaveOpen = $state(false);
+	let leaveError = $state('');
+	let leaveLoading = $state(false);
+	let leaveOpen = $state(false);
 
 	const canEditTeam = $derived(team?.role === 'owner' || team?.role === 'admin');
 	const canDeleteTeam = $derived(team?.role === 'owner');
@@ -96,13 +96,13 @@
 		}
 	}
 
-		async function handleLeave() {
-			leaveError = '';
+	async function handleLeave() {
+		leaveError = '';
 
-			if (canDeleteTeam) {
-				leaveError = 'Owners must transfer ownership before leaving.';
-				return;
-			}
+		if (canDeleteTeam) {
+			leaveError = 'Owners must transfer ownership before leaving.';
+			return;
+		}
 
 		leaveLoading = true;
 		try {
@@ -187,7 +187,8 @@
 	<Card.Root>
 		<Card.Header>
 			<Card.Title>Danger zone</Card.Title>
-			<Card.Description>Deleting a team removes all monitors, incidents, and data.</Card.Description>
+			<Card.Description>Deleting a team removes all monitors, incidents, and data.</Card.Description
+			>
 		</Card.Header>
 		<Card.Content class="grid gap-3">
 			{#if deleteError}
@@ -226,9 +227,7 @@
 			{#if !canDeleteTeam}
 				<AlertDialog.Root bind:open={leaveOpen}>
 					<AlertDialog.Trigger class="w-fit">
-						<Button variant="destructive" disabled={leaveLoading}>
-							Leave team
-						</Button>
+						<Button variant="destructive" disabled={leaveLoading}>Leave team</Button>
 					</AlertDialog.Trigger>
 					<AlertDialog.Portal>
 						<AlertDialog.Overlay />
@@ -253,9 +252,7 @@
 				</AlertDialog.Root>
 			{/if}
 			{#if !canDeleteTeam}
-				<p class="text-xs text-muted-foreground">
-					Only team owners can delete a team.
-				</p>
+				<p class="text-xs text-muted-foreground">Only team owners can delete a team.</p>
 			{/if}
 		</Card.Content>
 	</Card.Root>

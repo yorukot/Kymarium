@@ -27,6 +27,7 @@
 	let { children, data } = $props();
 
 	const crumbs: Crumb[] = $derived(buildBreadcrumbs(page, data));
+	const title = $derived(buildTitle(crumbs));
 
 	function buildBreadcrumbs(currentPage: Page, layoutData: SidebarData): Crumb[] {
 		const segments = currentPage.url.pathname.split('/').filter(Boolean);
@@ -76,10 +77,20 @@
 			.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
 			.join(' ');
 	}
+
+	function buildTitle(segments: Crumb[]): string {
+		const appName = 'Knocker';
+		if (!segments.length) return appName;
+		const teamName = segments[0]?.label;
+		const last = segments[segments.length - 1]?.label ?? teamName ?? appName;
+		if (!teamName || last === teamName) return `${last} - ${appName}`;
+		return `${last} - ${teamName} - ${appName}`;
+	}
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<title>{title}</title>
 </svelte:head>
 
 <ModeWatcher />
