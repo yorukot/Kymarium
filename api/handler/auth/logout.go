@@ -19,7 +19,7 @@ import (
 // @Success 200 {object} response.SuccessResponse "Logged out"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /auth/logout [post]
-func (h *AuthHandler) Logout(c echo.Context) error {
+func (h *Handler) Logout(c echo.Context) error {
 	expireAuthCookies(c)
 
 	refreshCookie, err := c.Cookie(models.CookieNameRefreshToken)
@@ -32,7 +32,7 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 		zap.L().Error("Failed to begin transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction")
 	}
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	refreshToken, err := h.Repo.GetRefreshTokenByToken(c.Request().Context(), tx, refreshCookie.Value)
 	if err != nil {
@@ -49,7 +49,7 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 		}
 	}
 
-	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		zap.L().Error("Failed to commit transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}

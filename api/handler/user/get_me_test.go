@@ -33,7 +33,7 @@ func TestGetMe_Success(t *testing.T) {
 			UpdatedAt:   now,
 		}, nil)
 
-	h := &UserHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, rec := testutil.NewEchoContext(http.MethodGet, "/users/me", nil)
 	testutil.Authenticate(c, 123)
 
@@ -65,7 +65,7 @@ func TestGetMe_NotFound(t *testing.T) {
 	mockRepo.On("GetUserByID", mock.Anything, mock.Anything, int64(456)).
 		Return((*models.User)(nil), nil)
 
-	h := &UserHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, _ := testutil.NewEchoContext(http.MethodGet, "/users/me", nil)
 	testutil.Authenticate(c, 456)
 
@@ -79,7 +79,7 @@ func TestGetMe_NotFound(t *testing.T) {
 func TestGetMe_Unauthorized(t *testing.T) {
 	testutil.InitTestEnv(t)
 
-	h := &UserHandler{Repo: &repository.MockRepository{}}
+	h := &Handler{Repo: &repository.MockRepository{}}
 	c, _ := testutil.NewEchoContext(http.MethodGet, "/users/me", nil)
 
 	err := h.GetMe(c)

@@ -13,8 +13,8 @@ import (
 // It enables mocking the data layer in tests.
 type Repository interface {
 	StartTransaction(ctx context.Context) (pgx.Tx, error)
-	DeferRollback(tx pgx.Tx, ctx context.Context)
-	CommitTransaction(tx pgx.Tx, ctx context.Context) error
+	DeferRollback(ctx context.Context, tx pgx.Tx)
+	CommitTransaction(ctx context.Context, tx pgx.Tx) error
 
 	// Status pages
 	CreateStatusPage(ctx context.Context, tx pgx.Tx, statusPage models.StatusPage) error
@@ -42,10 +42,16 @@ type Repository interface {
 	CreateOAuthToken(ctx context.Context, tx pgx.Tx, oauthToken models.OAuthToken) error
 	CreateRefreshToken(ctx context.Context, tx pgx.Tx, token models.RefreshToken) error
 	UpdateRefreshTokenUsedAt(ctx context.Context, tx pgx.Tx, token models.RefreshToken) error
+	ListAccountsByUserID(ctx context.Context, tx pgx.Tx, userID int64) ([]models.Account, error)
+	ListActiveRefreshTokensByUserID(ctx context.Context, tx pgx.Tx, userID int64) ([]models.RefreshToken, error)
+	UpdateRefreshTokenUsedAtByID(ctx context.Context, tx pgx.Tx, userID, tokenID int64, usedAt time.Time) (bool, error)
+	UpdateRefreshTokensUsedAtExcept(ctx context.Context, tx pgx.Tx, userID, tokenID int64, usedAt time.Time) (int64, error)
 
 	// Users
 	GetUserByID(ctx context.Context, tx pgx.Tx, userID int64) (*models.User, error)
 	UpdateUserVerification(ctx context.Context, tx pgx.Tx, userID int64, verified bool, verifyCode *string, updatedAt time.Time) error
+	UpdateUserProfile(ctx context.Context, tx pgx.Tx, userID int64, displayName string, avatar *string, updatedAt time.Time) (*models.User, error)
+	UpdateUserPasswordHash(ctx context.Context, tx pgx.Tx, userID int64, passwordHash string, updatedAt time.Time) error
 
 	// Teams
 	ListTeamsByUserID(ctx context.Context, tx pgx.Tx, userID int64) ([]models.TeamWithRole, error)
@@ -64,6 +70,7 @@ type Repository interface {
 	GetTeamInviteByToken(ctx context.Context, tx pgx.Tx, token string) (*models.TeamInvite, error)
 	GetPendingTeamInviteByTeamAndUser(ctx context.Context, tx pgx.Tx, teamID, userID int64) (*models.TeamInvite, error)
 	ListTeamInvitesByTeamID(ctx context.Context, tx pgx.Tx, teamID int64) ([]models.TeamInvite, error)
+	ListPendingTeamInvitesByUserID(ctx context.Context, tx pgx.Tx, userID int64, now time.Time) ([]models.TeamInviteWithTeam, error)
 	UpdateTeamInviteStatus(ctx context.Context, tx pgx.Tx, inviteID int64, status models.InviteStatus, updatedAt time.Time, acceptedAt, rejectedAt, canceledAt *time.Time) (*models.TeamInvite, error)
 
 	// Notifications

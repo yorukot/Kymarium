@@ -28,7 +28,7 @@ import (
 // @Failure 400 {object} response.ErrorResponse "Invalid provider, oauth state, or verification failed"
 // @Failure 500 {object} response.ErrorResponse "Internal server error during user creation or token generation"
 // @Router /auth/oauth/{provider}/callback [get]
-func (h *AuthHandler) OAuthCallback(c echo.Context) error {
+func (h *Handler) OAuthCallback(c echo.Context) error {
 	// Get the oauth state from the query params
 	oauthState := c.QueryParam("state")
 	code := c.QueryParam("code")
@@ -103,7 +103,7 @@ func (h *AuthHandler) OAuthCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction", err)
 	}
 
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	// Get the account and user by the provider and user ID for checking if the user is already linked/registered
 	account, user, err := h.Repo.GetAccountWithUserByProviderUserID(c.Request().Context(), tx, provider, userInfo.Subject)
@@ -219,7 +219,7 @@ func (h *AuthHandler) OAuthCallback(c echo.Context) error {
 	}
 
 	// Commit the transaction
-	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		zap.L().Error("Failed to commit transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}

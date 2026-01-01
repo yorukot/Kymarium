@@ -32,7 +32,7 @@ type registerRequest struct {
 // @Failure 400 {object} response.ErrorResponse "Invalid request body or email already in use"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /auth/register [post]
-func (h *AuthHandler) Register(c echo.Context) error {
+func (h *Handler) Register(c echo.Context) error {
 	// Decode the request body
 	var registerRequest registerRequest
 	if err := json.NewDecoder(c.Request().Body).Decode(&registerRequest); err != nil {
@@ -51,7 +51,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction")
 	}
 
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	// Get the account by email
 	checkedAccount, err := h.Repo.GetAccountByEmail(c.Request().Context(), tx, registerRequest.Email)
@@ -99,7 +99,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to send verification email")
 		}
 
-		if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+		if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 			zap.L().Error("Failed to commit transaction", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 		}
@@ -121,7 +121,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	}
 
 	// Commit the transaction
-	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		zap.L().Error("Failed to commit transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}

@@ -23,7 +23,7 @@ import (
 // @Failure 302 {object} response.ErrorResponse "User not found"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /auth/verify [get]
-func (h *AuthHandler) VerifyEmail(c echo.Context) error {
+func (h *Handler) VerifyEmail(c echo.Context) error {
 	verificationToken := c.QueryParam("token")
 	if verificationToken == "" {
 		return c.Redirect(http.StatusFound, buildFrontendVerificationURL("expired", ""))
@@ -48,7 +48,7 @@ func (h *AuthHandler) VerifyEmail(c echo.Context) error {
 		zap.L().Error("Failed to begin transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction")
 	}
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	user, err := h.Repo.GetUserByID(c.Request().Context(), tx, userID)
 	if err != nil {
@@ -60,7 +60,7 @@ func (h *AuthHandler) VerifyEmail(c echo.Context) error {
 	}
 
 	if user.Verified {
-		if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+		if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 			zap.L().Error("Failed to commit transaction", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 		}
@@ -76,7 +76,7 @@ func (h *AuthHandler) VerifyEmail(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update user verification")
 	}
 
-	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		zap.L().Error("Failed to commit transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}

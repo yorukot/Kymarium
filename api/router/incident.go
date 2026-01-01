@@ -9,7 +9,7 @@ import (
 
 // IncidentRouter handles incident-related routes.
 func IncidentRouter(api *echo.Group, repo repository.Repository) {
-	incidentHandler := &incident.IncidentHandler{
+	incidentHandler := &incident.Handler{
 		Repo: repo,
 	}
 

@@ -125,6 +125,26 @@ func (r *PGRepository) ListTeamInvitesByTeamID(ctx context.Context, tx pgx.Tx, t
 	return invites, nil
 }
 
+// ListPendingTeamInvitesByUserID returns pending invites for a user with team context.
+func (r *PGRepository) ListPendingTeamInvitesByUserID(ctx context.Context, tx pgx.Tx, userID int64, now time.Time) ([]models.TeamInviteWithTeam, error) {
+	query := `
+		SELECT ti.id, ti.team_id, ti.invited_by, ti.invited_to, ti.invited_email, ti.role, ti.status, ti.token,
+			ti.expires_at, ti.accepted_at, ti.rejected_at, ti.canceled_at, ti.updated_at, ti.created_at,
+			t.name AS team_name
+		FROM team_invites ti
+		INNER JOIN teams t ON t.id = ti.team_id
+		WHERE ti.invited_to = $1 AND ti.status = $2 AND ti.expires_at > $3
+		ORDER BY ti.created_at DESC
+	`
+
+	var invites []models.TeamInviteWithTeam
+	if err := pgxscan.Select(ctx, tx, &invites, query, userID, models.InviteStatusPending, now); err != nil {
+		return nil, err
+	}
+
+	return invites, nil
+}
+
 // UpdateTeamInviteStatus updates invite status and timestamps.
 func (r *PGRepository) UpdateTeamInviteStatus(ctx context.Context, tx pgx.Tx, inviteID int64, status models.InviteStatus, updatedAt time.Time, acceptedAt, rejectedAt, canceledAt *time.Time) (*models.TeamInvite, error) {
 	query := `

@@ -30,7 +30,7 @@ type createTeamRequest struct {
 // @Failure 401 {object} response.ErrorResponse "Unauthorized"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /teams [post]
-func (h *TeamHandler) CreateTeam(c echo.Context) error {
+func (h *Handler) CreateTeam(c echo.Context) error {
 	var req createTeamRequest
 	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
@@ -55,7 +55,7 @@ func (h *TeamHandler) CreateTeam(c echo.Context) error {
 		zap.L().Error("Failed to begin transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction")
 	}
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	now := time.Now()
 
@@ -97,7 +97,7 @@ func (h *TeamHandler) CreateTeam(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create team member")
 	}
 
-	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 

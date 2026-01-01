@@ -1,7 +1,8 @@
-package team
+package user
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	authutil "github.com/yorukot/knocker/utils/auth"
@@ -9,16 +10,17 @@ import (
 	"go.uber.org/zap"
 )
 
-// ListTeams godoc
-// @Summary List teams
-// @Description Lists teams the authenticated user is a member of
-// @Tags teams
+// ListInvites godoc
+// @Summary List pending invites
+// @Description Lists pending team invites for the authenticated user
+// @Tags users
 // @Produce json
-// @Success 200 {object} response.SuccessResponse "Teams retrieved successfully"
+// @Success 200 {object} response.SuccessResponse "Invites retrieved successfully"
+// @Failure 400 {object} response.ErrorResponse "Invalid user ID"
 // @Failure 401 {object} response.ErrorResponse "Unauthorized"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
-// @Router /teams [get]
-func (h *Handler) ListTeams(c echo.Context) error {
+// @Router /users/me/invites [get]
+func (h *Handler) ListInvites(c echo.Context) error {
 	userID, err := authutil.GetUserIDFromContext(c)
 	if err != nil {
 		zap.L().Error("Failed to parse user ID from context", zap.Error(err))
@@ -36,15 +38,15 @@ func (h *Handler) ListTeams(c echo.Context) error {
 	}
 	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
-	teams, err := h.Repo.ListTeamsByUserID(c.Request().Context(), tx, *userID)
+	invites, err := h.Repo.ListPendingTeamInvitesByUserID(c.Request().Context(), tx, *userID, time.Now().UTC())
 	if err != nil {
-		zap.L().Error("Failed to list teams", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to list teams")
+		zap.L().Error("Failed to list pending invites", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to list invites")
 	}
 
 	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	return c.JSON(http.StatusOK, response.Success("Teams retrieved successfully", teams))
+	return c.JSON(http.StatusOK, response.Success("Invites retrieved successfully", invites))
 }

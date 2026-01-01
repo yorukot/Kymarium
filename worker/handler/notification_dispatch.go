@@ -79,7 +79,7 @@ func (h *Handler) fetchMonitorAndNotification(ctx context.Context, payload tasks
 	if err != nil {
 		return nil, nil, err
 	}
-	defer h.repo.DeferRollback(tx, ctx)
+	defer h.repo.DeferRollback(ctx, tx)
 
 	monitor, err := h.repo.GetMonitorByID(ctx, tx, payload.TeamID, payload.MonitorID)
 	if err != nil || monitor == nil {
@@ -91,7 +91,7 @@ func (h *Handler) fetchMonitorAndNotification(ctx context.Context, payload tasks
 		return monitor, notification, err
 	}
 
-	if err := h.repo.CommitTransaction(tx, ctx); err != nil {
+	if err := h.repo.CommitTransaction(ctx, tx); err != nil {
 		return nil, nil, err
 	}
 

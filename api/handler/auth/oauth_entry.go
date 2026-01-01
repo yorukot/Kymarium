@@ -25,7 +25,7 @@ import (
 // @Failure 400 {object} response.ErrorResponse "Invalid provider or bad request"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /auth/oauth/{provider} [get]
-func (h *AuthHandler) OAuthEntry(c echo.Context) error {
+func (h *Handler) OAuthEntry(c echo.Context) error {
 	// Parse provider
 	provider, err := parseProvider(c.Param("provider"))
 	if err != nil {

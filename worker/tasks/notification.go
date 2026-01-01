@@ -17,6 +17,7 @@ type NotificationPayload struct {
 	Detail         string      `json:"detail,omitempty"`
 }
 
+// NewNotificationDispatch builds an Asynq task to send a notification.
 func NewNotificationDispatch(payload NotificationPayload) (*asynq.Task, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {

@@ -1,8 +1,9 @@
-package team
+package user
 
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	authutil "github.com/yorukot/knocker/utils/auth"
@@ -10,22 +11,22 @@ import (
 	"go.uber.org/zap"
 )
 
-// GetTeam godoc
-// @Summary Get a team
-// @Description Retrieves a single team the authenticated user belongs to
-// @Tags teams
+// RevokeSession godoc
+// @Summary Revoke session
+// @Description Revokes a refresh token session for the authenticated user
+// @Tags users
 // @Produce json
-// @Param id path string true "Team ID"
-// @Success 200 {object} response.SuccessResponse "Team retrieved successfully"
-// @Failure 400 {object} response.ErrorResponse "Invalid team ID"
+// @Param sessionID path string true "Session ID"
+// @Success 200 {object} response.SuccessResponse "Session revoked successfully"
+// @Failure 400 {object} response.ErrorResponse "Invalid session ID"
 // @Failure 401 {object} response.ErrorResponse "Unauthorized"
-// @Failure 404 {object} response.ErrorResponse "Team not found"
+// @Failure 404 {object} response.ErrorResponse "Session not found"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
-// @Router /teams/{id} [get]
-func (h *Handler) GetTeam(c echo.Context) error {
-	teamID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+// @Router /users/me/sessions/{sessionID}/revoke [post]
+func (h *Handler) RevokeSession(c echo.Context) error {
+	sessionID, err := strconv.ParseInt(c.Param("sessionID"), 10, 64)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team ID")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid session ID")
 	}
 
 	userID, err := authutil.GetUserIDFromContext(c)
@@ -45,19 +46,19 @@ func (h *Handler) GetTeam(c echo.Context) error {
 	}
 	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
-	team, err := h.Repo.GetTeamForUser(c.Request().Context(), tx, teamID, *userID)
+	updated, err := h.Repo.UpdateRefreshTokenUsedAtByID(c.Request().Context(), tx, *userID, sessionID, time.Now())
 	if err != nil {
-		zap.L().Error("Failed to get team", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get team")
+		zap.L().Error("Failed to revoke refresh token", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to revoke session")
 	}
 
-	if team == nil {
-		return echo.NewHTTPError(http.StatusNotFound, "Team not found")
+	if !updated {
+		return echo.NewHTTPError(http.StatusNotFound, "Session not found")
 	}
 
 	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	return c.JSON(http.StatusOK, response.Success("Team retrieved successfully", team))
+	return c.JSON(http.StatusOK, response.SuccessMessage("Session revoked successfully"))
 }

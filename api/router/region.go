@@ -6,9 +6,9 @@ import (
 	"github.com/yorukot/knocker/repository"
 )
 
-// Region router going to route register signin etc
+// RegionRouter registers region routes.
 func RegionRouter(api *echo.Group, repo repository.Repository) {
-	regionHandler := &region.RegionHandler{
+	regionHandler := &region.Handler{
 		Repo: repo,
 	}
 	r := api.Group("/regions")

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
@@ -270,4 +271,62 @@ func (r *PGRepository) UpdateRefreshTokenUsedAt(ctx context.Context, tx pgx.Tx, 
 
 	_, err := tx.Exec(ctx, query, token.UsedAt, token.ID)
 	return err
+}
+
+// ListAccountsByUserID retrieves all accounts for a user.
+func (r *PGRepository) ListAccountsByUserID(ctx context.Context, tx pgx.Tx, userID int64) ([]models.Account, error) {
+	query := `SELECT id, provider, provider_user_id, user_id, email, is_primary, created_at, updated_at
+	          FROM accounts
+	          WHERE user_id = $1
+	          ORDER BY created_at DESC`
+
+	var accounts []models.Account
+	if err := pgxscan.Select(ctx, tx, &accounts, query, userID); err != nil {
+		return nil, err
+	}
+
+	return accounts, nil
+}
+
+// ListActiveRefreshTokensByUserID returns active (unused) refresh tokens for a user.
+func (r *PGRepository) ListActiveRefreshTokensByUserID(ctx context.Context, tx pgx.Tx, userID int64) ([]models.RefreshToken, error) {
+	query := `SELECT id, user_id, token, user_agent, ip, used_at, created_at
+	          FROM refresh_tokens
+	          WHERE user_id = $1 AND used_at IS NULL
+	          ORDER BY created_at DESC`
+
+	var tokens []models.RefreshToken
+	if err := pgxscan.Select(ctx, tx, &tokens, query, userID); err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
+}
+
+// UpdateRefreshTokenUsedAtByID marks a refresh token as used for a user.
+func (r *PGRepository) UpdateRefreshTokenUsedAtByID(ctx context.Context, tx pgx.Tx, userID, tokenID int64, usedAt time.Time) (bool, error) {
+	query := `UPDATE refresh_tokens
+	          SET used_at = $1
+	          WHERE id = $2 AND user_id = $3 AND used_at IS NULL`
+
+	result, err := tx.Exec(ctx, query, usedAt, tokenID, userID)
+	if err != nil {
+		return false, err
+	}
+
+	return result.RowsAffected() > 0, nil
+}
+
+// UpdateRefreshTokensUsedAtExcept marks all refresh tokens as used except the provided token.
+func (r *PGRepository) UpdateRefreshTokensUsedAtExcept(ctx context.Context, tx pgx.Tx, userID, tokenID int64, usedAt time.Time) (int64, error) {
+	query := `UPDATE refresh_tokens
+	          SET used_at = $1
+	          WHERE user_id = $2 AND used_at IS NULL AND id != $3`
+
+	result, err := tx.Exec(ctx, query, usedAt, userID, tokenID)
+	if err != nil {
+		return 0, err
+	}
+
+	return result.RowsAffected(), nil
 }

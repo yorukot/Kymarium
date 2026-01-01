@@ -4,8 +4,10 @@ import (
 	"time"
 )
 
+// PingStatus represents the result of a monitor ping.
 type PingStatus string
 
+// PingStatus values.
 const (
 	PingStatusSuccessful PingStatus = "successful"
 	PingStatusFailed     PingStatus = "failed"

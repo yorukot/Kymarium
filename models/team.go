@@ -2,8 +2,10 @@ package models
 
 import "time"
 
+// MemberRole represents a member's role within a team.
 type MemberRole string
 
+// MemberRole values.
 const (
 	MemberRoleOwner  MemberRole = "owner"
 	MemberRoleAdmin  MemberRole = "admin"
@@ -11,6 +13,7 @@ const (
 	MemberRoleViewer MemberRole = "viewer"
 )
 
+// Team represents a team entity.
 type Team struct {
 	ID        int64     `json:"id,string" db:"id"`
 	Name      string    `json:"name" db:"name"`
@@ -18,6 +21,7 @@ type Team struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
+// TeamMember represents a user's membership in a team.
 type TeamMember struct {
 	ID        int64      `json:"id,string" db:"id"`
 	TeamID    int64      `json:"team_id,string" db:"team_id"`
@@ -35,6 +39,7 @@ type TeamMemberWithUser struct {
 	Avatar      *string `json:"avatar,omitempty" db:"avatar"`
 }
 
+// TeamInvite represents a pending or historical invite to a team.
 type TeamInvite struct {
 	ID           int64        `json:"id,string" db:"id"`
 	TeamID       int64        `json:"team_id,string" db:"team_id"`
@@ -52,8 +57,16 @@ type TeamInvite struct {
 	CreatedAt    time.Time    `json:"created_at" db:"created_at"`
 }
 
+// TeamInviteWithTeam represents a pending invite with team context.
+type TeamInviteWithTeam struct {
+	TeamInvite
+	TeamName string `json:"team_name" db:"team_name"`
+}
+
+// InviteStatus represents the lifecycle state of a team invite.
 type InviteStatus string
 
+// InviteStatus values.
 const (
 	InviteStatusPending  InviteStatus = "pending"
 	InviteStatusAccepted InviteStatus = "accepted"

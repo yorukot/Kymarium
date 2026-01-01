@@ -30,7 +30,7 @@ func TestCreateTeam_Success(t *testing.T) {
 		capturedMember = args.Get(2).(models.TeamMember)
 	})
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, rec := testutil.NewEchoContext(http.MethodPost, "/teams", strings.NewReader(`{"name":"Acme"}`))
 	testutil.SetJSONHeader(c)
 	testutil.Authenticate(c, 123)
@@ -51,7 +51,7 @@ func TestCreateTeam_Success(t *testing.T) {
 func TestCreateTeam_Unauthorized(t *testing.T) {
 	testutil.InitTestEnv(t)
 
-	h := &TeamHandler{Repo: &repository.MockRepository{}}
+	h := &Handler{Repo: &repository.MockRepository{}}
 	c, _ := testutil.NewEchoContext(http.MethodPost, "/teams", strings.NewReader(`{"name":"Acme"}`))
 	testutil.SetJSONHeader(c)
 

@@ -2,7 +2,8 @@ package incident
 
 import "github.com/yorukot/knocker/repository"
 
-// IncidentHandler groups dependencies for incident endpoints.
-type IncidentHandler struct {
+// Handler groups dependencies for incident endpoints.
+// Handler handles incident-related requests.
+type Handler struct {
 	Repo repository.Repository
 }

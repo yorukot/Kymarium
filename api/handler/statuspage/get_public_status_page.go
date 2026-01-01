@@ -79,7 +79,7 @@ func (h *Handler) GetPublicStatusPage(c echo.Context) error {
 		zap.L().Error("Failed to begin transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction")
 	}
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	page, err := h.Repo.GetStatusPageBySlug(c.Request().Context(), tx, slug)
 	if err != nil {
@@ -156,7 +156,7 @@ func (h *Handler) GetPublicStatusPage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to list timeline data")
 	}
 
-	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 

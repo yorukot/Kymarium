@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Run starts the scheduler loop that enqueues monitor pings.
 func Run(pgsql *pgxpool.Pool) {
 	redisAddr := fmt.Sprintf("%s:%s", config.Env().RedisHost, config.Env().RedisPort)
 	asynqClient := asynq.NewClient(asynq.RedisClientOpt{
@@ -45,7 +46,7 @@ func loop(repo repository.Repository, asynqClient *asynq.Client) {
 		zap.L().Error("Failed to start transaction for fetching monitors", zap.Error(err))
 		return
 	}
-	defer repo.DeferRollback(tx, ctx)
+	defer repo.DeferRollback(ctx, tx)
 
 	// Fetch all monitors that need to be pinged
 	monitors, err := repo.ListMonitorsDueForCheck(ctx, tx)
@@ -55,7 +56,7 @@ func loop(repo repository.Repository, asynqClient *asynq.Client) {
 	}
 
 	// Commit the read transaction
-	if err := repo.CommitTransaction(tx, ctx); err != nil {
+	if err := repo.CommitTransaction(ctx, tx); err != nil {
 		zap.L().Error("Failed to commit transaction", zap.Error(err))
 		return
 	}
@@ -93,7 +94,7 @@ func batchUpdateLastChecked(repo repository.Repository, monitors []models.Monito
 		zap.L().Error("Failed to start transaction for updating monitors", zap.Error(err))
 		return
 	}
-	defer repo.DeferRollback(tx, ctx)
+	defer repo.DeferRollback(ctx, tx)
 
 	now := time.Now()
 
@@ -114,7 +115,7 @@ func batchUpdateLastChecked(repo repository.Repository, monitors []models.Monito
 		return
 	}
 
-	if err := repo.CommitTransaction(tx, ctx); err != nil {
+	if err := repo.CommitTransaction(ctx, tx); err != nil {
 		zap.L().Error("Failed to commit update transaction", zap.Error(err))
 		return
 	}
@@ -130,7 +131,7 @@ func scheduleMonitors(monitors []models.Monitor, asynqClient *asynq.Client) {
 
 	for _, monitor := range monitors {
 		// Create a task for each region
-		
+
 		for _, regionID := range monitor.RegionIDs {
 			// Create asynq task with region
 			task, err := tasks.NewMonitorPing(monitor, regionID)

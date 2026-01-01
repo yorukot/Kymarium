@@ -9,7 +9,7 @@ import (
 
 // TeamMemberRouter handles team member-related routes.
 func TeamMemberRouter(api *echo.Group, repo repository.Repository) {
-	teamHandler := &team.TeamHandler{Repo: repo}
+	teamHandler := &team.Handler{Repo: repo}
 
 	r := api.Group("/teams/:teamID/members", middleware.AuthRequiredMiddleware)
 	r.GET("", teamHandler.ListMembers)

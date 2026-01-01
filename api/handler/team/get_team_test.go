@@ -23,7 +23,7 @@ func TestGetTeam_Success(t *testing.T) {
 	mockRepo.On("GetTeamForUser", mock.Anything, mock.Anything, int64(5), int64(123)).
 		Return(&models.TeamWithRole{Team: models.Team{ID: 5, Name: "Five"}, Role: models.MemberRoleMember}, nil)
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, rec := testutil.NewEchoContext(http.MethodGet, "/teams/5", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("5")
@@ -49,7 +49,7 @@ func TestGetTeam_NotFound(t *testing.T) {
 	mockRepo.On("DeferRollback", mock.Anything, mock.Anything)
 	mockRepo.On("GetTeamForUser", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return((*models.TeamWithRole)(nil), nil)
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, _ := testutil.NewEchoContext(http.MethodGet, "/teams/9", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("9")
@@ -65,7 +65,7 @@ func TestGetTeam_NotFound(t *testing.T) {
 func TestGetTeam_Unauthorized(t *testing.T) {
 	testutil.InitTestEnv(t)
 
-	h := &TeamHandler{Repo: &repository.MockRepository{}}
+	h := &Handler{Repo: &repository.MockRepository{}}
 	c, _ := testutil.NewEchoContext(http.MethodGet, "/teams/1", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("1")

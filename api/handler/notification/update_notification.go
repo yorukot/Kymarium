@@ -37,7 +37,7 @@ type updateNotificationRequest struct {
 // @Failure 404 {object} response.ErrorResponse "Notification not found"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /teams/{teamID}/notifications/{id} [patch]
-func (h *NotificationHandler) UpdateNotification(c echo.Context) error {
+func (h *Handler) UpdateNotification(c echo.Context) error {
 	teamID, err := strconv.ParseInt(c.Param("teamID"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid team ID")
@@ -80,7 +80,7 @@ func (h *NotificationHandler) UpdateNotification(c echo.Context) error {
 		zap.L().Error("Failed to begin transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction")
 	}
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	member, err := h.Repo.GetTeamMemberByUserID(c.Request().Context(), tx, teamID, *userID)
 	if err != nil {
@@ -126,7 +126,7 @@ func (h *NotificationHandler) UpdateNotification(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Notification not found")
 	}
 
-	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 

@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Notification represents a notification channel configured by a team.
 type Notification struct {
 	ID        int64            `json:"id,string" db:"id"`
 	TeamID    int64            `json:"team_id,string" db:"team_id"`
@@ -31,10 +32,12 @@ type TelegramNotificationConfig struct {
 	ChatID   string `json:"chat_id" validate:"required,max=100"`
 }
 
+// EmailNotificationConfig describes the stored config for email notifications.
 type EmailNotificationConfig struct {
 	EmailAddress []string `json:"email_address" validate:"required,min=1,dive,required,email"`
 }
 
+// MonitorNotification links monitors to notification channels.
 type MonitorNotification struct {
 	ID             int64 `json:"id,string" db:"id"`
 	MonitorID      int64 `json:"monitor_id,string" db:"monitor_id"`

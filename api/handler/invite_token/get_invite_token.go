@@ -1,4 +1,4 @@
-package invite_token
+package invitetoken
 
 import (
 	"net/http"
@@ -18,7 +18,7 @@ import (
 // @Param token path string true "Invite token"
 // @Success 302 {string} string "Redirect"
 // @Router /invite-tokens/{token} [get]
-func (h *InviteTokenHandler) GetInviteToken(c echo.Context) error {
+func (h *Handler) GetInviteToken(c echo.Context) error {
 	token := c.Param("token")
 	if token == "" {
 		return c.Redirect(http.StatusFound, buildFrontendInviteURL("invalid", 0, ""))
@@ -29,7 +29,7 @@ func (h *InviteTokenHandler) GetInviteToken(c echo.Context) error {
 		zap.L().Error("Failed to begin transaction", zap.Error(err))
 		return c.Redirect(http.StatusFound, buildFrontendInviteURL("error", 0, ""))
 	}
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	invite, err := h.Repo.GetTeamInviteByToken(c.Request().Context(), tx, token)
 	if err != nil {
@@ -92,7 +92,7 @@ func (h *InviteTokenHandler) GetInviteToken(c echo.Context) error {
 		return c.Redirect(http.StatusFound, buildFrontendInviteURL("invalid", invite.TeamID, invite.InvitedEmail))
 	}
 
-	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		zap.L().Error("Failed to commit transaction", zap.Error(err))
 		return c.Redirect(http.StatusFound, buildFrontendInviteURL("error", invite.TeamID, invite.InvitedEmail))
 	}

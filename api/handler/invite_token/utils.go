@@ -1,4 +1,4 @@
-package invite_token
+package invitetoken
 
 import (
 	"net/url"

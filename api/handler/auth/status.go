@@ -24,7 +24,7 @@ type authStatusResponse struct {
 // @Failure 401 {object} response.ErrorResponse "Unauthorized"
 // @Failure 400 {object} response.ErrorResponse "Invalid user ID"
 // @Router /auth/status [get]
-func (h *AuthHandler) Status(c echo.Context) error {
+func (h *Handler) Status(c echo.Context) error {
 	userID, err := authutil.GetUserIDFromContext(c)
 	if err != nil {
 		zap.L().Error("Failed to parse user ID from context", zap.Error(err))

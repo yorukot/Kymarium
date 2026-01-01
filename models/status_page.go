@@ -2,8 +2,10 @@ package models
 
 import "time"
 
+// StatusPageElementType describes the type of element rendered on a status page.
 type StatusPageElementType string
 
+// StatusPageElementType values.
 const (
 	StatusPageElementTypeHistoricalTimeline     StatusPageElementType = "historical_timeline"
 	StatusPageElementTypeCurrentStatusIndicator StatusPageElementType = "current_status_indicator"

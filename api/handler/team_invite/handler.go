@@ -1,8 +1,9 @@
-package team_invite
+package teaminvite
 
 import "github.com/yorukot/knocker/repository"
 
-// TeamInviteHandler handles team invite-related routes.
-type TeamInviteHandler struct {
+// Handler handles team invite-related routes.
+// Handler handles team invite-related requests.
+type Handler struct {
 	Repo repository.Repository
 }

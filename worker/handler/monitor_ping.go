@@ -84,7 +84,7 @@ func (h *Handler) enqueueNotificationTasks(monitor models.Monitor, ping models.P
 			zap.Error(err))
 		return
 	}
-	defer h.repo.DeferRollback(tx, ctx)
+	defer h.repo.DeferRollback(ctx, tx)
 
 	notificationIDs, err := h.repo.GetNotificationIDsByMonitorID(ctx, tx, monitor.ID)
 	if err != nil {
@@ -94,7 +94,7 @@ func (h *Handler) enqueueNotificationTasks(monitor models.Monitor, ping models.P
 		return
 	}
 
-	if err := h.repo.CommitTransaction(tx, ctx); err != nil {
+	if err := h.repo.CommitTransaction(ctx, tx); err != nil {
 		zap.L().Error("failed to commit transaction",
 			zap.Int64("monitor_id", monitor.ID),
 			zap.Error(err))
@@ -159,7 +159,7 @@ func (h *Handler) processIncident(ctx context.Context, monitor models.Monitor, p
 			zap.Error(err))
 		return
 	}
-	defer h.repo.DeferRollback(tx, ctx)
+	defer h.repo.DeferRollback(ctx, tx)
 
 	openIncident, err := h.repo.GetOpenIncidentByMonitorID(ctx, tx, monitor.ID)
 	if err != nil {
@@ -182,13 +182,13 @@ func (h *Handler) processIncident(ctx context.Context, monitor models.Monitor, p
 	if targetStatus != monitor.Status {
 		if err := h.repo.UpdateMonitorStatus(ctx, tx, monitor.ID, targetStatus, time.Now().UTC()); err != nil {
 			zap.L().Error("failed to update monitor status",
-			zap.Int64("monitor_id", monitor.ID),
-			zap.Int64("region_id", regionID),
-			zap.String("region_name", region.Name),
-			zap.String("target_status", string(targetStatus)),
-			zap.Error(err))
-		return
-	}
+				zap.Int64("monitor_id", monitor.ID),
+				zap.Int64("region_id", regionID),
+				zap.String("region_name", region.Name),
+				zap.String("target_status", string(targetStatus)),
+				zap.Error(err))
+			return
+		}
 		monitor.Status = targetStatus
 	}
 
@@ -207,7 +207,7 @@ func (h *Handler) processIncident(ctx context.Context, monitor models.Monitor, p
 		return
 	}
 
-	if err := h.repo.CommitTransaction(tx, ctx); err != nil {
+	if err := h.repo.CommitTransaction(ctx, tx); err != nil {
 		zap.L().Error("failed to commit incident transaction",
 			zap.Int64("monitor_id", monitor.ID),
 			zap.Int64("region_id", regionID),
@@ -302,7 +302,7 @@ func (h *Handler) handleIncidentRecovery(ctx context.Context, tx pgx.Tx, monitor
 	}
 
 	allSuccessful := true
-	for i := range(recoveryThreshold) {
+	for i := range recoveryThreshold {
 		if samples[i].Status != models.PingStatusSuccessful {
 			allSuccessful = false
 			break

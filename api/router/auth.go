@@ -8,14 +8,14 @@ import (
 	"github.com/yorukot/knocker/utils/config"
 )
 
-// Auth router going to route register signin etc
+// AuthRouter registers auth-related routes.
 func AuthRouter(api *echo.Group, repo repository.Repository) {
 	oauthConfig, err := config.GetOAuthConfig()
 	if err != nil {
 		panic("Failed to initialize OAuth config: " + err.Error())
 	}
 
-	authHandler := &auth.AuthHandler{
+	authHandler := &auth.Handler{
 		Repo:        repo,
 		OAuthConfig: oauthConfig,
 	}

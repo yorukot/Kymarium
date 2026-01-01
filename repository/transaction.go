@@ -17,15 +17,15 @@ func (r *PGRepository) StartTransaction(ctx context.Context) (pgx.Tx, error) {
 	return tx, nil
 }
 
-// DeferRollback rollback the transaction if it's not already closed
-func (r *PGRepository) DeferRollback(tx pgx.Tx, ctx context.Context) {
+// DeferRollback rollback the transaction if it's not already closed.
+func (r *PGRepository) DeferRollback(ctx context.Context, tx pgx.Tx) {
 	if err := tx.Rollback(ctx); err != nil && err != pgx.ErrTxClosed {
 		zap.L().Error("Failed to rollback transaction", zap.Error(err))
 	}
 }
 
-// CommitTransaction commit the transaction
-func (r *PGRepository) CommitTransaction(tx pgx.Tx, ctx context.Context) error {
+// CommitTransaction commit the transaction.
+func (r *PGRepository) CommitTransaction(ctx context.Context, tx pgx.Tx) error {
 	if err := tx.Commit(ctx); err != nil {
 		zap.L().Error("Failed to commit transaction", zap.Error(err))
 		return err

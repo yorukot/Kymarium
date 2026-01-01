@@ -9,7 +9,7 @@ import (
 
 // MonitorRouter handles monitor-related routes
 func MonitorRouter(api *echo.Group, repo repository.Repository) {
-	monitorHandler := &monitor.MonitorHandler{
+	monitorHandler := &monitor.Handler{
 		Repo: repo,
 	}
 

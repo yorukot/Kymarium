@@ -9,7 +9,7 @@ import (
 
 // TeamRouter handles team-related routes
 func TeamRouter(api *echo.Group, repo repository.Repository) {
-	teamHandler := &team.TeamHandler{
+	teamHandler := &team.Handler{
 		Repo: repo,
 	}
 

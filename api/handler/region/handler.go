@@ -2,6 +2,7 @@ package region
 
 import "github.com/yorukot/knocker/repository"
 
-type RegionHandler struct {
+// Handler handles region-related requests.
+type Handler struct {
 	Repo repository.Repository
 }

@@ -9,22 +9,28 @@ import (
 	"github.com/yorukot/knocker/models/monitorm"
 )
 
+// MonitorType represents the type of monitor being configured.
 type MonitorType string
 
+// MonitorType values.
 const (
 	MonitorTypeHTTP MonitorType = "http"
 	MonitorTypePing MonitorType = "ping"
 )
 
+// MonitorStatus represents the current availability status of a monitor.
 type MonitorStatus string
 
+// MonitorStatus values.
 const (
 	MonitorStatusUp   MonitorStatus = "up"
 	MonitorStatusDown MonitorStatus = "down"
 )
 
+// NotificationType represents the delivery channel for notifications.
 type NotificationType string
 
+// NotificationType values.
 const (
 	NotificationTypeDiscord  NotificationType = "discord"
 	NotificationTypeTelegram NotificationType = "telegram"

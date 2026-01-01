@@ -42,7 +42,7 @@ func newUserResponse(user *models.User) userResponse {
 // @Failure 404 {object} response.ErrorResponse "User not found"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /users/me [get]
-func (h *UserHandler) GetMe(c echo.Context) error {
+func (h *Handler) GetMe(c echo.Context) error {
 	userID, err := authutil.GetUserIDFromContext(c)
 	if err != nil {
 		zap.L().Error("Failed to parse user ID from context", zap.Error(err))
@@ -58,7 +58,7 @@ func (h *UserHandler) GetMe(c echo.Context) error {
 		zap.L().Error("Failed to begin transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction")
 	}
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	user, err := h.Repo.GetUserByID(c.Request().Context(), tx, *userID)
 	if err != nil {
@@ -70,7 +70,7 @@ func (h *UserHandler) GetMe(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "User not found")
 	}
 
-	if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 

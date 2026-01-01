@@ -24,6 +24,8 @@ type PingRecorder struct {
 	stopped       chan struct{}
 }
 
+// NewPingRecorder creates a PingRecorder with default buffering settings.
+// NewPingRecorder creates a ping recorder with default buffering settings.
 func NewPingRecorder(repo repository.Repository) *PingRecorder {
 	recorder := &PingRecorder{
 		repo:          repo,
@@ -88,14 +90,14 @@ func (r *PingRecorder) flush(batch []models.Ping) []models.Ping {
 		zap.L().Error("failed to start transaction for ping batch", zap.Error(err))
 		return batch
 	}
-	defer r.repo.DeferRollback(tx, ctx)
+	defer r.repo.DeferRollback(ctx, tx)
 
 	if err := r.repo.BatchInsertPings(ctx, tx, batch); err != nil {
 		zap.L().Error("failed to insert ping batch", zap.Int("count", len(batch)), zap.Error(err))
 		return batch
 	}
 
-	if err := r.repo.CommitTransaction(tx, ctx); err != nil {
+	if err := r.repo.CommitTransaction(ctx, tx); err != nil {
 		return batch
 	}
 

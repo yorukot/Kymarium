@@ -24,7 +24,7 @@ func TestListTeams_Success(t *testing.T) {
 		{Team: models.Team{ID: 1, Name: "One"}, Role: models.MemberRoleOwner},
 	}, nil)
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, rec := testutil.NewEchoContext(http.MethodGet, "/teams", nil)
 	testutil.Authenticate(c, 123)
 
@@ -43,7 +43,7 @@ func TestListTeams_Success(t *testing.T) {
 func TestListTeams_Unauthorized(t *testing.T) {
 	testutil.InitTestEnv(t)
 
-	h := &TeamHandler{Repo: &repository.MockRepository{}}
+	h := &Handler{Repo: &repository.MockRepository{}}
 	c, _ := testutil.NewEchoContext(http.MethodGet, "/teams", nil)
 
 	err := h.ListTeams(c)

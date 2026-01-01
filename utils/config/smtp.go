@@ -22,6 +22,7 @@ var (
 	initErr  error
 )
 
+// InitSMTP initializes SMTP settings once.
 func InitSMTP() error {
 	initOnce.Do(func() {
 		initErr = initSMTPInternal()
@@ -64,6 +65,7 @@ func initSMTPInternal() error {
 	return nil
 }
 
+// SendEmail sends an email using the configured SMTP settings.
 func SendEmail(to string, cc, bcc []string, subject string, body string) error {
 	if err := InitSMTP(); err != nil {
 		return err

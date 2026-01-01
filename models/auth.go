@@ -12,6 +12,7 @@ const (
 	CookieNameAccessToken  = "access_token"
 )
 
+// RefreshToken represents a persisted refresh token session.
 type RefreshToken struct {
 	ID        int64      `json:"id,string" db:"id" example:"175928847299117063"`
 	UserID    int64      `json:"user_id,string" db:"user_id" example:"175928847299117063"`

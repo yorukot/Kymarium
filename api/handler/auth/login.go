@@ -36,7 +36,7 @@ type LoginRequest struct {
 // @Failure 500 {object} response.ErrorResponse "Internal server error (transaction, database, or password verification failure)"
 // @Failure 502 {object} response.ErrorResponse "Invalid request body format"
 // @Router /auth/login [post]
-func (h *AuthHandler) Login(c echo.Context) error {
+func (h *Handler) Login(c echo.Context) error {
 	// Decode the request body
 	var loginRequest LoginRequest
 	if err := json.NewDecoder(c.Request().Body).Decode(&loginRequest); err != nil {
@@ -54,7 +54,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 		zap.L().Error("Failed to begin transaction", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction", err)
 	}
-	defer h.Repo.DeferRollback(tx, c.Request().Context())
+	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
 	// Get the user by email
 	user, err := h.Repo.GetUserByEmail(c.Request().Context(), tx, loginRequest.Email)
@@ -120,7 +120,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 				}
 			}
 
-			if err := h.Repo.CommitTransaction(tx, c.Request().Context()); err != nil {
+			if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
 				zap.L().Error("Failed to commit transaction", zap.Error(err))
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 			}
@@ -143,7 +143,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	}
 
 	// Commit the transaction
-	h.Repo.CommitTransaction(tx, c.Request().Context())
+	h.Repo.CommitTransaction(c.Request().Context(), tx)
 
 	// Generate the refresh token cookie
 	refreshTokenCookie := generateRefreshTokenCookie(refreshToken)

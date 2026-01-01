@@ -2,8 +2,10 @@ package models
 
 import "time"
 
+// IncidentStatus represents the lifecycle state of an incident.
 type IncidentStatus string
 
+// IncidentStatus values.
 const (
 	IncidentStatusDetected      IncidentStatus = "detected"
 	IncidentStatusInvestigating IncidentStatus = "investigating"
@@ -12,8 +14,10 @@ const (
 	IncidentStatusResolved      IncidentStatus = "resolved"
 )
 
+// IncidentSeverity represents the impact level of an incident.
 type IncidentSeverity string
 
+// IncidentSeverity values.
 const (
 	IncidentSeverityEmergency IncidentSeverity = "emergency"
 	IncidentSeverityCritical  IncidentSeverity = "critical"
@@ -22,8 +26,10 @@ const (
 	IncidentSeverityInfo      IncidentSeverity = "info"
 )
 
+// EventType represents a timeline event type for incidents.
 type EventType string
 
+// EventType values.
 const (
 	IncidentEventTypeDetected         EventType = "detected"
 	IncidentEventTypeNotificationSent EventType = "notification_sent"

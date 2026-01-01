@@ -26,7 +26,7 @@ func TestUpdateTeam_Success(t *testing.T) {
 	mockRepo.On("UpdateTeamName", mock.Anything, mock.Anything, int64(10), "NewName", mock.AnythingOfType("time.Time")).
 		Return(&models.Team{ID: 10, Name: "NewName"}, nil)
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, rec := testutil.NewEchoContext(http.MethodPut, "/teams/10", strings.NewReader(`{"name":"NewName"}`))
 	testutil.SetJSONHeader(c)
 	c.SetParamNames("id")
@@ -51,7 +51,7 @@ func TestUpdateTeam_Forbidden(t *testing.T) {
 	mockRepo.On("GetTeamMemberByUserID", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(&models.TeamMember{Role: models.MemberRoleViewer}, nil)
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, _ := testutil.NewEchoContext(http.MethodPut, "/teams/11", strings.NewReader(`{"name":"NewName"}`))
 	testutil.SetJSONHeader(c)
 	c.SetParamNames("id")
@@ -74,7 +74,7 @@ func TestUpdateTeam_NotFound(t *testing.T) {
 	mockRepo.On("GetTeamMemberByUserID", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return((*models.TeamMember)(nil), nil)
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, _ := testutil.NewEchoContext(http.MethodPut, "/teams/11", strings.NewReader(`{"name":"NewName"}`))
 	testutil.SetJSONHeader(c)
 	c.SetParamNames("id")
@@ -91,7 +91,7 @@ func TestUpdateTeam_NotFound(t *testing.T) {
 func TestUpdateTeam_Unauthorized(t *testing.T) {
 	testutil.InitTestEnv(t)
 
-	h := &TeamHandler{Repo: &repository.MockRepository{}}
+	h := &Handler{Repo: &repository.MockRepository{}}
 	c, _ := testutil.NewEchoContext(http.MethodPut, "/teams/1", strings.NewReader(`{"name":"NewName"}`))
 	testutil.SetJSONHeader(c)
 	c.SetParamNames("id")

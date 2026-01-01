@@ -7,9 +7,9 @@ import (
 	"github.com/yorukot/knocker/repository"
 )
 
-// Auth router going to route register signin etc
+// NotificationRouter registers notification routes.
 func NotificationRouter(api *echo.Group, repo repository.Repository) {
-	notificationHandler := &notification.NotificationHandler{
+	notificationHandler := &notification.Handler{
 		Repo: repo,
 	}
 	r := api.Group("/teams/:teamID/notifications", middleware.AuthRequiredMiddleware)

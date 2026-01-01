@@ -4,8 +4,10 @@ import (
 	"net/http"
 )
 
+// HTTPMethod represents the HTTP method used by an HTTP monitor.
 type HTTPMethod string
 
+// HTTPMethod values.
 const (
 	MethodGet     HTTPMethod = http.MethodGet
 	MethodPost    HTTPMethod = http.MethodPost
@@ -16,8 +18,10 @@ const (
 	MethodOptions HTTPMethod = http.MethodOptions
 )
 
+// BodyEncoding represents the encoding for HTTP request bodies.
 type BodyEncoding string
 
+// BodyEncoding values.
 const (
 	BodyEncodingJSON BodyEncoding = "json"
 	BodyEncodingXML  BodyEncoding = "xml"

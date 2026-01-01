@@ -10,21 +10,22 @@ import (
 )
 
 type monitorResponse struct {
-	ID                string             `json:"id"`
-	TeamID            string             `json:"team_id"`
-	Name              string             `json:"name"`
-	Type              models.MonitorType `json:"type"`
-	Config            json.RawMessage    `json:"config"`
-	Interval          int                `json:"interval"`
-	LastChecked       time.Time          `json:"last_checked"`
-	NextCheck         time.Time          `json:"next_check"`
-	FailureThreshold  int16              `json:"failure_threshold"`
-	RecoveryThreshold int16              `json:"recovery_threshold"`
-	RegionIDs         []string           `json:"regions"`
-	NotificationIDs   []string           `json:"notification"`
-	Incidents         []incidentResponse `json:"incidents,omitempty"`
-	UpdatedAt         time.Time          `json:"updated_at"`
-	CreatedAt         time.Time          `json:"created_at"`
+	ID                string               `json:"id"`
+	TeamID            string               `json:"team_id"`
+	Name              string               `json:"name"`
+	Type              models.MonitorType   `json:"type"`
+	Config            json.RawMessage      `json:"config"`
+	Interval          int                  `json:"interval"`
+	Status            models.MonitorStatus `json:"status"`
+	LastChecked       time.Time            `json:"last_checked"`
+	NextCheck         time.Time            `json:"next_check"`
+	FailureThreshold  int16                `json:"failure_threshold"`
+	RecoveryThreshold int16                `json:"recovery_threshold"`
+	RegionIDs         []string             `json:"regions"`
+	NotificationIDs   []string             `json:"notification"`
+	Incidents         []incidentResponse   `json:"incidents,omitempty"`
+	UpdatedAt         time.Time            `json:"updated_at"`
+	CreatedAt         time.Time            `json:"created_at"`
 }
 
 type incidentResponse struct {
@@ -49,6 +50,7 @@ func newMonitorResponse(m models.Monitor) monitorResponse {
 		Type:              m.Type,
 		Config:            m.Config,
 		Interval:          m.Interval,
+		Status:            m.Status,
 		LastChecked:       m.LastChecked,
 		NextCheck:         m.NextCheck,
 		FailureThreshold:  m.FailureThreshold,

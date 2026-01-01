@@ -2,14 +2,14 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/handler/team_invite"
+	teaminvite "github.com/yorukot/knocker/api/handler/team_invite"
 	"github.com/yorukot/knocker/api/middleware"
 	"github.com/yorukot/knocker/repository"
 )
 
 // TeamInviteRouter handles team invite-related routes.
 func TeamInviteRouter(api *echo.Group, repo repository.Repository) {
-	handler := &team_invite.TeamInviteHandler{Repo: repo}
+	handler := &teaminvite.Handler{Repo: repo}
 
 	r := api.Group("/teams/:teamID/invites", middleware.AuthRequiredMiddleware)
 	r.POST("", handler.CreateInvite)

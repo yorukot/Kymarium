@@ -364,7 +364,7 @@ definitions:
     required:
     - name
     type: object
-  team_invite.createTeamInviteRequest:
+  teaminvite.createTeamInviteRequest:
     properties:
       email:
         maxLength: 255
@@ -378,7 +378,7 @@ definitions:
     required:
     - email
     type: object
-  team_invite.updateInviteRequest:
+  teaminvite.updateInviteRequest:
     properties:
       status:
         enum:
@@ -387,6 +387,30 @@ definitions:
         type: string
     required:
     - status
+    type: object
+  user.updatePasswordRequest:
+    properties:
+      current_password:
+        maxLength: 255
+        minLength: 8
+        type: string
+      new_password:
+        maxLength: 255
+        minLength: 8
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  user.updateUserRequest:
+    properties:
+      avatar:
+        maxLength: 2048
+        type: string
+      display_name:
+        maxLength: 255
+        minLength: 1
+        type: string
     type: object
 host: localhost:8000
 info:
@@ -902,6 +926,45 @@ paths:
       summary: Update a team
       tags:
       - teams
+  /teams/{id}/leave:
+    post:
+      description: Leaves a team (non-owner only)
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Left team successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid team ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Team not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Leave a team
+      tags:
+      - teams
   /teams/{teamID}/incidents:
     get:
       description: Lists incidents for a team the user has access to
@@ -1260,7 +1323,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/team_invite.createTeamInviteRequest'
+          $ref: '#/definitions/teaminvite.createTeamInviteRequest'
       produces:
       - application/json
       responses:
@@ -1363,7 +1426,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/team_invite.updateInviteRequest'
+          $ref: '#/definitions/teaminvite.updateInviteRequest'
       produces:
       - application/json
       responses:
@@ -2259,6 +2322,216 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: Get current user
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's profile
+      parameters:
+      - description: User update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.updateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Update current user
+      tags:
+      - users
+  /users/me/account:
+    get:
+      description: Retrieves the authenticated user's account details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account retrieved successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get current user account info
+      tags:
+      - users
+  /users/me/invites:
+    get:
+      description: Lists pending team invites for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invites retrieved successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List pending invites
+      tags:
+      - users
+  /users/me/password:
+    patch:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's password
+      parameters:
+      - description: Password update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.updatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password updated successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Update password
+      tags:
+      - users
+  /users/me/sessions:
+    get:
+      description: Lists active refresh token sessions for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sessions retrieved successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List active sessions
+      tags:
+      - users
+  /users/me/sessions/{sessionID}/revoke:
+    post:
+      description: Revokes a refresh token session for the authenticated user
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session revoked successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid session ID
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Session not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Revoke session
+      tags:
+      - users
+  /users/me/sessions/revoke-others:
+    post:
+      description: Revokes all active sessions except the current one
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Other sessions revoked successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Refresh token not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Revoke other sessions
       tags:
       - users
 schemes:

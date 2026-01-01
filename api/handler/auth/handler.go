@@ -5,7 +5,8 @@ import (
 	"github.com/yorukot/knocker/utils/config"
 )
 
-type AuthHandler struct {
+// Handler handles auth-related requests.
+type Handler struct {
 	Repo        repository.Repository
 	OAuthConfig *config.OAuthConfig
 }

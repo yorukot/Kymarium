@@ -2,6 +2,7 @@ package monitor
 
 import "github.com/yorukot/knocker/repository"
 
-type MonitorHandler struct {
+// Handler handles monitor-related requests.
+type Handler struct {
 	Repo repository.Repository
 }

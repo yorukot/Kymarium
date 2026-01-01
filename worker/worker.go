@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Run starts the background worker processing queues.
 func Run(db *pgxpool.Pool) {
 	zap.L().Info("Starting worker")
 	cfg := config.Env()

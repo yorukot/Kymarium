@@ -4,12 +4,14 @@ import (
 	"sync"
 
 	"github.com/caarlos0/env/v10"
-	_ "github.com/joho/godotenv/autoload"
+	_ "github.com/joho/godotenv/autoload" // Load .env into the process environment.
 	"github.com/yorukot/knocker/models"
 )
 
+// AppEnv represents the running environment.
 type AppEnv string
 
+// AppEnv values.
 const (
 	AppEnvDev  AppEnv = "dev"
 	AppEnvProd AppEnv = "prod"

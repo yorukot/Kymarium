@@ -1,4 +1,4 @@
-package team_invite
+package teaminvite
 
 import (
 	"fmt"

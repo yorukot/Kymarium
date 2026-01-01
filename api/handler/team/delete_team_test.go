@@ -23,7 +23,7 @@ func TestDeleteTeam_Success(t *testing.T) {
 		Return(&models.TeamMember{Role: models.MemberRoleOwner}, nil)
 	mockRepo.On("DeleteTeam", mock.Anything, mock.Anything, int64(7)).Return(nil)
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, rec := testutil.NewEchoContext(http.MethodDelete, "/teams/7", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("7")
@@ -43,7 +43,7 @@ func TestDeleteTeam_Forbidden(t *testing.T) {
 	mockRepo.On("GetTeamMemberByUserID", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(&models.TeamMember{Role: models.MemberRoleMember}, nil)
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, _ := testutil.NewEchoContext(http.MethodDelete, "/teams/7", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("7")
@@ -65,7 +65,7 @@ func TestDeleteTeam_NotFound(t *testing.T) {
 	mockRepo.On("GetTeamMemberByUserID", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return((*models.TeamMember)(nil), nil)
 
-	h := &TeamHandler{Repo: mockRepo}
+	h := &Handler{Repo: mockRepo}
 	c, _ := testutil.NewEchoContext(http.MethodDelete, "/teams/7", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("7")
@@ -81,7 +81,7 @@ func TestDeleteTeam_NotFound(t *testing.T) {
 func TestDeleteTeam_Unauthorized(t *testing.T) {
 	testutil.InitTestEnv(t)
 
-	h := &TeamHandler{Repo: &repository.MockRepository{}}
+	h := &Handler{Repo: &repository.MockRepository{}}
 	c, _ := testutil.NewEchoContext(http.MethodDelete, "/teams/7", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("7")
