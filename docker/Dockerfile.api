@@ -1,0 +1,29 @@
+# syntax=docker/dockerfile:1
+
+ARG GO_VERSION=1.24.3
+
+FROM golang:${GO_VERSION}-alpine AS build
+RUN apk add --no-cache ca-certificates git
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
+
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/knocker ./cmd
+
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates
+WORKDIR /app
+
+COPY --from=build /out/knocker /app/knocker
+COPY migrations /app/migrations
+
+ENV APP_ENV=prod
+EXPOSE 8000
+
+CMD ["/app/knocker", "api"]

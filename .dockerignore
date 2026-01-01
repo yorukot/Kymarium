@@ -1,0 +1,8 @@
+.git
+.DS_Store
+tmp
+**/node_modules
+**/.svelte-kit
+**/build
+**/.env
+**/.env.*

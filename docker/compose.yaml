@@ -1,0 +1,114 @@
+services:
+  timescale:
+    image: timescale/timescaledb:latest-pg17
+    container_name: knocker-timescale
+    environment:
+      POSTGRES_DB: ${DB_NAME:-knocker}
+      POSTGRES_USER: ${DB_USER:-knocker}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-knocker-this-is-a-really-long-password}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-knocker} -d ${DB_NAME:-knocker}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    container_name: knocker-dragonfly
+    command: ["--default_lua_flags=allow-undeclared-keys"]
+    environment:
+      - DFLY_requirepass=${REDIS_PASSWORD:-knocker-dragonfly-password}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - dragonfly_data:/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    env_file:
+      - ../.env
+    environment:
+      APP_ENV: ${APP_ENV:-prod}
+      APP_PORT: ${APP_PORT:-8000}
+      DB_HOST: timescale
+      DB_PORT: "5432"
+      DB_SSL_MODE: ${DB_SSL_MODE:-disable}
+      REDIS_HOST: dragonfly
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-knocker-dragonfly-password}
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on:
+      timescale:
+        condition: service_healthy
+      dragonfly:
+        condition: service_started
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.worker
+    env_file:
+      - ../.env
+    environment:
+      APP_ENV: ${APP_ENV:-prod}
+      DB_HOST: timescale
+      DB_PORT: "5432"
+      DB_SSL_MODE: ${DB_SSL_MODE:-disable}
+      REDIS_HOST: dragonfly
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-knocker-dragonfly-password}
+    depends_on:
+      timescale:
+        condition: service_healthy
+      dragonfly:
+        condition: service_started
+    restart: unless-stopped
+
+  schedular:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.schedular
+    env_file:
+      - ../.env
+    environment:
+      APP_ENV: ${APP_ENV:-prod}
+      DB_HOST: timescale
+      DB_PORT: "5432"
+      DB_SSL_MODE: ${DB_SSL_MODE:-disable}
+      REDIS_HOST: dragonfly
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-knocker-dragonfly-password}
+    depends_on:
+      timescale:
+        condition: service_healthy
+      dragonfly:
+        condition: service_started
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+      args:
+        PUBLIC_API_BASE: ${PUBLIC_API_BASE:-http://localhost:8000}
+    environment:
+      PUBLIC_API_BASE: ${PUBLIC_API_BASE:-http://localhost:8000}
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  timescale_data:
+  dragonfly_data:

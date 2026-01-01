@@ -1,0 +1,26 @@
+services:
+  timescale:
+    image: timescale/timescaledb:latest-pg17
+    container_name: knocker-timescale
+    environment:
+      POSTGRES_DB: knocker
+      POSTGRES_USER: knocker
+      POSTGRES_PASSWORD: knocker-this-is-a-really-long-password
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    container_name: knocker-dragonfly
+    command: ["--default_lua_flags=allow-undeclared-keys"]
+    environment:
+      - DFLY_requirepass=knocker-dragonfly-password
+    ports:
+      - "6379:6379"
+    volumes:
+      - dragonfly_data:/data
+
+volumes:
+  timescale_data:
+  dragonfly_data:
