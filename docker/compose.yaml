@@ -2,32 +2,34 @@ services:
   timescale:
     image: timescale/timescaledb:latest-pg17
     container_name: kymarium-timescale
+    env_file:
+      - ../.env
     environment:
-      POSTGRES_DB: ${DB_NAME:-kymarium}
-      POSTGRES_USER: ${DB_USER:-kymarium}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-kymarium-this-is-a-really-long-password}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
       - timescale_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kymarium} -d ${DB_NAME:-kymarium}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
-      retries: 12
-    restart: unless-stopped
+      retries: 20
 
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly
     container_name: kymarium-dragonfly
     command: ["--default_lua_flags=allow-undeclared-keys"]
+    env_file:
+      - ../.env
     environment:
-      - DFLY_requirepass=${REDIS_PASSWORD:-kymarium-dragonfly-password}
+      - DFLY_requirepass=${REDIS_PASSWORD}
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "6379:6379"
     volumes:
       - dragonfly_data:/data
-    restart: unless-stopped
 
   api:
     build:
@@ -35,15 +37,6 @@ services:
       dockerfile: docker/Dockerfile.api
     env_file:
       - ../.env
-    environment:
-      APP_ENV: ${APP_ENV:-prod}
-      APP_PORT: ${APP_PORT:-8000}
-      DB_HOST: timescale
-      DB_PORT: "5432"
-      DB_SSL_MODE: ${DB_SSL_MODE:-disable}
-      REDIS_HOST: dragonfly
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-kymarium-dragonfly-password}
     ports:
       - "${APP_PORT:-8000}:8000"
     depends_on:
@@ -59,14 +52,6 @@ services:
       dockerfile: docker/Dockerfile.worker
     env_file:
       - ../.env
-    environment:
-      APP_ENV: ${APP_ENV:-prod}
-      DB_HOST: timescale
-      DB_PORT: "5432"
-      DB_SSL_MODE: ${DB_SSL_MODE:-disable}
-      REDIS_HOST: dragonfly
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-kymarium-dragonfly-password}
     depends_on:
       timescale:
         condition: service_healthy
@@ -80,14 +65,6 @@ services:
       dockerfile: docker/Dockerfile.schedular
     env_file:
       - ../.env
-    environment:
-      APP_ENV: ${APP_ENV:-prod}
-      DB_HOST: timescale
-      DB_PORT: "5432"
-      DB_SSL_MODE: ${DB_SSL_MODE:-disable}
-      REDIS_HOST: dragonfly
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-kymarium-dragonfly-password}
     depends_on:
       timescale:
         condition: service_healthy
@@ -100,11 +77,13 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.web
       args:
-        PUBLIC_API_BASE: ${PUBLIC_API_BASE:-http://localhost:8000}
+        PUBLIC_API_BASE: ${PUBLIC_API_BASE:-http://localhost:8000/api}
     environment:
-      PUBLIC_API_BASE: ${PUBLIC_API_BASE:-http://localhost:8000}
+      PUBLIC_API_BASE: ${PUBLIC_API_BASE:-http://localhost:8000/api}
+      HOST: 0.0.0.0
+      PORT: 3000
     ports:
-      - "${WEB_PORT:-5173}:5173"
+      - "${WEB_PORT:-3000}:3000"
     depends_on:
       - api
     restart: unless-stopped

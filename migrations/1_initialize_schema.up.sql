@@ -256,8 +256,8 @@ CREATE TABLE "public"."pings" (
 CREATE INDEX "idx_pings_monitor_id" ON "public"."pings" ("monitor_id");
 
 -- TimescaleDB hypertable and continuous aggregate for ping rollups
-SELECT add_retention_policy('pings', INTERVAL '7 days');
 SELECT create_hypertable('pings', 'time', if_not_exists => TRUE);
+SELECT add_retention_policy('pings', INTERVAL '7 days');
 
 CREATE MATERIALIZED VIEW monitor_30min_summary
 WITH (timescaledb.continuous) AS
@@ -285,7 +285,7 @@ SELECT add_continuous_aggregate_policy(
     schedule_interval => INTERVAL '15 minutes'
 );
 
-SELECT add_retention_policy('pings', INTERVAL '90 days');
+SELECT add_retention_policy('monitor_30min_summary', INTERVAL '1 year');
 
 ALTER MATERIALIZED VIEW monitor_30min_summary
 SET (timescaledb.materialized_only = false);

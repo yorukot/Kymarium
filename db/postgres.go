@@ -47,13 +47,17 @@ func InitDatabase() (*pgxpool.Pool, error) {
 
 	zap.L().Info("Database initialized")
 
-	Migrator()
-
-	if err := creteRegionsDataIfNotExists(ctx, pool); err != nil {
-		pool.Close()
-		return nil, err
+	runAll := len(os.Args) < 2 || os.Args[1] == "all"
+	if runAll || os.Args[1] == "api" {
+		Migrator()
+		if err := creteRegionsDataIfNotExists(ctx, pool); err != nil {
+			pool.Close()
+			return nil, err
+		}
 	}
 
+	
+	
 	return pool, nil
 }
 
@@ -97,7 +101,10 @@ func Migrator() {
 }
 
 func creteRegionsDataIfNotExists(ctx context.Context, pool *pgxpool.Pool) error {
+	
+	zap.L().Info("Creating regions data if not exists")
 
+	// Check if regions already exist
 	regions := make([]models.Region, 0, len(config.Env().AppRegions))
 	for _, raw := range config.Env().AppRegions {
 		parts := strings.SplitN(raw, "-", 2)
@@ -135,7 +142,8 @@ func creteRegionsDataIfNotExists(ctx context.Context, pool *pgxpool.Pool) error 
 			return fmt.Errorf("insert region %q: %w", region.Name, err)
 		}
 	}
-
+	
+	zap.L().Info("Regions data created or already exists")
 	return nil
 }
 

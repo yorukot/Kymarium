@@ -105,7 +105,7 @@ func generateRefreshTokenCookie(refreshToken models.RefreshToken) http.Cookie {
 	return http.Cookie{
 		Name:     models.CookieNameRefreshToken,
 		Path:     "/api/auth/refresh",
-		Domain:   config.Env().FrontendDomain,
+		Domain:   cookieDomain(),
 		Value:    refreshToken.Token,
 		HttpOnly: true,
 		Secure:   config.Env().AppEnv == config.AppEnvProd,
@@ -140,7 +140,7 @@ func generateAccessTokenCookie(accessToken string) http.Cookie {
 	return http.Cookie{
 		Name:     models.CookieNameAccessToken,
 		Path:     "/api",
-		Domain:   config.Env().FrontendDomain,
+		Domain:   cookieDomain(),
 		Value:    accessToken,
 		HttpOnly: true,
 		Secure:   config.Env().AppEnv == config.AppEnvProd,
@@ -370,7 +370,7 @@ func generateOAuthSessionCookie(session string) http.Cookie {
 	oauthSessionCookie := http.Cookie{
 		Name:     models.CookieNameOAuthSession,
 		Value:    session,
-		Domain:   config.Env().FrontendDomain,
+		Domain:   cookieDomain(),
 		HttpOnly: true,
 		Path:     "/api/auth/oauth",
 		Secure:   config.Env().AppEnv == config.AppEnvProd,
@@ -379,4 +379,33 @@ func generateOAuthSessionCookie(session string) http.Cookie {
 	}
 
 	return oauthSessionCookie
+}
+
+func cookieDomain() string {
+	return normalizeCookieDomain(config.Env().CookieDomain)
+}
+
+func normalizeCookieDomain(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return ""
+	}
+
+	if strings.Contains(trimmed, "://") {
+		parsed, err := url.Parse(trimmed)
+		if err == nil && parsed.Hostname() != "" {
+			return parsed.Hostname()
+		}
+	}
+
+	parsed, err := url.Parse("http://" + trimmed)
+	if err == nil && parsed.Hostname() != "" {
+		return parsed.Hostname()
+	}
+
+	if host, _, err := net.SplitHostPort(trimmed); err == nil {
+		return host
+	}
+
+	return trimmed
 }

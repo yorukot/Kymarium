@@ -38,7 +38,7 @@ func Run(db *pgxpool.Pool) {
 	repo := repository.New(db)
 	routes(e, repo)
 	e.Logger.Infof("Starting server on port %s in %s mode", env.AppPort, env.AppEnv)
-	e.Logger.Fatal(e.Start(":" + env.AppPort))
+	e.Logger.Fatal(e.Start(":8000"))
 }
 
 // routes sets up the API routes
