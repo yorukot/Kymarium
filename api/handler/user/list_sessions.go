@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/models"
 	authutil "github.com/yorukot/knocker/utils/auth"
 	"github.com/yorukot/knocker/utils/response"
 	"go.uber.org/zap"
@@ -16,7 +15,6 @@ type sessionResponse struct {
 	UserAgent *string   `json:"user_agent,omitempty" example:"Mozilla/5.0 (Windows NT 10.0; Win64; x64)"`
 	IP        string    `json:"ip,omitempty" example:"192.168.1.100"`
 	CreatedAt time.Time `json:"created_at" example:"2023-01-01T12:00:00Z"`
-	Current   bool      `json:"current" example:"true"`
 }
 
 // ListSessions godoc
@@ -47,19 +45,6 @@ func (h *Handler) ListSessions(c echo.Context) error {
 	}
 	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
-	var currentTokenID *int64
-	refreshCookie, err := c.Cookie(models.CookieNameRefreshToken)
-	if err == nil && refreshCookie != nil && refreshCookie.Value != "" {
-		refreshToken, err := h.Repo.GetRefreshTokenByToken(c.Request().Context(), tx, refreshCookie.Value)
-		if err != nil {
-			zap.L().Error("Failed to get refresh token", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get sessions")
-		}
-		if refreshToken != nil {
-			currentTokenID = &refreshToken.ID
-		}
-	}
-
 	tokens, err := h.Repo.ListActiveRefreshTokensByUserID(c.Request().Context(), tx, *userID)
 	if err != nil {
 		zap.L().Error("Failed to list refresh tokens", zap.Error(err))
@@ -81,7 +66,6 @@ func (h *Handler) ListSessions(c echo.Context) error {
 			UserAgent: token.UserAgent,
 			IP:        ip,
 			CreatedAt: token.CreatedAt,
-			Current:   currentTokenID != nil && token.ID == *currentTokenID,
 		})
 	}
 

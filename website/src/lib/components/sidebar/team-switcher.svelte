@@ -7,7 +7,7 @@
 	import { shapes } from '@dicebear/collection';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import type { Team } from '../../types';
+	import type { Team } from '$lib/types';
 	import AddTeamDialog from './add-team-dialog.svelte';
 
 	const teamID = $derived.by(() => page.params.teamID);

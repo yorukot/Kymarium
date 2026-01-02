@@ -2,7 +2,7 @@
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
-	import type { Monitor } from '../../types';
+	import type { Monitor } from '$lib/types';
 
 	let {
 		open = $bindable(false),

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { StatusPageWithElements } from '../../types';
+	import type { StatusPageWithElements } from '$lib/types';
 	import { Card } from '$lib/components/ui/card';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createForm } from 'felte';
 	import { validator } from '@felte/validator-zod';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 	import { z } from 'zod';
 	import { page } from '$app/state';
 	import {
@@ -16,7 +17,7 @@
 	import { cn } from '$lib/utils';
 	import { toast } from 'svelte-sonner';
 	import Textarea from '$lib/components/ui/textarea/textarea.svelte';
-	import type { EmailNotificationConfig, Notification } from '../../../types';
+	import type { EmailNotificationConfig, Notification } from '../$lib/types';
 
 	let {
 		notification = null,
@@ -79,9 +80,9 @@
 
 	const initialValues: FormValues = deriveInitialValues();
 
-	const { form, errors, isSubmitting, setFields, reset } = createForm<FormValues>({
+	const { form, isSubmitting, setFields, reset } = createForm<FormValues>({
 		initialValues,
-		extend: validator({ schema: formSchema }),
+		extend: [validator({ schema: formSchema }), reporter()],
 		onSubmit: handleSubmit
 	});
 
@@ -183,9 +184,11 @@
 		<div class="space-y-2">
 			<Field.Label for="name">Name</Field.Label>
 			<Input id="name" name="name" placeholder="On-call email" />
-			{#if $errors.name}
-				<Field.Description class="text-destructive">{$errors.name[0]}</Field.Description>
-			{/if}
+			<ValidationMessage for="name" let:messages>
+				{#if messages?.length}
+					<Field.Description class="text-destructive">{messages[0]}</Field.Description>
+				{/if}
+			</ValidationMessage>
 		</div>
 
 		<div class="space-y-2">
@@ -197,11 +200,11 @@
 				placeholder="alerts@example.com\nstatus@example.com"
 				rows={4}
 			/>
-			{#if $errors.config?.emailAddress}
-				<Field.Description class="text-destructive"
-					>{$errors.config.emailAddress[0]}</Field.Description
-				>
-			{/if}
+			<ValidationMessage for="config.emailAddress" let:messages>
+				{#if messages?.length}
+					<Field.Description class="text-destructive">{messages[0]}</Field.Description>
+				{/if}
+			</ValidationMessage>
 		</div>
 	</Field.Set>
 

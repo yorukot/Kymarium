@@ -2,6 +2,7 @@ import { PUBLIC_API_BASE } from '$env/static/public';
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
 import camelcaseKeys from 'camelcase-keys';
+import snakecaseKeys from 'snakecase-keys';
 import { refreshToken } from './auth';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -56,17 +57,35 @@ function normalizeResponse<T>(data: unknown): T {
 	return data as T;
 }
 
+function normalizeRequestBody(value: unknown): unknown {
+	if (!value || typeof value !== 'object') return value;
+
+	if (
+		(typeof FormData !== 'undefined' && value instanceof FormData) ||
+		(typeof URLSearchParams !== 'undefined' && value instanceof URLSearchParams) ||
+		(typeof Blob !== 'undefined' && value instanceof Blob) ||
+		(typeof File !== 'undefined' && value instanceof File) ||
+		value instanceof Date
+	) {
+		return value;
+	}
+
+	return snakecaseKeys(value as Record<string, unknown>, { deep: true });
+}
+
 export async function apiRequest<T>(url: string, options: ApiOptions = {}): Promise<T> {
 	const { method = 'GET', body, defaultError = 'Request failed', headers } = options;
+	const shouldNormalizeBody = body && (method === 'POST' || method === 'PUT' || method === 'PATCH');
+	const normalizedBody = shouldNormalizeBody ? normalizeRequestBody(body) : body;
 
 	const requestInit: RequestInit = {
 		method,
 		credentials: 'include',
 		headers: {
-			...(body ? { 'Content-Type': 'application/json' } : {}),
+			...(normalizedBody ? { 'Content-Type': 'application/json' } : {}),
 			...headers
 		},
-		body: body ? JSON.stringify(body) : undefined
+		body: normalizedBody ? JSON.stringify(normalizedBody) : undefined
 	};
 
 	const res = await fetch(`${PUBLIC_API_BASE}${url}`, requestInit);
@@ -117,15 +136,17 @@ export async function apiRequest<T>(url: string, options: ApiOptions = {}): Prom
 
 export async function publicApiRequest<T>(url: string, options: ApiOptions = {}): Promise<T> {
 	const { method = 'GET', body, defaultError = 'Request failed', headers } = options;
+	const shouldNormalizeBody = body && (method === 'POST' || method === 'PUT' || method === 'PATCH');
+	const normalizedBody = shouldNormalizeBody ? normalizeRequestBody(body) : body;
 
 	const requestInit: RequestInit = {
 		method,
 		credentials: 'omit',
 		headers: {
-			...(body ? { 'Content-Type': 'application/json' } : {}),
+			...(normalizedBody ? { 'Content-Type': 'application/json' } : {}),
 			...headers
 		},
-		body: body ? JSON.stringify(body) : undefined
+		body: normalizedBody ? JSON.stringify(normalizedBody) : undefined
 	};
 
 	const res = await fetch(`${PUBLIC_API_BASE}${url}`, requestInit);

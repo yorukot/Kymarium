@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatSli, statusMeta } from '$lib/styles/status';
-	import type { PublicStatusPageMonitor } from '../../../types';
+	import type { PublicStatusPageMonitor } from '../$lib/types';
 	import HistoricalTimeline from './historical-timeline.svelte';
 
 	let { monitor, days = 90 }: { monitor: PublicStatusPageMonitor; days?: number } = $props();

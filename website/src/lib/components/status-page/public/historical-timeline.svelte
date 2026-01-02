@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PublicTimelinePoint } from '../../../types';
+	import type { PublicTimelinePoint } from '../$lib/types';
 	import HistoricalTimelinePoint from './historical-timeline-point.svelte';
 
 	let {

@@ -2,11 +2,10 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Field from '$lib/components/ui/field/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-import * as Accordion from '$lib/components/ui/accordion';
+	import * as Accordion from '$lib/components/ui/accordion';
+	import { ValidationMessage } from '@felte/reporter-svelte';
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const { errors = {}, initialConfig } = $props<{
-		errors?: any;
+	const { initialConfig } = $props<{
 		initialConfig?: { host?: string; timeoutSeconds?: number; packetSize?: number | '' };
 	}>();
 
@@ -46,11 +45,13 @@ import * as Accordion from '$lib/components/ui/accordion';
 					placeholder="example.com or 192.0.2.1"
 					required
 				/>
-				{#if errors?.config?.host}
-					<Field.Description class="text-destructive">
-						{errors.config.host[0]}
-					</Field.Description>
-				{/if}
+				<ValidationMessage for="config.host" let:messages>
+					{#if messages?.length}
+						<Field.Description class="text-destructive">
+							{messages[0]}
+						</Field.Description>
+					{/if}
+				</ValidationMessage>
 			</div>
 
 			<Accordion.Root type="single">
@@ -70,11 +71,13 @@ import * as Accordion from '$lib/components/ui/accordion';
 								bind:value={timeoutSeconds}
 								placeholder="5"
 							/>
-							{#if errors?.config?.timeoutSeconds}
-								<Field.Description class="text-destructive">
-									{errors.config.timeoutSeconds[0]}
-								</Field.Description>
-							{/if}
+							<ValidationMessage for="config.timeoutSeconds" let:messages>
+								{#if messages?.length}
+									<Field.Description class="text-destructive">
+										{messages[0]}
+									</Field.Description>
+								{/if}
+							</ValidationMessage>
 						</div>
 
 						<div class="space-y-2">
@@ -90,11 +93,13 @@ import * as Accordion from '$lib/components/ui/accordion';
 								bind:value={packetSize}
 								placeholder="56"
 							/>
-							{#if errors?.config?.packetSize}
-								<Field.Description class="text-destructive">
-									{errors.config.packetSize[0]}
-								</Field.Description>
-							{/if}
+							<ValidationMessage for="config.packetSize" let:messages>
+								{#if messages?.length}
+									<Field.Description class="text-destructive">
+										{messages[0]}
+									</Field.Description>
+								{/if}
+							</ValidationMessage>
 						</div>
 					</Accordion.Content>
 				</Accordion.Item>

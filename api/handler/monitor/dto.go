@@ -17,6 +17,7 @@ type monitorResponse struct {
 	Config            json.RawMessage      `json:"config"`
 	Interval          int                  `json:"interval"`
 	Status            models.MonitorStatus `json:"status"`
+	UptimeSLI30       *float64             `json:"uptime_sli_30,omitempty"`
 	LastChecked       time.Time            `json:"last_checked"`
 	NextCheck         time.Time            `json:"next_check"`
 	FailureThreshold  int16                `json:"failure_threshold"`
@@ -43,6 +44,10 @@ type notificationIDList = utils.IDList
 type regionIDList = utils.IDList
 
 func newMonitorResponse(m models.Monitor) monitorResponse {
+	return newMonitorResponseWithUptime(m, nil)
+}
+
+func newMonitorResponseWithUptime(m models.Monitor, uptimeSLI30 *float64) monitorResponse {
 	return monitorResponse{
 		ID:                strconv.FormatInt(m.ID, 10),
 		TeamID:            strconv.FormatInt(m.TeamID, 10),
@@ -51,6 +56,7 @@ func newMonitorResponse(m models.Monitor) monitorResponse {
 		Config:            m.Config,
 		Interval:          m.Interval,
 		Status:            m.Status,
+		UptimeSLI30:       uptimeSLI30,
 		LastChecked:       m.LastChecked,
 		NextCheck:         m.NextCheck,
 		FailureThreshold:  m.FailureThreshold,
@@ -63,8 +69,8 @@ func newMonitorResponse(m models.Monitor) monitorResponse {
 	}
 }
 
-func newMonitorResponseWithIncidents(m models.MonitorWithIncidents) monitorResponse {
-	resp := newMonitorResponse(m.Monitor)
+func newMonitorResponseWithIncidents(m models.MonitorWithIncidents, uptimeSLI30 *float64) monitorResponse {
+	resp := newMonitorResponseWithUptime(m.Monitor, uptimeSLI30)
 	resp.Incidents = formatIncidents(m.ID, m.Incidents)
 	return resp
 }
@@ -77,10 +83,14 @@ func newMonitorResponses(monitors []models.Monitor) []monitorResponse {
 	return responses
 }
 
-func newMonitorResponsesWithIncidents(monitors []models.MonitorWithIncidents) []monitorResponse {
+func newMonitorResponsesWithIncidents(monitors []models.MonitorWithIncidents, uptimeByMonitor map[int64]*float64) []monitorResponse {
 	responses := make([]monitorResponse, len(monitors))
 	for i, monitor := range monitors {
-		responses[i] = newMonitorResponseWithIncidents(monitor)
+		var uptime *float64
+		if uptimeByMonitor != nil {
+			uptime = uptimeByMonitor[monitor.ID]
+		}
+		responses[i] = newMonitorResponseWithIncidents(monitor, uptime)
 	}
 	return responses
 }

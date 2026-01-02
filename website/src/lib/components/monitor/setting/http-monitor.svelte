@@ -7,15 +7,14 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import MultiSelect from '$lib/components/ui/multi-select';
 	import * as Accordion from '$lib/components/ui/accordion';
+	import { ValidationMessage } from '@felte/reporter-svelte';
 
-	import type { BodyEncoding, HTTPMethod } from '../../../types/monitor-config';
+	import type { BodyEncoding, HTTPMethod } from '../$lib/type/monitor-config';
 	import { bodyEncodingOptions, acceptedStatusOptions, httpMethods } from './setting';
 	import { condenseStatusTokens } from './utils';
 
 	
-	const { errors = {}, initialConfig } = $props<{
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		errors?: any;
+	const { initialConfig } = $props<{
 		initialConfig?: {
 			url: string;
 			method: HTTPMethod;
@@ -88,11 +87,13 @@
 					placeholder="https://example.com/health"
 					required
 				/>
-				{#if errors?.config?.url}
-					<Field.Description class="text-destructive">
-						{errors.config.url[0]}
-					</Field.Description>
-				{/if}
+				<ValidationMessage for="config.url" let:messages>
+					{#if messages?.length}
+						<Field.Description class="text-destructive">
+							{messages[0]}
+						</Field.Description>
+					{/if}
+				</ValidationMessage>
 			</div>
 			<Accordion.Root type="single">
 				<Accordion.Item value="item-1">
@@ -129,11 +130,13 @@
 								bind:value={requestTimeoutSeconds}
 								placeholder="10"
 							/>
-							{#if errors?.config?.requestTimeoutSeconds}
-								<Field.Description class="text-destructive">
-									{errors.config.requestTimeoutSeconds[0]}
-								</Field.Description>
-							{/if}
+							<ValidationMessage for="config.requestTimeoutSeconds" let:messages>
+								{#if messages?.length}
+									<Field.Description class="text-destructive">
+										{messages[0]}
+									</Field.Description>
+								{/if}
+							</ValidationMessage>
 						</div>
 
 						<div class="space-y-2">
@@ -148,11 +151,13 @@
 								bind:value={maxRedirects}
 								placeholder="5"
 							/>
-							{#if errors?.config?.maxRedirects}
-								<Field.Description class="text-destructive">
-									{errors.config.maxRedirects[0]}
-								</Field.Description>
-							{/if}
+							<ValidationMessage for="config.maxRedirects" let:messages>
+								{#if messages?.length}
+									<Field.Description class="text-destructive">
+										{messages[0]}
+									</Field.Description>
+								{/if}
+							</ValidationMessage>
 						</div>
 
 						<div class="space-y-2">
@@ -166,11 +171,13 @@
 								emptyMessage="No matching codes"
 								maxBadges={4}
 							/>
-							{#if errors?.config?.acceptedStatusCodes}
-								<Field.Description class="text-destructive">
-									{errors.config.acceptedStatusCodes[0]}
-								</Field.Description>
-							{/if}
+							<ValidationMessage for="config.acceptedStatusCodes" let:messages>
+								{#if messages?.length}
+									<Field.Description class="text-destructive">
+										{messages[0]}
+									</Field.Description>
+								{/if}
+							</ValidationMessage>
 						</div>
 
 						<div class="space-y-2">

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createForm } from 'felte';
 	import { validator } from '@felte/validator-zod';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 	import { z } from 'zod';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -15,7 +16,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Switch } from '$lib/components/ui/switch';
 	import { createIncident } from '$lib/api/incident';
-	import type { Incident, Monitor } from '../../types';
+	import type { Incident, Monitor } from '$lib/types';
 	import { toast } from 'svelte-sonner';
 
 	type FormValues = {
@@ -78,9 +79,9 @@
 		monitorIds: z.array(z.string().min(1)).min(1, 'Select at least one monitor')
 	});
 
-	const { form, errors, isSubmitting } = createForm<FormValues>({
+	const { form, isSubmitting } = createForm<FormValues>({
 		initialValues,
-		extend: validator({ schema }),
+		extend: [validator({ schema }), reporter()],
 		onSubmit: handleSubmit
 	});
 
@@ -165,9 +166,11 @@
 						</Select.Content>
 					</Select.Root>
 					<input type="hidden" name="status" value={status} />
-					{#if $errors.status}
-						<Field.Description class="text-destructive">{$errors.status[0]}</Field.Description>
-					{/if}
+					<ValidationMessage for="status" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">{messages[0]}</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</div>
 
 				<div class="space-y-2">
@@ -187,9 +190,11 @@
 						</Select.Content>
 					</Select.Root>
 					<input type="hidden" name="severity" value={severity} />
-					{#if $errors.severity}
-						<Field.Description class="text-destructive">{$errors.severity[0]}</Field.Description>
-					{/if}
+					<ValidationMessage for="severity" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">{messages[0]}</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</div>
 			</Field.Set>
 
@@ -201,9 +206,11 @@
 					placeholder="Short summary, e.g. API latency spike"
 					bind:value={title}
 				/>
-				{#if $errors.title}
-					<Field.Description class="text-destructive">{$errors.title[0]}</Field.Description>
-				{/if}
+				<ValidationMessage for="title" let:messages>
+					{#if messages?.length}
+						<Field.Description class="text-destructive">{messages[0]}</Field.Description>
+					{/if}
+				</ValidationMessage>
 			</div>
 
 			<div class="space-y-2">
@@ -215,9 +222,11 @@
 					bind:value={message}
 					rows={3}
 				/>
-				{#if $errors.message}
-					<Field.Description class="text-destructive">{$errors.message[0]}</Field.Description>
-				{/if}
+				<ValidationMessage for="message" let:messages>
+					{#if messages?.length}
+						<Field.Description class="text-destructive">{messages[0]}</Field.Description>
+					{/if}
+				</ValidationMessage>
 			</div>
 
 			<div class="space-y-2">
@@ -229,9 +238,15 @@
 					bind:value={monitorIds}
 					emptyMessage="No monitors available"
 				/>
-				<Field.Description class={$errors.monitorIds ? 'text-destructive' : 'text-muted-foreground'}>
-					{$errors.monitorIds ? $errors.monitorIds[0] : 'Select all monitors affected by this incident.'}
-				</Field.Description>
+				<ValidationMessage for="monitorIds" let:messages>
+					<Field.Description
+						class={messages?.length ? 'text-destructive' : 'text-muted-foreground'}
+					>
+						{messages?.length
+							? messages[0]
+							: 'Select all monitors affected by this incident.'}
+					</Field.Description>
+				</ValidationMessage>
 			</div>
 
 			<Field.Set class="grid gap-4 md:grid-cols-3">
@@ -245,9 +260,11 @@
 						bind:value={startedAt}
 						required
 					/>
-					{#if $errors.startedAt}
-						<Field.Description class="text-destructive">{$errors.startedAt[0]}</Field.Description>
-					{/if}
+					<ValidationMessage for="startedAt" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">{messages[0]}</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</div>
 
 				<div class="space-y-2">
@@ -275,11 +292,13 @@
 				</div>
 			</Field.Set>
 
-			{#if $errors.FORM_ERROR}
-				<Field.Description class="text-destructive text-center">
-					{$errors.FORM_ERROR}
-				</Field.Description>
-			{/if}
+			<ValidationMessage for="FORM_ERROR" let:messages>
+				{#if messages?.length}
+					<Field.Description class="text-destructive text-center">
+						{messages[0]}
+					</Field.Description>
+				{/if}
+			</ValidationMessage>
 
 			<div class="flex justify-end gap-2">
 				<Button type="button" variant="ghost" href="../incidents">

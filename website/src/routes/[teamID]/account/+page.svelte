@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { createForm } from 'felte';
+	import { validator } from '@felte/validator-zod';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
+	import { z } from 'zod';
 	import Icon from '@iconify/svelte';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -30,12 +34,7 @@
 	let profileSuccess = $state('');
 	let profileLoading = $state(false);
 
-	let currentPassword = $state('');
-	let newPassword = $state('');
-	let confirmPassword = $state('');
-	let passwordError = $state('');
 	let passwordSuccess = $state('');
-	let passwordLoading = $state(false);
 
 	let sessionsLoading = $state(false);
 	let revokeOtherLoading = $state(false);
@@ -91,36 +90,63 @@
 		}
 	}
 
-	async function handlePasswordSave(event: SubmitEvent) {
-		event.preventDefault();
-		passwordError = '';
-		passwordSuccess = '';
+	const passwordSchema = z
+		.object({
+			currentPassword: z
+				.string()
+				.min(8, 'Current password must be at least 8 characters.')
+				.max(255, 'Current password is too long.'),
+			newPassword: z
+				.string()
+				.min(8, 'New password must be at least 8 characters.')
+				.max(255, 'New password is too long.'),
+			confirmPassword: z
+				.string()
+				.min(8, 'Confirm password must be at least 8 characters.')
+				.max(255, 'Confirm password is too long.')
+		})
+		.superRefine((values, ctx) => {
+			if (values.currentPassword === values.newPassword) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['newPassword'],
+					message: 'New password must be different from the current password.'
+				});
+			}
+			if (values.newPassword !== values.confirmPassword) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['confirmPassword'],
+					message: 'Passwords do not match.'
+				});
+			}
+		});
 
-		if (!currentPassword.trim() || !newPassword.trim()) {
-			passwordError = 'Both current and new password are required.';
-			return;
-		}
+	type PasswordFormValues = z.infer<typeof passwordSchema>;
 
-		if (newPassword !== confirmPassword) {
-			passwordError = 'Passwords do not match.';
-			return;
+	const {
+		form: passwordForm,
+		isSubmitting: isPasswordSubmitting,
+		reset: resetPasswordForm
+	} = createForm<PasswordFormValues>({
+		extend: [validator({ schema: passwordSchema }), reporter()],
+		onSubmit: async (values) => {
+			passwordSuccess = '';
+			try {
+				await updatePassword({
+					currentPassword: values.currentPassword,
+					newPassword: values.newPassword
+				});
+				resetPasswordForm();
+				passwordSuccess = 'Password updated successfully.';
+				toast.success('Password updated');
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'Failed to update password.';
+				toast.error(message);
+				return { FORM_ERROR: message };
+			}
 		}
-
-		passwordLoading = true;
-		try {
-			await updatePassword({ currentPassword, newPassword });
-			currentPassword = '';
-			newPassword = '';
-			confirmPassword = '';
-			passwordSuccess = 'Password updated successfully.';
-			toast.success('Password updated');
-		} catch (err) {
-			passwordError = err instanceof Error ? err.message : 'Failed to update password.';
-			toast.error(passwordError);
-		} finally {
-			passwordLoading = false;
-		}
-	}
+	});
 
 	async function refreshSessions() {
 		sessionsLoading = true;
@@ -204,9 +230,7 @@
 						bind:value={avatar}
 						disabled={profileLoading}
 					/>
-					<p class="text-xs text-muted-foreground">
-						Leave blank to use the default avatar.
-					</p>
+					<p class="text-xs text-muted-foreground">Leave blank to use the default avatar.</p>
 				</div>
 
 				<div class="grid gap-2 md:grid-cols-2">
@@ -220,9 +244,7 @@
 							<Badge variant={user.verified ? 'default' : 'outline'}>
 								{user.verified ? 'Verified' : 'Unverified'}
 							</Badge>
-							<span class="text-xs text-muted-foreground">
-								Email verification status.
-							</span>
+							<span class="text-xs text-muted-foreground"> Email verification status. </span>
 						</div>
 					</div>
 				</div>
@@ -255,7 +277,9 @@
 			{#if hasAccounts}
 				<div class="grid gap-3">
 					{#each accounts as account (account.id)}
-						<div class="flex flex-col gap-2 rounded-lg border border-border/60 px-4 py-3 md:flex-row md:items-center md:justify-between">
+						<div
+							class="flex flex-col gap-2 rounded-lg border border-border/60 px-4 py-3 md:flex-row md:items-center md:justify-between"
+						>
 							<div class="grid gap-1">
 								<span class="text-sm font-medium">{account.email}</span>
 								<span class="text-xs text-muted-foreground">
@@ -285,48 +309,68 @@
 			<Card.Description>Update your password for email sign-in.</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<form class="grid gap-4" onsubmit={handlePasswordSave}>
+			<form class="grid gap-4" use:passwordForm>
 				<div class="grid gap-2">
 					<label class="text-sm font-medium" for="current-password">Current password</label>
 					<Input
 						id="current-password"
+						name="currentPassword"
 						type="password"
 						placeholder="Enter current password"
-						bind:value={currentPassword}
-						disabled={passwordLoading}
+						autocomplete="current-password"
+						disabled={$isPasswordSubmitting}
 					/>
+					<ValidationMessage for="currentPassword" let:messages>
+						{#if messages?.length}
+							<p class="text-sm text-destructive">{messages[0]}</p>
+						{/if}
+					</ValidationMessage>
 				</div>
 				<div class="grid gap-2">
 					<label class="text-sm font-medium" for="new-password">New password</label>
 					<Input
 						id="new-password"
+						name="newPassword"
 						type="password"
 						placeholder="Enter new password"
-						bind:value={newPassword}
-						disabled={passwordLoading}
+						autocomplete="new-password"
+						disabled={$isPasswordSubmitting}
 					/>
+					<ValidationMessage for="newPassword" let:messages>
+						{#if messages?.length}
+							<p class="text-sm text-destructive">{messages[0]}</p>
+						{/if}
+					</ValidationMessage>
 				</div>
 				<div class="grid gap-2">
 					<label class="text-sm font-medium" for="confirm-password">Confirm new password</label>
 					<Input
 						id="confirm-password"
+						name="confirmPassword"
 						type="password"
 						placeholder="Confirm new password"
-						bind:value={confirmPassword}
-						disabled={passwordLoading}
+						autocomplete="new-password"
+						disabled={$isPasswordSubmitting}
 					/>
+					<ValidationMessage for="confirmPassword" let:messages>
+						{#if messages?.length}
+							<p class="text-sm text-destructive">{messages[0]}</p>
+						{/if}
+					</ValidationMessage>
 				</div>
 
-				{#if passwordError}
-					<p class="text-sm text-destructive">{passwordError}</p>
-				{/if}
+				<ValidationMessage for="FORM_ERROR" let:messages>
+					{#if messages?.length}
+						<p class="text-sm text-destructive">{messages[0]}</p>
+					{/if}
+				</ValidationMessage>
 				{#if passwordSuccess}
 					<p class="text-sm text-success">{passwordSuccess}</p>
 				{/if}
 
 				<div class="flex items-center gap-2">
-					<Button type="submit" disabled={passwordLoading}>
-						{#if passwordLoading}
+					<Button type="submit" disabled={$isPasswordSubmitting}>
+						{#if $isPasswordSubmitting}
 							<Icon icon="lucide:loader-2" class="animate-spin" />
 						{/if}
 						Update password
@@ -338,27 +382,21 @@
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Active sessions</Card.Title>
+			<div class="flex items-center justify-between gap-2">
+				<Card.Title>Active sessions</Card.Title>
+				<Button size="icon-sm" onclick={refreshSessions} disabled={sessionsLoading}>
+					<Icon icon="lucide:refresh-ccw"/>
+				</Button>
+			</div>
 			<Card.Description>Manage where you are currently signed in.</Card.Description>
 		</Card.Header>
 		<Card.Content class="grid gap-4">
-			<div class="flex flex-wrap items-center justify-between gap-3">
-				<div class="text-sm text-muted-foreground">
-					{sessionsLoading ? 'Refreshing sessions…' : 'Active sessions are updated in real time.'}
-				</div>
-				<Button
-					variant="outline"
-					onclick={refreshSessions}
-					disabled={sessionsLoading}
-				>
-					Refresh
-				</Button>
-			</div>
-
 			{#if hasSessions}
 				<div class="grid gap-3">
 					{#each sessions as session (session.id)}
-						<div class="flex flex-col gap-3 rounded-lg border border-border/60 px-4 py-3 md:flex-row md:items-center md:justify-between">
+						<div
+							class="flex flex-col gap-3 rounded-lg border border-border/60 px-4 py-3 md:flex-row md:items-center md:justify-between"
+						>
 							<div class="grid gap-1">
 								<span class="text-sm font-medium">
 									{session.userAgent ?? 'Unknown device'}
@@ -369,14 +407,11 @@
 								</span>
 							</div>
 							<div class="flex items-center gap-2">
-								{#if session.current}
-									<Badge>Current</Badge>
-								{/if}
 								<Button
 									variant="outline"
 									size="sm"
 									onclick={() => handleRevokeSession(session.id)}
-									disabled={session.current || revokeSessionId === session.id}
+									disabled={revokeSessionId === session.id}
 								>
 									{#if revokeSessionId === session.id}
 										<Icon icon="lucide:loader-2" class="animate-spin" />
@@ -387,10 +422,7 @@
 						</div>
 					{/each}
 				</div>
-				<div class="flex items-center justify-between gap-2">
-					<p class="text-xs text-muted-foreground">
-						Revoking a session logs it out on the next refresh.
-					</p>
+				<div class="flex items-center justify-end gap-2">
 					<Button
 						variant="destructive"
 						onclick={handleRevokeOtherSessions}
@@ -399,7 +431,7 @@
 						{#if revokeOtherLoading}
 							<Icon icon="lucide:loader-2" class="animate-spin" />
 						{/if}
-						Revoke other sessions
+						Revoke all sessions
 					</Button>
 				</div>
 			{:else}

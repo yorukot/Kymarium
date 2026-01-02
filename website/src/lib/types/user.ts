@@ -17,5 +17,4 @@ export interface Session {
 	userAgent?: string;
 	ip?: string;
 	createdAt: string;
-	current: boolean;
 }

@@ -1,4 +1,4 @@
-import type { Account, Session, TeamInviteWithTeam, User } from '../../types';
+import type { Account, Session, TeamInviteWithTeam, User } from '$lib/types';
 import { apiRequest } from './utils';
 
 export type UserResponse = {

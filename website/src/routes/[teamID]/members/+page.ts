@@ -1,5 +1,5 @@
 import { getTeamMembers } from '$lib/api/team';
-import type { TeamInvite, TeamMemberWithUser } from '../../../types';
+import type { TeamInvite, TeamMemberWithUser } from '../$lib/types';
 import type { PageLoad } from './$types';
 
 export type MembersPageData = {

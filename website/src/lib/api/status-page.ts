@@ -3,7 +3,7 @@ import type {
 	StatusPage,
 	StatusPageElementType,
 	StatusPageWithElements
-} from '../../types';
+} from '$lib/types';
 import { apiRequest, publicApiRequest } from './utils';
 
 export type StatusPageListResponse = {

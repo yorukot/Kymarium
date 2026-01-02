@@ -1,4 +1,4 @@
-import type { Monitor } from "../../types";
+import type { Monitor } from "$lib/type";
 
 export function monitorTarget(monitor: Monitor): string {
 	switch (monitor.type) {

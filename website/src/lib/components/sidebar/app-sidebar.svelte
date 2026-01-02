@@ -3,7 +3,7 @@
 	import NavUser from './nav-user.svelte';
 	import TeamSwitcher from './team-switcher.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import type { Team, User } from '../../types';
+	import type { Team, User } from '$lib/types';
 	import type { NavItem } from './type';
 
 	const NavItems: NavItem[] = [

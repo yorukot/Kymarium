@@ -1,4 +1,4 @@
-import type { Region } from '../../types';
+import type { Region } from '$lib/types';
 
 export function regionFlagIcon(region: Region): string | null {
 	const countryCode = region.name.split('-')[0]?.trim().toLowerCase();

@@ -1,5 +1,5 @@
 import { getStatusPages } from '$lib/api/status-page';
-import type { StatusPageWithElements } from '../../../types';
+import type { StatusPageWithElements } from '../$lib/types';
 import type { PageLoad } from './$types';
 
 export type StatusPagesData = {

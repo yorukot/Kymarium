@@ -7,7 +7,7 @@
 	import { curveLinear } from "d3-shape";
 	import { cubicInOut } from 'svelte/easing';
 	import { SvelteMap } from 'svelte/reactivity';
-	import type { MonitorAnalytics, Region } from '../../../types';
+	import type { MonitorAnalytics, Region } from '../$lib/types';
 	import { regionFlagEmoji } from '$lib/utils/region';
 
 	type PercentileKey = 'p50Ms' | 'p75Ms' | 'p90Ms' | 'p95Ms' | 'p99Ms';

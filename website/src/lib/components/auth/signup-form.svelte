@@ -9,6 +9,7 @@
 
 	import { createForm } from 'felte';
 	import { validator } from '@felte/validator-zod';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 	import { z } from 'zod';
 
 	const inBrowser = typeof window !== 'undefined';
@@ -31,8 +32,8 @@
 			message: 'Passwords do not match.'
 		});
 
-	const { form, errors, isSubmitting } = createForm({
-		extend: validator({ schema: signupSchema }),
+	const { form, isSubmitting } = createForm({
+		extend: [validator({ schema: signupSchema }), reporter()],
 		onSubmit: async (values) => {
 			try {
 				const response = await registerUser(values.displayName, values.email, values.password);
@@ -77,11 +78,13 @@
 						autocomplete="name"
 						required
 					/>
-					{#if $errors.displayName}
-						<Field.Description class="text-destructive">
-							{$errors.displayName[0]}
-						</Field.Description>
-					{/if}
+					<ValidationMessage for="displayName" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">
+								{messages[0]}
+							</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</Field.Field>
 
 				<Field.Field>
@@ -97,11 +100,13 @@
 					<Field.Description>
 						We'll use this to contact you. We will not share your email.
 					</Field.Description>
-					{#if $errors.email}
-						<Field.Description class="text-destructive">
-							{$errors.email[0]}
-						</Field.Description>
-					{/if}
+					<ValidationMessage for="email" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">
+								{messages[0]}
+							</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</Field.Field>
 
 				<Field.Field>
@@ -114,11 +119,13 @@
 						required
 					/>
 					<Field.Description>Must be at least 8 characters long.</Field.Description>
-					{#if $errors.password}
-						<Field.Description class="text-destructive">
-							{$errors.password[0]}
-						</Field.Description>
-					{/if}
+					<ValidationMessage for="password" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">
+								{messages[0]}
+							</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</Field.Field>
 
 				<Field.Field>
@@ -130,18 +137,22 @@
 						autocomplete="new-password"
 						required
 					/>
-					{#if $errors.confirmPassword}
-						<Field.Description class="text-destructive">
-							{$errors.confirmPassword[0]}
-						</Field.Description>
-					{/if}
+					<ValidationMessage for="confirmPassword" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">
+								{messages[0]}
+							</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</Field.Field>
 
-				{#if $errors.FORM_ERROR}
-					<Field.Description class="text-destructive text-center">
-						{$errors.FORM_ERROR}
-					</Field.Description>
-				{/if}
+				<ValidationMessage for="FORM_ERROR" let:messages>
+					{#if messages?.length}
+						<Field.Description class="text-destructive text-center">
+							{messages[0]}
+						</Field.Description>
+					{/if}
+				</ValidationMessage>
 
 				<Field.Field>
 					<Button type="submit" disabled={$isSubmitting}>

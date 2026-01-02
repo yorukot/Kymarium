@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createForm } from 'felte';
 	import { validator } from '@felte/validator-zod';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 	import { z } from 'zod';
 	import { page } from '$app/state';
 	import {
@@ -15,7 +16,7 @@
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { cn } from '$lib/utils';
 	import { toast } from 'svelte-sonner';
-	import type { Notification, DiscordNotificationConfig } from '../../../types';
+	import type { Notification, DiscordNotificationConfig } from '../$lib/types';
 
 	let {
 		notification = null,
@@ -59,9 +60,9 @@
 
 	const initialValues: FormValues = deriveInitialValues();
 
-	const { form, errors, isSubmitting, setFields, reset } = createForm<FormValues>({
+	const { form, isSubmitting, setFields, reset } = createForm<FormValues>({
 		initialValues,
-		extend: validator({ schema: formSchema }),
+		extend: [validator({ schema: formSchema }), reporter()],
 		onSubmit: handleSubmit
 	});
 
@@ -158,9 +159,11 @@
 		<div class="space-y-2">
 			<Field.Label for="name">Name</Field.Label>
 			<Input id="name" name="name" placeholder="On-call alerts" />
-			{#if $errors.name}
-				<Field.Description class="text-destructive">{$errors.name[0]}</Field.Description>
-			{/if}
+			<ValidationMessage for="name" let:messages>
+				{#if messages?.length}
+					<Field.Description class="text-destructive">{messages[0]}</Field.Description>
+				{/if}
+			</ValidationMessage>
 		</div>
 
 		<div class="space-y-2">
@@ -171,11 +174,11 @@
 				type="url"
 				placeholder="https://discord.com/api/webhooks/..."
 			/>
-			{#if $errors.config?.webhookUrl}
-				<Field.Description class="text-destructive"
-					>{$errors.config.webhookUrl[0]}</Field.Description
-				>
-			{/if}
+			<ValidationMessage for="config.webhookUrl" let:messages>
+				{#if messages?.length}
+					<Field.Description class="text-destructive">{messages[0]}</Field.Description>
+				{/if}
+			</ValidationMessage>
 		</div>
 	</Field.Set>
 

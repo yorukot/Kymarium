@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createForm } from 'felte';
 	import { validator } from '@felte/validator-zod';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 	import { z } from 'zod';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -17,8 +18,8 @@
 		slug: z.string().min(3, 'Slug is required').max(255, 'Slug is too long')
 	});
 
-	const { form, errors, isSubmitting } = createForm({
-		extend: validator({ schema }),
+	const { form, isSubmitting } = createForm({
+		extend: [validator({ schema }), reporter()],
 		onSubmit: async (values) => {
 			try {
 				const teamID = page.params.teamID;
@@ -97,11 +98,13 @@
 								}
 							}}
 						/>
-						{#if $errors.title}
-							<FieldDescription class="text-destructive">
-								{$errors.title[0]}
-							</FieldDescription>
-						{/if}
+						<ValidationMessage for="title" let:messages>
+							{#if messages?.length}
+								<FieldDescription class="text-destructive">
+									{messages[0]}
+								</FieldDescription>
+							{/if}
+						</ValidationMessage>
 					</Field>
 
 					<Field>
@@ -120,18 +123,22 @@
 								target.dispatchEvent(new Event('input'));
 							}}
 						/>
-						{#if $errors.slug}
-							<FieldDescription class="text-destructive">
-								{$errors.slug[0]}
-							</FieldDescription>
-						{/if}
+						<ValidationMessage for="slug" let:messages>
+							{#if messages?.length}
+								<FieldDescription class="text-destructive">
+									{messages[0]}
+								</FieldDescription>
+							{/if}
+						</ValidationMessage>
 					</Field>
 
-					{#if $errors.FORM_ERROR}
-						<FieldDescription class="text-destructive text-center">
-							{$errors.FORM_ERROR}
-						</FieldDescription>
-					{/if}
+					<ValidationMessage for="FORM_ERROR" let:messages>
+						{#if messages?.length}
+							<FieldDescription class="text-destructive text-center">
+								{messages[0]}
+							</FieldDescription>
+						{/if}
+					</ValidationMessage>
 				</FieldGroup>
 			</Card.Content>
 		</Card.Root>

@@ -1,4 +1,4 @@
-import type { Notification, NotificationType } from '../../types';
+import type { Notification, NotificationType } from '$lib/types';
 import { apiRequest } from './utils';
 
 export type NotificationsResponse = {

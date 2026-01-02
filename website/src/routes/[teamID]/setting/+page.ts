@@ -1,5 +1,5 @@
 import { getTeam } from '$lib/api/team';
-import type { TeamWithRole } from '../../../types';
+import type { TeamWithRole } from '../$lib/types';
 import type { PageLoad } from './$types';
 
 export type TeamSettingPageData = {

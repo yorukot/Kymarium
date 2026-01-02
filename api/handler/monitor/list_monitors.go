@@ -3,6 +3,7 @@ package monitor
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/yorukot/knocker/models"
@@ -64,6 +65,19 @@ func (h *Handler) ListMonitors(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to list monitors")
 	}
 
+	monitorIDs := make([]int64, 0, len(monitors))
+	for _, monitor := range monitors {
+		monitorIDs = append(monitorIDs, monitor.ID)
+	}
+
+	start, end := last30DayWindowUTC()
+	dailySummaries, err := h.Repo.ListMonitorDailySummaryByMonitorIDs(c.Request().Context(), tx, monitorIDs, start, end)
+	if err != nil {
+		zap.L().Error("Failed to list daily summaries", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to list daily summaries")
+	}
+	uptimeByMonitor := buildUptimeSLI30(dailySummaries)
+
 	monitorsWithIncidents := make([]models.MonitorWithIncidents, 0, len(monitors))
 	for _, monitor := range monitors {
 		incidents, err := h.Repo.ListIncidentsByMonitorID(c.Request().Context(), tx, monitor.ID)
@@ -86,5 +100,38 @@ func (h *Handler) ListMonitors(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	return c.JSON(http.StatusOK, response.Success("Monitors retrieved successfully", newMonitorResponsesWithIncidents(monitorsWithIncidents)))
+	return c.JSON(http.StatusOK, response.Success("Monitors retrieved successfully", newMonitorResponsesWithIncidents(monitorsWithIncidents, uptimeByMonitor)))
+}
+
+func last30DayWindowUTC() (time.Time, time.Time) {
+	now := time.Now().UTC()
+	end := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	start := end.AddDate(0, 0, -30)
+	return start, end
+}
+
+type uptimeTotals struct {
+	good  int64
+	total int64
+}
+
+func buildUptimeSLI30(summaries []models.MonitorDailySummary) map[int64]*float64 {
+	totals := make(map[int64]uptimeTotals)
+	for _, summary := range summaries {
+		current := totals[summary.MonitorID]
+		current.total += summary.TotalCount
+		current.good += summary.GoodCount
+		totals[summary.MonitorID] = current
+	}
+
+	result := make(map[int64]*float64, len(totals))
+	for monitorID, counts := range totals {
+		if counts.total == 0 {
+			continue
+		}
+		uptime := (float64(counts.good) / float64(counts.total)) * 100
+		result[monitorID] = &uptime
+	}
+
+	return result
 }

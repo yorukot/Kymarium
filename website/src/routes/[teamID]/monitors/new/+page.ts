@@ -1,7 +1,7 @@
 import { getNotifications } from '$lib/api/notification';
 import { getRegions } from '$lib/api/region';
 import type { PageLoad } from './$types';
-import type { Notification, Region } from '../../../../types';
+import type { Notification, Region } from '$lib/types';
 
 export type NewMonitorPageData = {
 	notifications: Notification[];

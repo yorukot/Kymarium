@@ -1,6 +1,6 @@
 import { getTeams } from '$lib/api/team';
 import { getUser } from '$lib/api/user';
-import type { Team, User } from '../../types';
+import type { Team, User } from '$lib/types';
 import type { LayoutLoad } from './$types';
 
 export type SidebarData = {

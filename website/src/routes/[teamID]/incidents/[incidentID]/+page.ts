@@ -1,6 +1,6 @@
 import { getIncident, getIncidentEvents } from '$lib/api/incident';
 import { getMonitors } from '$lib/api/monitor';
-import type { Incident, IncidentEvent, MonitorWithIncidents } from '../../../../types';
+import type { Incident, IncidentEvent, MonitorWithIncidents } from '$lib/types';
 import type { PageLoad } from './$types';
 
 export type IncidentDetailPageData = {

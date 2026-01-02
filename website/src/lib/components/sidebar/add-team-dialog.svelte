@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createForm } from 'felte';
 	import { validator } from '@felte/validator-zod';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 	import { z } from 'zod';
 	import { goto } from '$app/navigation';
 	import { createTeam } from '$lib/api/team';
@@ -16,8 +17,8 @@
 		name: z.string().min(1, 'Team name is required').max(255, 'Team name is too long')
 	});
 
-	const { form, errors, isSubmitting } = createForm({
-		extend: validator({ schema }),
+	const { form, isSubmitting } = createForm({
+		extend: [validator({ schema }), reporter()],
 		onSubmit: async (values) => {
 			try {
 				const response = await createTeam(values.name);
@@ -53,18 +54,22 @@
 					autocomplete="organization"
 					required
 				/>
-				{#if $errors.name}
-					<Field.Description class="text-destructive">
-						{$errors.name[0]}
-					</Field.Description>
-				{/if}
+				<ValidationMessage for="name" let:messages>
+					{#if messages?.length}
+						<Field.Description class="text-destructive">
+							{messages[0]}
+						</Field.Description>
+					{/if}
+				</ValidationMessage>
 			</Field.Field>
 
-			{#if $errors.FORM_ERROR}
-				<Field.Description class="text-destructive text-center">
-					{$errors.FORM_ERROR}
-				</Field.Description>
-			{/if}
+			<ValidationMessage for="FORM_ERROR" let:messages>
+				{#if messages?.length}
+					<Field.Description class="text-destructive text-center">
+						{messages[0]}
+					</Field.Description>
+				{/if}
+			</ValidationMessage>
 
 			<Dialog.Footer class="gap-2">
 				<Button type="button" variant="outline" disabled={$isSubmitting} onclick={() => (open = false)}>

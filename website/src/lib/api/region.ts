@@ -1,4 +1,4 @@
-import type { Region } from '../../types';
+import type { Region } from '$lib/types';
 import { apiRequest } from './utils';
 
 export type RegionListResponse = {

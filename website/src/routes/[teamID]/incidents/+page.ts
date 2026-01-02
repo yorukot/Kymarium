@@ -1,6 +1,6 @@
 import { getIncidents } from '$lib/api/incident';
 import { getMonitors } from '$lib/api/monitor';
-import type { Incident, MonitorWithIncidents } from '../../../types';
+import type { Incident, MonitorWithIncidents } from '../$lib/types';
 import type { PageLoad } from './$types';
 
 export type IncidentWithMonitors = Incident & { monitorNames: string[] };

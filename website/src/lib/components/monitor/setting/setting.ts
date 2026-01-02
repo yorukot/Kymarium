@@ -1,5 +1,5 @@
-import type { BodyEncoding, HTTPMethod } from '../../../../types/monitor-config';
-import type { MonitorType } from '../../../../types';
+import type { BodyEncoding, HTTPMethod } from '../../$lib/type/monitor-config';
+import type { MonitorType } from '$lib/types';
 import type { MultiSelectOption } from '$lib/components/ui/multi-select';
 
 export type MonitorTypeSelect = {

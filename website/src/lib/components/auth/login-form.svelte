@@ -12,6 +12,7 @@
 		FieldDescription
 	} from '$lib/components/ui/field/index.js';
 	import { validator } from '@felte/validator-zod';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 	import * as z from 'zod';
 	import { createForm } from 'felte';
 
@@ -28,8 +29,8 @@
 		redirectTo = url.searchParams.get('next') ?? '/';
 	}
 
-	const { form, errors, isSubmitting } = createForm({
-		extend: validator({ schema: loginSchema }),
+	const { form, isSubmitting } = createForm({
+		extend: [validator({ schema: loginSchema }), reporter()],
 		onSubmit: async (values) => {
 			try {
 				await login(values.email, values.password);
@@ -74,11 +75,13 @@
 						autocomplete="email"
 						required
 					/>
-					{#if $errors.email}
-						<FieldDescription class="text-destructive">
-							{$errors.email[0]}
-						</FieldDescription>
-					{/if}
+					<ValidationMessage for="email" let:messages>
+						{#if messages?.length}
+							<FieldDescription class="text-destructive">
+								{messages[0]}
+							</FieldDescription>
+						{/if}
+					</ValidationMessage>
 				</Field>
 
 				<Field>
@@ -93,18 +96,22 @@
 						autocomplete="current-password"
 						required
 					/>
-					{#if $errors.password}
-						<FieldDescription class="text-destructive">
-							{$errors.password[0]}
-						</FieldDescription>
-					{/if}
+					<ValidationMessage for="password" let:messages>
+						{#if messages?.length}
+							<FieldDescription class="text-destructive">
+								{messages[0]}
+							</FieldDescription>
+						{/if}
+					</ValidationMessage>
 				</Field>
 
-				{#if $errors.FORM_ERROR}
-					<FieldDescription class="text-destructive text-center">
-						{$errors.FORM_ERROR}
-					</FieldDescription>
-				{/if}
+				<ValidationMessage for="FORM_ERROR" let:messages>
+					{#if messages?.length}
+						<FieldDescription class="text-destructive text-center">
+							{messages[0]}
+						</FieldDescription>
+					{/if}
+				</ValidationMessage>
 
 				<Field>
 					<Button type="submit" class="w-full" disabled={$isSubmitting}>

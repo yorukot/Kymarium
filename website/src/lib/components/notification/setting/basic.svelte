@@ -6,7 +6,7 @@
 	import SlackForm from './slack.svelte';
 	import TelegramForm from './telegram.svelte';
 	import EmailForm from './email.svelte';
-	import type { NotificationType, Notification } from '../../../types';
+	import type { NotificationType, Notification } from '../$lib/types';
 
 	type SupportedNotificationType = Extract<NotificationType, 'discord' | 'slack' | 'telegram' | 'email'>;
 

@@ -11,7 +11,7 @@
 	import { createAvatar } from '@dicebear/core';
 	import { thumbs } from '@dicebear/collection';
 	import { setMode, userPrefersMode } from 'mode-watcher';
-	import type { User } from '../../types';
+	import type { User } from '$lib/types';
 
 	const sidebar = useSidebar();
 

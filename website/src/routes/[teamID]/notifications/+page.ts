@@ -1,5 +1,5 @@
 import { getNotifications } from '$lib/api/notification';
-import type { Notification } from '../../../types';
+import type { Notification } from '../$lib/types';
 import type { PageLoad } from './$types';
 
 export type NotificationsPageData = {

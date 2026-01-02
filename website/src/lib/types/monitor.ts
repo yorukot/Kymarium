@@ -16,6 +16,7 @@ export interface Monitor {
 	config: HTTPMonitorConfig | PingMonitorConfig | Record<string, unknown>;
 	interval: number;
 	status: MonitorStatus;
+	uptimeSli30?: number;
 	lastChecked: string;
 	nextCheck: string;
 	failureThreshold: number;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Tooltip } from 'bits-ui';
 	import { formatDate, formatUpTo2Decimals, timelineTone } from '$lib/styles/status';
-	import type { PublicTimelinePoint } from '../../../types';
+	import type { PublicTimelinePoint } from '../$lib/types';
 
 	let { point }: {
 		point: PublicTimelinePoint;

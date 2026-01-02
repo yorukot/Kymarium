@@ -8,7 +8,7 @@
   import { cn } from '$lib/utils';
 	import { decidedNotificationIcon, notificationTypeMeta } from '$lib/utils/notification';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import type { EmailNotificationConfig, Notification } from '../../types';
+	import type { EmailNotificationConfig, Notification } from '$lib/types';
 	import { testNotification, deleteNotification } from '$lib/api/notification';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';

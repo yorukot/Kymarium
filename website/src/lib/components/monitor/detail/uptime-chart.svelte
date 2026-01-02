@@ -4,7 +4,7 @@
 	import { BarChart } from 'layerchart';
 	import { cubicInOut } from 'svelte/easing';
 	import { SvelteMap } from 'svelte/reactivity';
-	import type { MonitorAnalytics } from '../../../types';
+	import type { MonitorAnalytics } from '../$lib/types';
 
 	type Props = {
 		analytics: MonitorAnalytics;

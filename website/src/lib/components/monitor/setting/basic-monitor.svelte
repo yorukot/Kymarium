@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createForm } from 'felte';
 	import { validator } from '@felte/validator-zod';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 	import { z } from 'zod';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -10,7 +11,7 @@
 	import * as Field from '$lib/components/ui/field/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group';
 	import MultiSelect, { type MultiSelectOption } from '$lib/components/ui/multi-select';
-	import type { Monitor, MonitorType, Notification, Region } from '../../../types';
+	import type { Monitor, MonitorType, Notification, Region } from '../$lib/types';
 	import { Slider } from '$lib/components/ui/slider';
 	import * as Select from '$lib/components/ui/select';
 	import HttpMonitor from './http-monitor.svelte';
@@ -217,9 +218,9 @@
 		};
 	})();
 
-	const { form, errors, setFields, isSubmitting } = createForm<MonitorFormValues>({
+	const { form, setFields, isSubmitting } = createForm<MonitorFormValues>({
 		initialValues,
-		extend: validator({ schema: monitorFormSchema }),
+		extend: [validator({ schema: monitorFormSchema }), reporter()],
 		onSubmit: async (values) => {
 			try {
 				const payload = buildPayload(values);
@@ -287,13 +288,6 @@
 			}
 		};
 	}
-
-	let formLevelError = $state<string | null>(null);
-
-	$effect(() => {
-		const keyed = $errors as unknown as { FORM_ERROR?: string[] | null };
-		formLevelError = keyed.FORM_ERROR?.[0] ?? null;
-	});
 
 	$effect(() => {
 		setFields('interval', intervalOptions[intervalIndex].seconds);
@@ -399,11 +393,13 @@
 					<Field.Label for="monitor-name">Monitor name</Field.Label>
 					<Input id="monitor-name" name="name" type="text" placeholder="My Monitor" required />
 					<Field.Description>The name of your monitor.</Field.Description>
-					{#if $errors.name}
-						<Field.Description class="text-destructive">
-							{$errors.name[0]}
-						</Field.Description>
-					{/if}
+					<ValidationMessage for="name" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">
+								{messages[0]}
+							</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</div>
 
 				<div class="space-y-2">
@@ -479,11 +475,13 @@
 							</Select.Content>
 						</Select.Root>
 						<input type="hidden" name="failureThreshold" value={failureThresholdValue} />
-						{#if $errors.failureThreshold}
-							<Field.Description class="text-destructive">
-								{$errors.failureThreshold[0]}
-							</Field.Description>
-						{/if}
+						<ValidationMessage for="failureThreshold" let:messages>
+							{#if messages?.length}
+								<Field.Description class="text-destructive">
+									{messages[0]}
+								</Field.Description>
+							{/if}
+						</ValidationMessage>
 					</div>
 
 					<div class="space-y-2">
@@ -505,11 +503,13 @@
 							</Select.Content>
 						</Select.Root>
 						<input type="hidden" name="recoveryThreshold" value={recoveryThresholdValue} />
-						{#if $errors.recoveryThreshold}
-							<Field.Description class="text-destructive">
-								{$errors.recoveryThreshold[0]}
-							</Field.Description>
-						{/if}
+						<ValidationMessage for="recoveryThreshold" let:messages>
+							{#if messages?.length}
+								<Field.Description class="text-destructive">
+									{messages[0]}
+								</Field.Description>
+							{/if}
+						</ValidationMessage>
 					</div>
 				</div>
 
@@ -537,11 +537,13 @@
 							</button>
 						{/each}
 					</div>
-					{#if $errors.regions}
-						<Field.Description class="text-destructive">
-							{$errors.regions[0]}
-						</Field.Description>
-					{/if}
+					<ValidationMessage for="regions" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">
+								{messages[0]}
+							</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</div>
 
 				<div class="space-y-2">
@@ -555,27 +557,31 @@
 						emptyMessage="No matching notification channels"
 						maxBadges={4}
 					/>
-					{#if $errors.notification}
-						<Field.Description class="text-destructive">
-							{$errors.notification[0]}
-						</Field.Description>
-					{/if}
+					<ValidationMessage for="notification" let:messages>
+						{#if messages?.length}
+							<Field.Description class="text-destructive">
+								{messages[0]}
+							</Field.Description>
+						{/if}
+					</ValidationMessage>
 				</div>
 			</Field.Set>
 		</Card.Content>
 	</Card.Root>
 
 	{#if selectedMonitorType === 'http'}
-		<HttpMonitor errors={$errors} initialConfig={initialHttpConfig} />
+		<HttpMonitor initialConfig={initialHttpConfig} />
 	{:else}
-		<PingMonitor errors={$errors} initialConfig={initialPingConfig} />
+		<PingMonitor initialConfig={initialPingConfig} />
 	{/if}
 
-	{#if formLevelError}
-		<Field.Description class="text-destructive text-right">
-			{formLevelError}
-		</Field.Description>
-	{/if}
+	<ValidationMessage for="FORM_ERROR" let:messages>
+		{#if messages?.length}
+			<Field.Description class="text-destructive text-right">
+				{messages[0]}
+			</Field.Description>
+		{/if}
+	</ValidationMessage>
 
 	<div class="flex gap-2 justify-end">
 		{#if isEdit}

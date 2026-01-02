@@ -1,4 +1,4 @@
-import type { MemberRole, Team, TeamInvite, TeamMemberWithUser, TeamWithRole } from '../../types';
+import type { MemberRole, Team, TeamInvite, TeamMemberWithUser, TeamWithRole } from '$lib/types';
 import { apiRequest } from './utils';
 
 export type TeamsResponse = {

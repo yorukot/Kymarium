@@ -1,6 +1,5 @@
 import { getMonitorAnalytics } from '$lib/api/monitor';
 import { getRegions } from '$lib/api/region';
-import type { MonitorAnalytics, Region } from '../../../../types';
 import type { PageLoad } from './$types';
 
 export type MonitorDetailData = {
