@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 func bindStatusPageUpsert(c echo.Context) (statusPageUpsertRequest, error) {

@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/handler/notification"
-	"github.com/yorukot/knocker/api/middleware"
-	"github.com/yorukot/knocker/repository"
+	"github.com/yorukot/kymarium/api/handler/notification"
+	"github.com/yorukot/kymarium/api/middleware"
+	"github.com/yorukot/kymarium/repository"
 )
 
 // NotificationRouter registers notification routes.

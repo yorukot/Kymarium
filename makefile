@@ -1,4 +1,4 @@
-BINARY_NAME=knocker
+BINARY_NAME=kymarium
 
 build:
 	go build -o tmp/$(BINARY_NAME) ./cmd

@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/utils/config"
-	"github.com/yorukot/knocker/utils/encrypt"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/utils/config"
+	"github.com/yorukot/kymarium/utils/encrypt"
 	"go.uber.org/zap"
 )
 

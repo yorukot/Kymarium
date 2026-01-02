@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/utils/response"
+	"github.com/yorukot/kymarium/utils/response"
 	"go.uber.org/zap"
 )
 

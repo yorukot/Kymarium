@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/yorukot/knocker/utils/config"
+	"github.com/yorukot/kymarium/utils/config"
 )
 
 func buildFrontendInviteURL(result string, teamID int64, email string) string {

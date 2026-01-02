@@ -13,11 +13,11 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/repository"
-	"github.com/yorukot/knocker/utils/config"
-	"github.com/yorukot/knocker/utils/encrypt"
-	"github.com/yorukot/knocker/utils/id"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/repository"
+	"github.com/yorukot/kymarium/utils/config"
+	"github.com/yorukot/kymarium/utils/encrypt"
+	"github.com/yorukot/kymarium/utils/id"
 	"golang.org/x/oauth2"
 )
 

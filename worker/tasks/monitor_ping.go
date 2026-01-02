@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/hibiken/asynq"
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // MonitorPingPayload represents the payload for a monitor ping task

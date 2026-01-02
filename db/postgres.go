@@ -13,9 +13,9 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"       // Register file source for migrations.
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/utils/config"
-	"github.com/yorukot/knocker/utils/id"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/utils/config"
+	"github.com/yorukot/kymarium/utils/id"
 	"go.uber.org/zap"
 )
 

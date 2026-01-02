@@ -6,10 +6,10 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yorukot/knocker/repository"
-	"github.com/yorukot/knocker/utils/config"
-	"github.com/yorukot/knocker/worker/handler"
-	"github.com/yorukot/knocker/worker/tasks"
+	"github.com/yorukot/kymarium/repository"
+	"github.com/yorukot/kymarium/utils/config"
+	"github.com/yorukot/kymarium/worker/handler"
+	"github.com/yorukot/kymarium/worker/tasks"
 	"go.uber.org/zap"
 )
 

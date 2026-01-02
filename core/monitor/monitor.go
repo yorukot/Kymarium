@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // Result captures the outcome of running a monitor.

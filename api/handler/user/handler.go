@@ -1,6 +1,6 @@
 package user
 
-import "github.com/yorukot/knocker/repository"
+import "github.com/yorukot/kymarium/repository"
 
 // Handler handles user-related requests.
 type Handler struct {

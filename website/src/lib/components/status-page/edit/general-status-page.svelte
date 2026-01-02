@@ -48,7 +48,7 @@
 						{#if messages?.length}
 							<p class="text-sm text-destructive">{messages[0]}</p>
 						{:else}
-							Used in the public URL (e.g., status.knocker.com/acme-status).
+							Used in the public URL (e.g., status.kymarium.com/acme-status).
 						{/if}
 					</ValidationMessage>
 				</Field.Description>

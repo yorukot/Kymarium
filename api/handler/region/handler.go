@@ -1,6 +1,6 @@
 package region
 
-import "github.com/yorukot/knocker/repository"
+import "github.com/yorukot/kymarium/repository"
 
 // Handler handles region-related requests.
 type Handler struct {

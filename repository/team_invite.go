@@ -7,7 +7,7 @@ import (
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // CreateTeamInvite inserts a new team invite record.

@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/models/monitorm"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/models/monitorm"
 )
 
 // RunHTTP executes an HTTP monitor using the provided client and monitor config.

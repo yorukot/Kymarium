@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/middleware"
+	"github.com/yorukot/kymarium/api/middleware"
 )
 
 // NewEchoContext creates a fresh Echo context and recorder.

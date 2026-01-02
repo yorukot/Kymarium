@@ -6,13 +6,13 @@ import (
 	"syscall"
 
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/yorukot/knocker/api"
-	"github.com/yorukot/knocker/db"
-	"github.com/yorukot/knocker/schedular"
-	"github.com/yorukot/knocker/utils/config"
-	"github.com/yorukot/knocker/utils/id"
-	"github.com/yorukot/knocker/utils/logger"
-	"github.com/yorukot/knocker/worker"
+	"github.com/yorukot/kymarium/api"
+	"github.com/yorukot/kymarium/db"
+	"github.com/yorukot/kymarium/schedular"
+	"github.com/yorukot/kymarium/utils/config"
+	"github.com/yorukot/kymarium/utils/id"
+	"github.com/yorukot/kymarium/utils/logger"
+	"github.com/yorukot/kymarium/worker"
 	"go.uber.org/zap"
 )
 

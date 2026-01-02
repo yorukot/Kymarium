@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/hibiken/asynq"
-	"github.com/yorukot/knocker/repository"
+	"github.com/yorukot/kymarium/repository"
 )
 
 // Handler coordinates worker task handlers.

@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"github.com/yorukot/knocker/repository"
-	"github.com/yorukot/knocker/utils/config"
+	"github.com/yorukot/kymarium/repository"
+	"github.com/yorukot/kymarium/utils/config"
 )
 
 // Handler handles auth-related requests.

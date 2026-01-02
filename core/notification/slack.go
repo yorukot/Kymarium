@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 func sendSlack(ctx context.Context, client *http.Client, notification models.Notification, title, description string, _ models.PingStatus) error {

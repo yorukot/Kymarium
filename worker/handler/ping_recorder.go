@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/repository"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/repository"
 	"go.uber.org/zap"
 )
 

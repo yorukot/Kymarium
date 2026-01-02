@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/middleware"
+	"github.com/yorukot/kymarium/api/middleware"
 )
 
 // GetUserIDFromContext returns the user ID if present in context.

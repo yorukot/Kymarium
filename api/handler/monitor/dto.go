@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/utils"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/utils"
 )
 
 type monitorResponse struct {

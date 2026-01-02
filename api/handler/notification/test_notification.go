@@ -6,10 +6,10 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	notificationcore "github.com/yorukot/knocker/core/notification"
-	"github.com/yorukot/knocker/models"
-	authutil "github.com/yorukot/knocker/utils/auth"
-	"github.com/yorukot/knocker/utils/response"
+	notificationcore "github.com/yorukot/kymarium/core/notification"
+	"github.com/yorukot/kymarium/models"
+	authutil "github.com/yorukot/kymarium/utils/auth"
+	"github.com/yorukot/kymarium/utils/response"
 	"go.uber.org/zap"
 )
 
@@ -83,7 +83,7 @@ func (h *Handler) TestNotification(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	title := "Knocker notification test"
+	title := "Kymarium notification test"
 	description := fmt.Sprintf("Test notification for team %d and channel %q", teamID, notification.Name)
 
 	if err := notificationcore.Send(c.Request().Context(), *notification, title, description, models.PingStatusSuccessful); err != nil {

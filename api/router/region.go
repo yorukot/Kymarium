@@ -2,8 +2,8 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/handler/region"
-	"github.com/yorukot/knocker/repository"
+	"github.com/yorukot/kymarium/api/handler/region"
+	"github.com/yorukot/kymarium/repository"
 )
 
 // RegionRouter registers region routes.

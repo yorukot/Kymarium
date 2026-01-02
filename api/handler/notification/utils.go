@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // ValidateNotificationConfig validates the config JSON for a notification type.

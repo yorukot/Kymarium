@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 	"go.uber.org/zap"
 )
 

@@ -71,7 +71,7 @@
 	<Card.Header>
 		<h2 class="text-lg font-bold">HTTP monitor settings</h2>
 		<p class="text-sm text-muted-foreground">
-			Configure how Knocker will probe your HTTP endpoint.
+			Configure how Kymarium will probe your HTTP endpoint.
 		</p>
 	</Card.Header>
 	<Card.Content>

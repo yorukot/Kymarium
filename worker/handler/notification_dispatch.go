@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/hibiken/asynq"
-	notificationcore "github.com/yorukot/knocker/core/notification"
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/utils/config"
-	"github.com/yorukot/knocker/worker/tasks"
+	notificationcore "github.com/yorukot/kymarium/core/notification"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/utils/config"
+	"github.com/yorukot/kymarium/worker/tasks"
 	"go.uber.org/zap"
 )
 

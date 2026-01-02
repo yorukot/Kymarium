@@ -79,7 +79,7 @@
 	}
 
 	function buildTitle(segments: Crumb[]): string {
-		const appName = 'Knocker';
+		const appName = 'Kymarium';
 		if (!segments.length) return appName;
 		const teamName = segments[0]?.label;
 		const last = segments[segments.length - 1]?.label ?? teamName ?? appName;

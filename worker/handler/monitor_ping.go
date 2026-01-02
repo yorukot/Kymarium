@@ -13,11 +13,11 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	monitorcore "github.com/yorukot/knocker/core/monitor"
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/utils/config"
-	"github.com/yorukot/knocker/utils/id"
-	"github.com/yorukot/knocker/worker/tasks"
+	monitorcore "github.com/yorukot/kymarium/core/monitor"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/utils/config"
+	"github.com/yorukot/kymarium/utils/id"
+	"github.com/yorukot/kymarium/worker/tasks"
 	"go.uber.org/zap"
 )
 

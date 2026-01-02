@@ -2,10 +2,10 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/handler/auth"
-	"github.com/yorukot/knocker/api/middleware"
-	"github.com/yorukot/knocker/repository"
-	"github.com/yorukot/knocker/utils/config"
+	"github.com/yorukot/kymarium/api/handler/auth"
+	"github.com/yorukot/kymarium/api/middleware"
+	"github.com/yorukot/kymarium/repository"
+	"github.com/yorukot/kymarium/utils/config"
 )
 
 // AuthRouter registers auth-related routes.

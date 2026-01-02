@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-Use this guide to work consistently in the Knocker Go codebase and ship changes safely. Role-specific guides: `agents/backend/guide.md` for Go services and `agents/frontend/guide.md` for `website/` work. Backend deep dives: `agents/backend/overview.md` (runtime flow), `agents/backend/monitoring.md` (pings/incidents), `agents/backend/data.md` (schema/repository), `agents/backend/api.md` (HTTP/auth), and `agents/backend/notifications.md` (queues/dispatch). Agents run with the Context7 MCP server available—use it to pull fresh, official docs for libraries and cloud services before coding or reviewing.
+Use this guide to work consistently in the Kymarium Go codebase and ship changes safely. Role-specific guides: `agents/backend/guide.md` for Go services and `agents/frontend/guide.md` for `website/` work. Backend deep dives: `agents/backend/overview.md` (runtime flow), `agents/backend/monitoring.md` (pings/incidents), `agents/backend/data.md` (schema/repository), `agents/backend/api.md` (HTTP/auth), and `agents/backend/notifications.md` (queues/dispatch). Agents run with the Context7 MCP server available—use it to pull fresh, official docs for libraries and cloud services before coding or reviewing.
 - Only read or modify the `website/` folder when the task explicitly requires a frontend change; otherwise leave it untouched to stay focused on backend work.
 
 ## Mandatory Workflow Rules

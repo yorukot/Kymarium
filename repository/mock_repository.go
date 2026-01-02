@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/mock"
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // MockRepository is a testify-based mock implementing Repository for unit tests.

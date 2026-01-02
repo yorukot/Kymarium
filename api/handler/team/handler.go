@@ -1,6 +1,6 @@
 package team
 
-import "github.com/yorukot/knocker/repository"
+import "github.com/yorukot/kymarium/repository"
 
 // Handler handles team-related requests.
 type Handler struct {

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/models/monitorm"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/models/monitorm"
 )
 
 // Integration tests with local mock HTTP server

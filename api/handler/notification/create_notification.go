@@ -8,10 +8,10 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/models"
-	authutil "github.com/yorukot/knocker/utils/auth"
-	"github.com/yorukot/knocker/utils/id"
-	"github.com/yorukot/knocker/utils/response"
+	"github.com/yorukot/kymarium/models"
+	authutil "github.com/yorukot/kymarium/utils/auth"
+	"github.com/yorukot/kymarium/utils/id"
+	"github.com/yorukot/kymarium/utils/response"
 	"go.uber.org/zap"
 )
 

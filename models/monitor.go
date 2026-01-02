@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/yorukot/knocker/models/monitorm"
+	"github.com/yorukot/kymarium/models/monitorm"
 )
 
 // MonitorType represents the type of monitor being configured.

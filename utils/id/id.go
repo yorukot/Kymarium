@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/sony/sonyflake/v2"
-	"github.com/yorukot/knocker/utils/config"
+	"github.com/yorukot/kymarium/utils/config"
 	"go.uber.org/zap"
 )
 

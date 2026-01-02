@@ -9,11 +9,11 @@ import (
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	"github.com/yorukot/knocker/api/middleware"
-	"github.com/yorukot/knocker/api/router"
-	swaggerDocs "github.com/yorukot/knocker/docs"
-	"github.com/yorukot/knocker/repository"
-	"github.com/yorukot/knocker/utils/config"
+	"github.com/yorukot/kymarium/api/middleware"
+	"github.com/yorukot/kymarium/api/router"
+	swaggerDocs "github.com/yorukot/kymarium/docs"
+	"github.com/yorukot/kymarium/repository"
+	"github.com/yorukot/kymarium/utils/config"
 	"go.uber.org/zap"
 )
 

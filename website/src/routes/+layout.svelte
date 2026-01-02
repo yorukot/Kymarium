@@ -8,7 +8,7 @@
 
 	let { children } = $props();
 
-	const appName = 'Knocker';
+	const appName = 'Kymarium';
 
 	const title = $derived(buildTitle(page));
 

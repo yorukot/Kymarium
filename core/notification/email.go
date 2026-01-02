@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/utils/config"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/utils/config"
 )
 
 func sendEmail(ctx context.Context, _ *http.Client, notification models.Notification, title, description string, _ models.PingStatus) error {
@@ -27,7 +27,7 @@ func sendEmail(ctx context.Context, _ *http.Client, notification models.Notifica
 
 	subject := strings.TrimSpace(title)
 	if subject == "" {
-		subject = "Knocker notification"
+		subject = "Kymarium notification"
 	}
 
 	body := strings.TrimSpace(description)

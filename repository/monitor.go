@@ -7,8 +7,8 @@ import (
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/jackc/pgx/v5"
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/utils/id"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/utils/id"
 )
 
 // CreateMonitor inserts a monitor record.

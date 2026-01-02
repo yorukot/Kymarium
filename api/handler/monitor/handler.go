@@ -1,6 +1,6 @@
 package monitor
 
-import "github.com/yorukot/knocker/repository"
+import "github.com/yorukot/kymarium/repository"
 
 // Handler handles monitor-related requests.
 type Handler struct {

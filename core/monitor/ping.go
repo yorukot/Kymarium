@@ -9,7 +9,7 @@ import (
 	"time"
 
 	ping "github.com/prometheus-community/pro-bing"
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // RunPing executes an ICMP ping monitor using the provided configuration.

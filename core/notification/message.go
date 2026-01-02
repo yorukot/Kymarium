@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // MessageInput captures the data used to build a notification message.

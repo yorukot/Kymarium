@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 func sendDiscord(ctx context.Context, client *http.Client, notification models.Notification, title, description string, status models.PingStatus) error {
@@ -43,7 +43,7 @@ func sanitizeDiscordUsername(name string) string {
 	re := regexp.MustCompile(`(?i)discord`)
 	clean := strings.TrimSpace(re.ReplaceAllString(name, ""))
 	if clean == "" {
-		return "Knocker"
+		return "Kymarium"
 	}
 	return clean
 }

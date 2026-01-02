@@ -1,6 +1,6 @@
 package incident
 
-import "github.com/yorukot/knocker/repository"
+import "github.com/yorukot/kymarium/repository"
 
 // Handler groups dependencies for incident endpoints.
 // Handler handles incident-related requests.

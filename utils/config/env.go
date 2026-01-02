@@ -5,7 +5,7 @@ import (
 
 	"github.com/caarlos0/env/v10"
 	_ "github.com/joho/godotenv/autoload" // Load .env into the process environment.
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // AppEnv represents the running environment.
@@ -20,7 +20,7 @@ const (
 // EnvConfig holds all environment variables for the application
 type EnvConfig struct {
 	AppEnv       AppEnv   `env:"APP_ENV" envDefault:"prod"`
-	AppName      string   `env:"APP_NAME" envDefault:"knocker"`
+	AppName      string   `env:"APP_NAME" envDefault:"kymarium"`
 	AppMachineID int16    `env:"APP_MACHINE_ID" envDefault:"1"`
 	AppPort      string   `env:"APP_PORT" envDefault:"8000"`
 	AppRegion    string   `env:"APP_REGION" envDefault:"TW-Taipei"`

@@ -2,8 +2,8 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	invitetoken "github.com/yorukot/knocker/api/handler/invite_token"
-	"github.com/yorukot/knocker/repository"
+	invitetoken "github.com/yorukot/kymarium/api/handler/invite_token"
+	"github.com/yorukot/kymarium/repository"
 )
 
 // InviteTokenRouter handles invite token routes.

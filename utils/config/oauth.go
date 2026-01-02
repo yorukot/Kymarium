@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"

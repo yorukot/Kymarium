@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/handler/monitor"
-	"github.com/yorukot/knocker/api/middleware"
-	"github.com/yorukot/knocker/repository"
+	"github.com/yorukot/kymarium/api/handler/monitor"
+	"github.com/yorukot/kymarium/api/middleware"
+	"github.com/yorukot/kymarium/repository"
 )
 
 // MonitorRouter handles monitor-related routes

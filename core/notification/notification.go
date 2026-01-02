@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // Send dispatches a notification using the provided notification model.

@@ -1,6 +1,6 @@
 package invitetoken
 
-import "github.com/yorukot/knocker/repository"
+import "github.com/yorukot/kymarium/repository"
 
 // Handler handles invite token routes.
 // Handler handles invite token requests.

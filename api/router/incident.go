@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/handler/incident"
-	"github.com/yorukot/knocker/api/middleware"
-	"github.com/yorukot/knocker/repository"
+	"github.com/yorukot/kymarium/api/handler/incident"
+	"github.com/yorukot/kymarium/api/middleware"
+	"github.com/yorukot/kymarium/repository"
 )
 
 // IncidentRouter handles incident-related routes.

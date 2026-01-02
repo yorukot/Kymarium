@@ -1,6 +1,6 @@
-# Knocker System Overview
+# Kymarium System Overview
 
-Use this as the starting point for understanding how Knocker runs, how monitors are scheduled, and where to look when extending behavior.
+Use this as the starting point for understanding how Kymarium runs, how monitors are scheduled, and where to look when extending behavior.
 
 ## Runtime components
 - API (`api/`): Echo HTTP server, JWT auth, Swagger docs in `api/docs/`, routes defined under `api/router/` and handlers under `api/handler/`.

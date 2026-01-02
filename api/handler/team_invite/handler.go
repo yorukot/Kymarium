@@ -1,6 +1,6 @@
 package teaminvite
 
-import "github.com/yorukot/knocker/repository"
+import "github.com/yorukot/kymarium/repository"
 
 // Handler handles team invite-related routes.
 // Handler handles team invite-related requests.

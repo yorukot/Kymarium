@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 // telegramAPIBase is overridable for testing.

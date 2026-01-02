@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/utils/config"
-	"github.com/yorukot/knocker/utils/encrypt"
-	"github.com/yorukot/knocker/utils/response"
+	"github.com/yorukot/kymarium/utils/config"
+	"github.com/yorukot/kymarium/utils/encrypt"
+	"github.com/yorukot/kymarium/utils/response"
 	"go.uber.org/zap"
 )
 

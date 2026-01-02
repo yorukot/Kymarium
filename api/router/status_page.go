@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/handler/statuspage"
-	"github.com/yorukot/knocker/api/middleware"
-	"github.com/yorukot/knocker/repository"
+	"github.com/yorukot/kymarium/api/handler/statuspage"
+	"github.com/yorukot/kymarium/api/middleware"
+	"github.com/yorukot/kymarium/repository"
 )
 
 // StatusPageRouter handles status page routes.

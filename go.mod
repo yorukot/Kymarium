@@ -1,4 +1,4 @@
-module github.com/yorukot/knocker
+module github.com/yorukot/kymarium
 
 go 1.24.3
 

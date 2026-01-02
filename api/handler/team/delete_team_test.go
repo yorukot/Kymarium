@@ -7,9 +7,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/yorukot/knocker/internal/testutil"
-	"github.com/yorukot/knocker/models"
-	"github.com/yorukot/knocker/repository"
+	"github.com/yorukot/kymarium/internal/testutil"
+	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/repository"
 )
 
 func TestDeleteTeam_Success(t *testing.T) {

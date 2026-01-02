@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/yorukot/knocker/api/middleware"
-	"github.com/yorukot/knocker/utils/config"
+	"github.com/yorukot/kymarium/api/middleware"
+	"github.com/yorukot/kymarium/utils/config"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )

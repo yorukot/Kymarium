@@ -1,7 +1,7 @@
 package statuspage
 
 import (
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 type statusPageGroupInput struct {

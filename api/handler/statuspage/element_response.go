@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/yorukot/knocker/models"
+	"github.com/yorukot/kymarium/models"
 )
 
 func buildStatusPageElementResponses(groups []models.StatusPageGroup, monitors []models.StatusPageMonitor) []statusPageElementResponse {

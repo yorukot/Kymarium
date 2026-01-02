@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/yorukot/knocker/utils/config"
-	"github.com/yorukot/knocker/utils/id"
+	"github.com/yorukot/kymarium/utils/config"
+	"github.com/yorukot/kymarium/utils/id"
 	"go.uber.org/zap"
 )
 

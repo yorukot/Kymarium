@@ -1,17 +1,17 @@
 services:
   timescale:
     image: timescale/timescaledb:latest-pg17
-    container_name: knocker-timescale
+    container_name: kymarium-timescale
     environment:
-      POSTGRES_DB: ${DB_NAME:-knocker}
-      POSTGRES_USER: ${DB_USER:-knocker}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-knocker-this-is-a-really-long-password}
+      POSTGRES_DB: ${DB_NAME:-kymarium}
+      POSTGRES_USER: ${DB_USER:-kymarium}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kymarium-this-is-a-really-long-password}
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - timescale_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-knocker} -d ${DB_NAME:-knocker}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kymarium} -d ${DB_NAME:-kymarium}"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -19,10 +19,10 @@ services:
 
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly
-    container_name: knocker-dragonfly
+    container_name: kymarium-dragonfly
     command: ["--default_lua_flags=allow-undeclared-keys"]
     environment:
-      - DFLY_requirepass=${REDIS_PASSWORD:-knocker-dragonfly-password}
+      - DFLY_requirepass=${REDIS_PASSWORD:-kymarium-dragonfly-password}
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
@@ -43,7 +43,7 @@ services:
       DB_SSL_MODE: ${DB_SSL_MODE:-disable}
       REDIS_HOST: dragonfly
       REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-knocker-dragonfly-password}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-kymarium-dragonfly-password}
     ports:
       - "${APP_PORT:-8000}:8000"
     depends_on:
@@ -66,7 +66,7 @@ services:
       DB_SSL_MODE: ${DB_SSL_MODE:-disable}
       REDIS_HOST: dragonfly
       REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-knocker-dragonfly-password}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-kymarium-dragonfly-password}
     depends_on:
       timescale:
         condition: service_healthy
@@ -87,7 +87,7 @@ services:
       DB_SSL_MODE: ${DB_SSL_MODE:-disable}
       REDIS_HOST: dragonfly
       REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-knocker-dragonfly-password}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-kymarium-dragonfly-password}
     depends_on:
       timescale:
         condition: service_healthy

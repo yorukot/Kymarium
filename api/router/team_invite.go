@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	teaminvite "github.com/yorukot/knocker/api/handler/team_invite"
-	"github.com/yorukot/knocker/api/middleware"
-	"github.com/yorukot/knocker/repository"
+	teaminvite "github.com/yorukot/kymarium/api/handler/team_invite"
+	"github.com/yorukot/kymarium/api/middleware"
+	"github.com/yorukot/kymarium/repository"
 )
 
 // TeamInviteRouter handles team invite-related routes.

@@ -29,7 +29,7 @@
 	<Card.Header>
 		<h2 class="text-lg font-bold">Ping monitor settings</h2>
 		<p class="text-sm text-muted-foreground">
-			Configure how Knocker will ping your host.
+			Configure how Kymarium will ping your host.
 		</p>
 	</Card.Header>
 	<Card.Content>

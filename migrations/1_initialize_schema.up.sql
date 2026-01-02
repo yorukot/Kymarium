@@ -10,9 +10,10 @@ CREATE TYPE "incident_severity" AS ENUM ('emergency', 'critical', 'major', 'mino
 CREATE TYPE "member_role" AS ENUM ('owner', 'admin', 'member', 'viewer');
 CREATE TYPE "monitor_status" AS ENUM ('up', 'down');
 CREATE TYPE "monitor_type" AS ENUM ('http', 'ping');
-CREATE TYPE "notification_type" AS ENUM ('discord', 'telegram', 'email');
+CREATE TYPE "notification_type" AS ENUM ('discord', 'telegram', 'email', 'slack');
 CREATE TYPE "ping_status" AS ENUM ('successful', 'failed', 'timeout');
-CREATE TYPE "status_page_element_type" AS ENUM ('historical_timeline', 'current_status_indicator', 'none');
+CREATE TYPE "status_page_element_type" AS ENUM ('historical_timeline', 'current_status_indicator');
+CREATE TYPE "invite_status" AS ENUM ('pending', 'accepted', 'rejected', 'canceled');
 
 CREATE TABLE "public"."oauth_tokens" (
     "account_id" bigint NOT NULL,
@@ -33,6 +34,8 @@ CREATE TABLE "public"."users" (
     "password_hash" text,
     "avatar" text,
     "display_name" text NOT NULL,
+    "verified" boolean NOT NULL DEFAULT false,
+    "verify_code" text,
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL,
     PRIMARY KEY ("id")
@@ -42,6 +45,7 @@ CREATE TABLE "public"."status_pages" (
     "id" bigint NOT NULL,
     "team_id" bigint NOT NULL,
     "slug" text NOT NULL,
+    "title" text NOT NULL,
     "icon" bytea,
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL,
@@ -56,6 +60,7 @@ CREATE TABLE "public"."accounts" (
     "provider_user_id" character varying(255) NOT NULL,
     "user_id" bigint NOT NULL,
     "email" character varying(255) NOT NULL,
+    "is_primary" boolean NOT NULL DEFAULT false,
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL,
     CONSTRAINT "pk_accounts_id" PRIMARY KEY ("id")
@@ -63,6 +68,7 @@ CREATE TABLE "public"."accounts" (
 -- Indexes
 CREATE UNIQUE INDEX "uq_accounts_provider_user_id" ON "public"."accounts" ("provider", "provider_user_id");
 CREATE UNIQUE INDEX "uq_accounts_provider_email" ON "public"."accounts" ("provider", "email");
+CREATE UNIQUE INDEX "uq_accounts_primary_per_user" ON "public"."accounts" ("user_id") WHERE is_primary;
 CREATE INDEX "idx_accounts_provider" ON "public"."accounts" ("provider");
 CREATE INDEX "idx_accounts_email" ON "public"."accounts" ("email");
 CREATE INDEX "idx_accounts_user_id" ON "public"."accounts" ("user_id");
@@ -118,6 +124,7 @@ CREATE TABLE "public"."incidents" (
     "severity" incident_severity NOT NULL DEFAULT 'major',
     "is_public" boolean NOT NULL,
     "auto_resolve" boolean NOT NULL DEFAULT false,
+    "title" text,
     "started_at" timestamp NOT NULL,
     "resolved_at" timestamp,
     "created_at" timestamp NOT NULL,
@@ -182,10 +189,22 @@ CREATE TABLE "public"."team_invites" (
     "team_id" bigint NOT NULL,
     "invited_by" bigint NOT NULL,
     "invited_to" bigint NOT NULL,
+    "invited_email" text NOT NULL,
+    "role" member_role NOT NULL DEFAULT 'member',
+    "status" invite_status NOT NULL DEFAULT 'pending',
+    "token" text,
+    "expires_at" timestamp NOT NULL DEFAULT (now() + interval '7 days'),
+    "accepted_at" timestamp,
+    "rejected_at" timestamp,
+    "canceled_at" timestamp,
     "updated_at" timestamp NOT NULL,
     "created_at" timestamp NOT NULL,
     CONSTRAINT "pk_team_invites_id" PRIMARY KEY ("id")
 );
+-- Indexes
+CREATE UNIQUE INDEX "uq_team_invites_token" ON "public"."team_invites" ("token") WHERE token IS NOT NULL;
+CREATE INDEX "idx_team_invites_team_id" ON "public"."team_invites" ("team_id");
+CREATE INDEX "idx_team_invites_status" ON "public"."team_invites" ("status");
 
 CREATE TABLE "public"."regions" (
     "id" bigint NOT NULL,
