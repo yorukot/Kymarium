@@ -32,7 +32,7 @@
 
 		if (authTitles[path]) return `${authTitles[path]} - ${appName}`;
 		if (path.startsWith('/auth')) return `Authentication - ${appName}`;
-		if (path === '/' || path === '') return appName;
+		if (path === '/') return appName;
 
 		const lastSegment = path.split('/').filter(Boolean).pop();
 		if (!lastSegment) return appName;

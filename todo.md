@@ -1,0 +1,10 @@
+- [] Multi select element's color need to be change.
+- [] Monitor list need able to click the whole card go into detail page.
+- [] Monitor detail page need to have padding
+- [] Add notify for save button and all the saving button
+- [] The slug and tuitle limit at the new status page is wrong
+- [] auto refresh for status page
+- [] status page slug need to validate
+- [] add incident and monitor link to the notification message
+- [] make the member can modify their own role except owner
+- [] enable 1 sec per ping

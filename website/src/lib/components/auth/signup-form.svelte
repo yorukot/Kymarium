@@ -11,6 +11,7 @@
 	import { validator } from '@felte/validator-zod';
 	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 	import { z } from 'zod';
+	import Spinner from '../ui/spinner/spinner.svelte';
 
 	const inBrowser = typeof window !== 'undefined';
 
@@ -32,7 +33,7 @@
 			message: 'Passwords do not match.'
 		});
 
-	const { form, isSubmitting } = createForm({
+	const { form, isSubmitting, setErrors } = createForm({
 		extend: [validator({ schema: signupSchema }), reporter()],
 		onSubmit: async (values) => {
 			try {
@@ -43,12 +44,16 @@
 				}
 				await goto(redirectTo);
 			} catch (error) {
-				return {
-					FORM_ERROR:
-						error instanceof Error
-							? error.message
-							: 'Unable to sign up right now. Please try again.'
-				};
+				const message =
+					error instanceof Error
+						? error.message
+						: 'Unable to sign up right now. Please try again.';
+				const normalizedMessage = message.toLowerCase();
+				if (normalizedMessage.includes('email is already in use')) {
+					setErrors({ email: 'This email is already in use.' });
+					return;
+				}
+				setErrors({ FORM_ERROR: message });
 			}
 		}
 	});
@@ -154,9 +159,13 @@
 					{/if}
 				</ValidationMessage>
 
-				<Field.Field>
+				<div class="flex flex-col gap-3">
 					<Button type="submit" disabled={$isSubmitting}>
-						{$isSubmitting ? 'Creating account...' : 'Create Account'}
+						{#if $isSubmitting}
+							<Spinner /> Creating...
+						{:else}
+							Create Account
+						{/if}
 					</Button>
 
 					<Button type="button" variant="outline" onclick={handleGoogle}>
@@ -168,7 +177,7 @@
 						Already have an account?
 						<a href="/auth/login">Sign in</a>
 					</Field.Description>
-				</Field.Field>
+				</div>
 			</Field.Group>
 		</form>
 	</Card.Content>

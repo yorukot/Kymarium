@@ -96,7 +96,6 @@ export async function apiRequest<T>(url: string, options: ApiOptions = {}): Prom
 
 	if (res.status === 401) {
 		const refreshed = await refreshToken();
-
 		if (!refreshed) {
 			await redirectToLogin();
 			throw new Error('AUTH_EXPIRED');

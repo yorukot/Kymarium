@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import { Spinner } from '$lib/components/ui/spinner';
 	import {
 		FieldGroup,
 		Field,
@@ -29,24 +30,25 @@
 		redirectTo = url.searchParams.get('next') ?? '/';
 	}
 
-	const { form, isSubmitting } = createForm({
+	const { form, isSubmitting, setErrors } = createForm({
 		extend: [validator({ schema: loginSchema }), reporter()],
 		onSubmit: async (values) => {
 			try {
 				await login(values.email, values.password);
 				await goto(redirectTo);
 			} catch (error) {
-				if (
-					error instanceof Error &&
-					error.message.toLowerCase().includes('email not verified')
-				) {
+				const message =
+					error instanceof Error ? error.message : 'Unable to log in right now. Please try again.';
+				const normalizedMessage = message.toLowerCase();
+				if (normalizedMessage.includes('email not verified')) {
 					await goto(`/auth/verify/sent?email=${encodeURIComponent(values.email)}`);
 					return;
 				}
-				return {
-					FORM_ERROR:
-						error instanceof Error ? error.message : 'Unable to log in right now. Please try again.'
-				};
+				if (normalizedMessage.includes('invalid credentials')) {
+					setErrors({ password: 'Invalid password or email', email: 'Invalid password or email' });
+					return;
+				}
+				setErrors({ FORM_ERROR: message });
 			}
 		}
 	});
@@ -113,9 +115,13 @@
 					{/if}
 				</ValidationMessage>
 
-				<Field>
+				<div class="flex flex-col gap-3">
 					<Button type="submit" class="w-full" disabled={$isSubmitting}>
-						{$isSubmitting ? 'Logging in...' : 'Login'}
+						{#if $isSubmitting}
+							<Spinner /> Loggin in...
+						{:else}
+							Login
+						{/if}
 					</Button>
 
 					<Button type="button" variant="outline" class="w-full" onclick={handleGoogle}>
@@ -127,7 +133,7 @@
 						Don't have an account?
 						<a href="/auth/register">Sign up</a>
 					</FieldDescription>
-				</Field>
+				</div>
 			</FieldGroup>
 		</form>
 	</Card.Content>

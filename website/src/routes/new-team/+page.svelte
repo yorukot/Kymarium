@@ -10,6 +10,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { FieldGroup, Field, FieldLabel, FieldDescription } from '$lib/components/ui/field';
 	import { createTeam } from '$lib/api/team';
+	import { Spinner } from '$lib/components/ui/spinner';
 
 	const schema = z.object({
 		name: z.string().min(1, 'Team name is required').max(255, 'Team name is too long')
@@ -35,50 +36,54 @@
 </script>
 
 <div>
-<div class="min-h-screen px-4 flex items-center justify-center">
-	<Card.Root class="w-full max-w-md">
-		<Card.Header>
-			<Card.Title class="text-2xl">Create a new team</Card.Title>
-			<Card.Description>Give your team a name. You can add members later.</Card.Description>
-		</Card.Header>
-		<Card.Content>
-			<form use:form class="space-y-4">
-				<FieldGroup>
-					<Field>
-						<FieldLabel for="team-name">Team name</FieldLabel>
-						<Input
-							id="team-name"
-							name="name"
-							type="text"
-							placeholder="Acme SRE"
-							autocomplete="organization"
-							required
-						/>
-						<ValidationMessage for="name" let:messages>
+	<div class="min-h-screen px-4 flex items-center justify-center">
+		<Card.Root class="w-full max-w-md">
+			<Card.Header>
+				<Card.Title class="text-2xl">Create a new team</Card.Title>
+				<Card.Description>Give your team a name. You can add members later.</Card.Description>
+			</Card.Header>
+			<Card.Content>
+				<form use:form class="space-y-4">
+					<FieldGroup>
+						<Field>
+							<FieldLabel for="team-name">Team name</FieldLabel>
+							<Input
+								id="team-name"
+								name="name"
+								type="text"
+								placeholder="Acme SRE"
+								autocomplete="organization"
+								required
+							/>
+							<ValidationMessage for="name" let:messages>
+								{#if messages?.length}
+									<FieldDescription class="text-destructive">
+										{messages[0]}
+									</FieldDescription>
+								{/if}
+							</ValidationMessage>
+						</Field>
+
+						<ValidationMessage for="FORM_ERROR" let:messages>
 							{#if messages?.length}
-								<FieldDescription class="text-destructive">
+								<FieldDescription class="text-destructive text-center">
 									{messages[0]}
 								</FieldDescription>
 							{/if}
 						</ValidationMessage>
-					</Field>
 
-					<ValidationMessage for="FORM_ERROR" let:messages>
-						{#if messages?.length}
-							<FieldDescription class="text-destructive text-center">
-								{messages[0]}
-							</FieldDescription>
-						{/if}
-					</ValidationMessage>
-
-					<Field>
-						<Button type="submit" class="w-full" disabled={$isSubmitting}>
-							{$isSubmitting ? 'Creating…' : 'Create team'}
-						</Button>
-					</Field>
-				</FieldGroup>
-			</form>
-		</Card.Content>
-	</Card.Root>
-</div>
+						<Field>
+							<Button type="submit" class="w-full" disabled={$isSubmitting}>
+								{#if $isSubmitting}
+									<Spinner /> Creating...
+								{:else}
+									Create team
+								{/if}
+							</Button>
+						</Field>
+					</FieldGroup>
+				</form>
+			</Card.Content>
+		</Card.Root>
+	</div>
 </div>
