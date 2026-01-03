@@ -6,6 +6,7 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Spinner } from '$lib/components/ui/spinner';
+	import { StatusCodes } from 'http-status-codes';
 	import {
 		FieldGroup,
 		Field,
@@ -17,44 +18,29 @@
 	import * as z from 'zod';
 	import { createForm } from 'felte';
 
-	const inBrowser = typeof window !== 'undefined';
-
 	const loginSchema = z.object({
 		email: z.email().max(255),
 		password: z.string().min(8).max(255)
 	});
 
 	let redirectTo = '/';
-	if (inBrowser) {
-		const url = new URL(window.location.href);
-		redirectTo = url.searchParams.get('next') ?? '/';
-	}
+	const url = new URL(window.location.href);
+	redirectTo = url.searchParams.get('next') ?? '/';
 
 	const { form, isSubmitting, setErrors } = createForm({
 		extend: [validator({ schema: loginSchema }), reporter()],
 		onSubmit: async (values) => {
-			try {
-				await login(values.email, values.password);
-				await goto(redirectTo);
-			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Unable to log in right now. Please try again.';
-				const normalizedMessage = message.toLowerCase();
-				if (normalizedMessage.includes('email not verified')) {
-					await goto(`/auth/verify/sent?email=${encodeURIComponent(values.email)}`);
-					return;
-				}
-				if (normalizedMessage.includes('invalid credentials')) {
-					setErrors({ password: 'Invalid password or email', email: 'Invalid password or email' });
-					return;
-				}
-				setErrors({ FORM_ERROR: message });
-			}
+				const res = await login(values.email, values.password);
+				if (res.statusCode != StatusCodes.OK)
+				   return (res.message || 'Login failed');
+	  },
+		onError: (errors) => {
+			console.error('Form error:', errors);
+			
 		}
 	});
 
 	const handleGoogle = () => {
-		if (!inBrowser) return;
 		window.location.href = buildOAuthUrl('google', redirectTo);
 	};
 </script>

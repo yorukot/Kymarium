@@ -13,7 +13,7 @@ func MonitorRouter(api *echo.Group, repo repository.Repository) {
 		Repo: repo,
 	}
 
-	r := api.Group("/teams/:teamID/monitors", middleware.AuthRequiredMiddleware)
+	r := api.Group("/teams/:teamID/monitors", middleware.AuthRequiredMiddleware(repo))
 	r.POST("", monitorHandler.CreateMonitor)
 	r.GET("", monitorHandler.ListMonitors)
 	r.GET("/:id", monitorHandler.GetMonitor)

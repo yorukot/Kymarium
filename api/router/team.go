@@ -13,7 +13,7 @@ func TeamRouter(api *echo.Group, repo repository.Repository) {
 		Repo: repo,
 	}
 
-	r := api.Group("/teams", middleware.AuthRequiredMiddleware)
+	r := api.Group("/teams", middleware.AuthRequiredMiddleware(repo))
 	r.GET("", teamHandler.ListTeams)
 	r.POST("", teamHandler.CreateTeam)
 	r.GET("/:id", teamHandler.GetTeam)

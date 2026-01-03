@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/utils/config"
 	"go.uber.org/zap"
 )
 
@@ -17,7 +18,7 @@ import (
 
 // OAuthCallback godoc
 // @Summary OAuth callback handler
-// @Description Handles OAuth provider callback, processes authorization code, creates/links user accounts, and issues authentication tokens
+// @Description Handles OAuth provider callback, processes authorization code, creates/links user accounts, and issues a session cookie
 // @Tags oauth
 // @Accept json
 // @Produce json
@@ -205,17 +206,16 @@ func (h *Handler) OAuthCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create oauth token")
 	}
 
-	// Generate the refresh token
-	refreshToken, err := generateTokenAndSaveRefreshToken(c, h.Repo, tx, userID)
+	expiresAt := time.Now().Add(time.Duration(config.Env().SessionExpiresAt) * time.Second)
+	session, err := generateSession(userID, c.Request().UserAgent(), c.RealIP(), expiresAt)
 	if err != nil {
-		zap.L().Error("Failed to create refresh token", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create refresh token")
+		zap.L().Error("Failed to generate session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate session")
 	}
 
-	accessTokenCookie, err := generateAccessTokenCookieForUser(userID)
-	if err != nil {
-		zap.L().Error("Failed to generate access token", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate access token")
+	if err := h.Repo.CreateSession(c.Request().Context(), tx, session); err != nil {
+		zap.L().Error("Failed to create session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create session")
 	}
 
 	// Commit the transaction
@@ -224,10 +224,8 @@ func (h *Handler) OAuthCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	// Generate the refresh token cookie
-	refreshTokenCookie := generateRefreshTokenCookie(refreshToken)
-	c.SetCookie(&refreshTokenCookie)
-	c.SetCookie(&accessTokenCookie)
+	sessionCookie := generateSessionCookie(session)
+	c.SetCookie(&sessionCookie)
 
 	// Redirect to the redirect URI
 	return c.Redirect(http.StatusTemporaryRedirect, payload.RedirectURI)

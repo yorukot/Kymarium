@@ -13,7 +13,7 @@ func UserRouter(api *echo.Group, repo repository.Repository) {
 		Repo: repo,
 	}
 
-	r := api.Group("/users", middleware.AuthRequiredMiddleware)
+	r := api.Group("/users", middleware.AuthRequiredMiddleware(repo))
 	r.GET("/me", userHandler.GetMe)
 	r.PATCH("/me", userHandler.UpdateMe)
 	r.GET("/me/account", userHandler.GetAccount)

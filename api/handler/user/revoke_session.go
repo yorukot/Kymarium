@@ -3,7 +3,6 @@ package user
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	authutil "github.com/yorukot/kymarium/utils/auth"
@@ -13,7 +12,7 @@ import (
 
 // RevokeSession godoc
 // @Summary Revoke session
-// @Description Revokes a refresh token session for the authenticated user
+// @Description Revokes a session for the authenticated user
 // @Tags users
 // @Produce json
 // @Param sessionID path string true "Session ID"
@@ -46,9 +45,9 @@ func (h *Handler) RevokeSession(c echo.Context) error {
 	}
 	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
-	updated, err := h.Repo.UpdateRefreshTokenUsedAtByID(c.Request().Context(), tx, *userID, sessionID, time.Now())
+	updated, err := h.Repo.DeleteSessionByID(c.Request().Context(), tx, *userID, sessionID)
 	if err != nil {
-		zap.L().Error("Failed to revoke refresh token", zap.Error(err))
+		zap.L().Error("Failed to revoke session", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to revoke session")
 	}
 

@@ -1,4 +1,3 @@
-- [] Multi select element's color need to be change.
 - [] Monitor list need able to click the whole card go into detail page.
 - [] Monitor detail page need to have padding
 - [] Add notify for save button and all the saving button

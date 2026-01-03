@@ -11,7 +11,7 @@ import (
 func TeamMemberRouter(api *echo.Group, repo repository.Repository) {
 	teamHandler := &team.Handler{Repo: repo}
 
-	r := api.Group("/teams/:teamID/members", middleware.AuthRequiredMiddleware)
+	r := api.Group("/teams/:teamID/members", middleware.AuthRequiredMiddleware(repo))
 	r.GET("", teamHandler.ListMembers)
 	r.DELETE("/:userID", teamHandler.RemoveMember)
 }

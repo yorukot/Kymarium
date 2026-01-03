@@ -2,66 +2,89 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/yorukot/kymarium/models"
-	"github.com/yorukot/kymarium/utils/config"
-	"github.com/yorukot/kymarium/utils/encrypt"
+	"github.com/yorukot/kymarium/repository"
 	"go.uber.org/zap"
 )
 
-// authMiddlewareLogic is the logic for the auth middleware
-func authMiddlewareLogic(token string) (*encrypt.AccessTokenClaims, error) {
-	JWTSecret := encrypt.JWTSecret{
-		Secret: config.Env().JWTSecretKey,
+func attachUserIDFromSession(c echo.Context, repo repository.Repository, requireAuth bool) error {
+	sessionCookie, err := c.Cookie(models.CookieNameSession)
+	if err != nil || sessionCookie.Value == "" {
+		if requireAuth {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+		}
+		return nil
 	}
 
-	valid, claims, err := JWTSecret.ValidateAccessTokenAndGetClaims(token)
+	tx, err := repo.StartTransaction(c.Request().Context())
 	if err != nil {
-		zap.L().Error("Failed to validate access token", zap.Error(err))
-		return nil, echo.NewHTTPError(http.StatusInternalServerError, "Internal server error")
+		zap.L().Error("Failed to begin transaction", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to begin transaction")
+	}
+	defer repo.DeferRollback(c.Request().Context(), tx)
+
+	session, err := repo.GetSessionByToken(c.Request().Context(), tx, sessionCookie.Value)
+	if err != nil {
+		zap.L().Error("Failed to get session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get session")
 	}
 
-	if !valid {
-		return nil, echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
+	if session == nil {
+		if requireAuth {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+		}
+		return nil
 	}
 
-	return &claims, nil
+	if time.Now().After(session.ExpiresAt) {
+		if _, err := repo.DeleteSessionByToken(c.Request().Context(), tx, sessionCookie.Value); err != nil {
+			zap.L().Error("Failed to delete expired session", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete expired session")
+		}
+		if err := repo.CommitTransaction(c.Request().Context(), tx); err != nil {
+			zap.L().Error("Failed to commit transaction", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
+		}
+		if requireAuth {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+		}
+		return nil
+	}
+
+	if err := repo.CommitTransaction(c.Request().Context(), tx); err != nil {
+		zap.L().Error("Failed to commit transaction", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
+	}
+
+	c.Set(string(UserIDKey), strconv.FormatInt(session.UserID, 10))
+	return nil
 }
 
 // AuthRequiredMiddleware is the middleware for the auth required
-func AuthRequiredMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		accessCookie, err := c.Cookie(models.CookieNameAccessToken)
-		if err != nil || accessCookie.Value == "" {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
+func AuthRequiredMiddleware(repo repository.Repository) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if err := attachUserIDFromSession(c, repo, true); err != nil {
+				return err
+			}
+			return next(c)
 		}
-
-		claims, err := authMiddlewareLogic(accessCookie.Value)
-		if err != nil {
-			return err
-		}
-
-		c.Set(string(UserIDKey), claims.Subject)
-		return next(c)
 	}
 }
 
 // AuthOptionalMiddleware is the middleware for the auth optional
-func AuthOptionalMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		accessCookie, err := c.Cookie(models.CookieNameAccessToken)
-		if err != nil || accessCookie.Value == "" {
+func AuthOptionalMiddleware(repo repository.Repository) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if err := attachUserIDFromSession(c, repo, false); err != nil {
+				// For optional auth, continue even if session lookup fails
+				return next(c)
+			}
 			return next(c)
 		}
-
-		claims, err := authMiddlewareLogic(accessCookie.Value)
-		if err != nil {
-			// For optional auth, continue even if token is invalid
-			return next(c)
-		}
-
-		c.Set(string(UserIDKey), claims.Subject)
-		return next(c)
 	}
 }

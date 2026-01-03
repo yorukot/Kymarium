@@ -1,11 +1,8 @@
 import type { Incident } from '$lib/types';
 import type { IncidentEvent, IncidentEventType } from '$lib/types/incident';
-import { apiRequest } from './utils';
+import { apiRequest, type ApiResponse } from './utils';
 
-export type IncidentsResponse = {
-	message: string;
-	data: Incident[];
-};
+export type IncidentsResponse = ApiResponse<Incident[]>;
 
 export function getIncidents(teamID: string): Promise<IncidentsResponse> {
 	return apiRequest<IncidentsResponse>(`/teams/${teamID}/incidents`, {
@@ -13,10 +10,7 @@ export function getIncidents(teamID: string): Promise<IncidentsResponse> {
 	});
 }
 
-export type IncidentResponse = {
-	message: string;
-	data: Incident;
-};
+export type IncidentResponse = ApiResponse<Incident>;
 
 export function getIncident(teamID: string, incidentID: string): Promise<IncidentResponse> {
 	return apiRequest<IncidentResponse>(`/teams/${teamID}/incidents/${incidentID}`, {
@@ -24,10 +18,7 @@ export function getIncident(teamID: string, incidentID: string): Promise<Inciden
 	});
 }
 
-export type IncidentEventsResponse = {
-	message: string;
-	data: IncidentEvent[];
-};
+export type IncidentEventsResponse = ApiResponse<IncidentEvent[]>;
 
 export function getIncidentEvents(
 	teamID: string,
@@ -43,10 +34,7 @@ export type IncidentEventCreateRequest = {
 	event_type?: IncidentEventType;
 };
 
-export type IncidentEventCreateResponse = {
-	message: string;
-	data: IncidentEvent;
-};
+export type IncidentEventCreateResponse = ApiResponse<IncidentEvent>;
 
 export function createIncidentEvent(
 	teamID: string,
@@ -66,13 +54,10 @@ export type IncidentStatusUpdateRequest = {
 	public?: boolean;
 };
 
-export type IncidentStatusUpdateResponse = {
-	message: string;
-	data: {
-		incident: Incident;
-		event: IncidentEvent;
-	};
-};
+export type IncidentStatusUpdateResponse = ApiResponse<{
+	incident: Incident;
+	event: IncidentEvent;
+}>;
 
 export function updateIncidentStatus(
 	teamID: string,
@@ -92,10 +77,7 @@ export type IncidentUpdateRequest = {
 	auto_resolve?: boolean;
 };
 
-export type IncidentUpdateResponse = {
-	message: string;
-	data: Incident;
-};
+export type IncidentUpdateResponse = ApiResponse<Incident>;
 
 export function updateIncident(
 	teamID: string,
@@ -120,13 +102,10 @@ export type IncidentCreateRequest = {
 	monitor_ids: string[];
 };
 
-export type IncidentCreateResponse = {
-	message: string;
-	data: {
-		incident: Incident;
-		event: IncidentEvent;
-	};
-};
+export type IncidentCreateResponse = ApiResponse<{
+	incident: Incident;
+	event: IncidentEvent;
+}>;
 
 export function createIncident(
 	teamID: string,

@@ -13,7 +13,7 @@ import (
 
 // Logout godoc
 // @Summary Logout
-// @Description Logs the user out by invalidating refresh token and clearing cookies
+// @Description Logs the user out by invalidating session and clearing cookies
 // @Tags auth
 // @Produce json
 // @Success 200 {object} response.SuccessResponse "Logged out"
@@ -22,8 +22,8 @@ import (
 func (h *Handler) Logout(c echo.Context) error {
 	expireAuthCookies(c)
 
-	refreshCookie, err := c.Cookie(models.CookieNameRefreshToken)
-	if err != nil || refreshCookie == nil || refreshCookie.Value == "" {
+	sessionCookie, err := c.Cookie(models.CookieNameSession)
+	if err != nil || sessionCookie == nil || sessionCookie.Value == "" {
 		return c.JSON(http.StatusOK, response.SuccessMessage("Logged out"))
 	}
 
@@ -34,19 +34,9 @@ func (h *Handler) Logout(c echo.Context) error {
 	}
 	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
-	refreshToken, err := h.Repo.GetRefreshTokenByToken(c.Request().Context(), tx, refreshCookie.Value)
-	if err != nil {
-		zap.L().Error("Failed to get refresh token", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get refresh token")
-	}
-
-	if refreshToken != nil && refreshToken.UsedAt == nil {
-		now := time.Now()
-		refreshToken.UsedAt = &now
-		if err := h.Repo.UpdateRefreshTokenUsedAt(c.Request().Context(), tx, *refreshToken); err != nil {
-			zap.L().Error("Failed to update refresh token used_at", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update refresh token")
-		}
+	if _, err := h.Repo.DeleteSessionByToken(c.Request().Context(), tx, sessionCookie.Value); err != nil {
+		zap.L().Error("Failed to delete session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete session")
 	}
 
 	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
@@ -58,25 +48,13 @@ func (h *Handler) Logout(c echo.Context) error {
 }
 
 func expireAuthCookies(c echo.Context) {
-	accessCookie := http.Cookie{
-		Name:     models.CookieNameAccessToken,
+	sessionCookie := http.Cookie{
+		Name:     models.CookieNameSession,
 		Value:    "",
 		Path:     "/api",
 		Domain:   cookieDomain(),
 		HttpOnly: true,
-		Secure:   config.Env().AppEnv == config.AppEnvProd,
-		Expires:  time.Unix(0, 0),
-		MaxAge:   -1,
-		SameSite: http.SameSiteLaxMode,
-	}
-
-	refreshCookie := http.Cookie{
-		Name:     models.CookieNameRefreshToken,
-		Value:    "",
-		Path:     "/api/auth/refresh",
-		Domain:   cookieDomain(),
-		HttpOnly: true,
-		Secure:   config.Env().AppEnv == config.AppEnvProd,
+		Secure:   false,
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 		SameSite: http.SameSiteLaxMode,
@@ -94,7 +72,6 @@ func expireAuthCookies(c echo.Context) {
 		SameSite: http.SameSiteLaxMode,
 	}
 
-	c.SetCookie(&accessCookie)
-	c.SetCookie(&refreshCookie)
+	c.SetCookie(&sessionCookie)
 	c.SetCookie(&oauthCookie)
 }

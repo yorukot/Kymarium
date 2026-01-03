@@ -19,7 +19,7 @@ type sessionResponse struct {
 
 // ListSessions godoc
 // @Summary List active sessions
-// @Description Lists active refresh token sessions for the authenticated user
+// @Description Lists active sessions for the authenticated user
 // @Tags users
 // @Produce json
 // @Success 200 {object} response.SuccessResponse "Sessions retrieved successfully"
@@ -45,9 +45,9 @@ func (h *Handler) ListSessions(c echo.Context) error {
 	}
 	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
-	tokens, err := h.Repo.ListActiveRefreshTokensByUserID(c.Request().Context(), tx, *userID)
+	sessions, err := h.Repo.ListActiveSessionsByUserID(c.Request().Context(), tx, *userID, time.Now())
 	if err != nil {
-		zap.L().Error("Failed to list refresh tokens", zap.Error(err))
+		zap.L().Error("Failed to list sessions", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get sessions")
 	}
 
@@ -55,19 +55,19 @@ func (h *Handler) ListSessions(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	sessions := make([]sessionResponse, 0, len(tokens))
-	for _, token := range tokens {
+	responses := make([]sessionResponse, 0, len(sessions))
+	for _, session := range sessions {
 		ip := ""
-		if token.IP != nil {
-			ip = token.IP.String()
+		if session.IP != nil {
+			ip = session.IP.String()
 		}
-		sessions = append(sessions, sessionResponse{
-			ID:        token.ID,
-			UserAgent: token.UserAgent,
+		responses = append(responses, sessionResponse{
+			ID:        session.ID,
+			UserAgent: session.UserAgent,
 			IP:        ip,
-			CreatedAt: token.CreatedAt,
+			CreatedAt: session.CreatedAt,
 		})
 	}
 
-	return c.JSON(http.StatusOK, response.Success("Sessions retrieved successfully", sessions))
+	return c.JSON(http.StatusOK, response.Success("Sessions retrieved successfully", responses))
 }

@@ -1,15 +1,9 @@
 import type { Monitor, MonitorAnalytics, MonitorWithIncidents } from '$lib/types';
-import { apiRequest } from './utils';
+import { apiRequest, type ApiDefaultBody, type ApiResponse } from './utils';
 
-export type MonitorResponse = {
-	message: string;
-	data: MonitorWithIncidents[];
-};
+export type MonitorResponse = ApiResponse<MonitorWithIncidents[]>;
 
-export type MonitorSingleResponse = {
-	message: string;
-	data: Monitor;
-};
+export type MonitorSingleResponse = ApiResponse<Monitor>;
 
 export type MonitorCreateRequest = {
 	name: string;
@@ -40,24 +34,13 @@ export type MonitorCreateRequest = {
 		};
 };
 
-export type MonitorCreateResponse = {
-	message: string;
-	data: Monitor;
-};
+export type MonitorCreateResponse = ApiResponse<Monitor>;
 
-export type MonitorUpdateResponse = {
-	message: string;
-	data: Monitor;
-};
+export type MonitorUpdateResponse = ApiResponse<Monitor>;
 
-export type MonitorDeleteResponse = {
-	message: string;
-};
+export type MonitorDeleteResponse = ApiDefaultBody;
 
-export type MonitorAnalyticsResponse = {
-	message: string;
-	data: MonitorAnalytics;
-};
+export type MonitorAnalyticsResponse = ApiResponse<MonitorAnalytics>;
 
 export function getMonitors(teamID: string): Promise<MonitorResponse> {
 	return apiRequest<MonitorResponse>(`/teams/${teamID}/monitors`, {

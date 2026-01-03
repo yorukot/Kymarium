@@ -16,7 +16,7 @@ type authStatusResponse struct {
 
 // Status godoc
 // @Summary Check authentication status
-// @Description Returns 200 when the user is authenticated via access token cookie
+// @Description Returns 200 when the user is authenticated via session cookie
 // @Tags auth
 // @Accept json
 // @Produce json

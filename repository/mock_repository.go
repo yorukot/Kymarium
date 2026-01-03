@@ -172,6 +172,19 @@ func (m *MockRepository) GetRefreshTokenByToken(ctx context.Context, tx pgx.Tx, 
 	return refreshToken, args.Error(1)
 }
 
+// CreateSession mocks Repository.CreateSession.
+func (m *MockRepository) CreateSession(ctx context.Context, tx pgx.Tx, session models.Session) error {
+	args := m.Called(ctx, tx, session)
+	return args.Error(0)
+}
+
+// GetSessionByToken mocks Repository.GetSessionByToken.
+func (m *MockRepository) GetSessionByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Session, error) {
+	args := m.Called(ctx, tx, token)
+	session, _ := args.Get(0).(*models.Session)
+	return session, args.Error(1)
+}
+
 // CreateAccount mocks Repository.CreateAccount.
 func (m *MockRepository) CreateAccount(ctx context.Context, tx pgx.Tx, account models.Account) error {
 	args := m.Called(ctx, tx, account)
@@ -207,6 +220,31 @@ func (m *MockRepository) ListAccountsByUserID(ctx context.Context, tx pgx.Tx, us
 	args := m.Called(ctx, tx, userID)
 	accounts, _ := args.Get(0).([]models.Account)
 	return accounts, args.Error(1)
+}
+
+// ListActiveSessionsByUserID mocks Repository.ListActiveSessionsByUserID.
+func (m *MockRepository) ListActiveSessionsByUserID(ctx context.Context, tx pgx.Tx, userID int64, now time.Time) ([]models.Session, error) {
+	args := m.Called(ctx, tx, userID, now)
+	sessions, _ := args.Get(0).([]models.Session)
+	return sessions, args.Error(1)
+}
+
+// DeleteSessionByID mocks Repository.DeleteSessionByID.
+func (m *MockRepository) DeleteSessionByID(ctx context.Context, tx pgx.Tx, userID, sessionID int64) (bool, error) {
+	args := m.Called(ctx, tx, userID, sessionID)
+	return args.Bool(0), args.Error(1)
+}
+
+// DeleteSessionByToken mocks Repository.DeleteSessionByToken.
+func (m *MockRepository) DeleteSessionByToken(ctx context.Context, tx pgx.Tx, token string) (bool, error) {
+	args := m.Called(ctx, tx, token)
+	return args.Bool(0), args.Error(1)
+}
+
+// DeleteSessionsExceptToken mocks Repository.DeleteSessionsExceptToken.
+func (m *MockRepository) DeleteSessionsExceptToken(ctx context.Context, tx pgx.Tx, userID int64, token string) (int64, error) {
+	args := m.Called(ctx, tx, userID, token)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 // ListActiveRefreshTokensByUserID mocks Repository.ListActiveRefreshTokensByUserID.

@@ -1,10 +1,7 @@
 import type { Region } from '$lib/types';
-import { apiRequest } from './utils';
+import { apiRequest, type ApiResponse } from './utils';
 
-export type RegionListResponse = {
-	message: string;
-	data: Region[];
-};
+export type RegionListResponse = ApiResponse<Region[]>;
 
 export function getRegions(): Promise<RegionListResponse> {
 	return apiRequest<RegionListResponse>('/regions', {

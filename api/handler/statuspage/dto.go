@@ -32,7 +32,7 @@ type statusPageElementInput struct {
 
 type statusPageUpsertRequest struct {
 	Title    string                   `json:"title" form:"name" validate:"required,min=1,max=255"`
-	Slug     string                   `json:"slug" form:"slug" validate:"required,min=3,max=255"`
+	Slug     string                   `json:"slug" form:"slug" validate:"required,min=3,max=255,alphanum"`
 	Icon     []byte                   `json:"icon,omitempty" form:"icon"`
 	Elements []statusPageElementInput `json:"elements" form:"elements" validate:"dive"`
 	Groups   []statusPageGroupInput   `json:"groups" form:"groups" validate:"dive"`

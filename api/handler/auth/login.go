@@ -25,12 +25,12 @@ type LoginRequest struct {
 
 // Login godoc
 // @Summary User login
-// @Description Authenticates a user with email and password, sets refresh/access token cookies
+// @Description Authenticates a user with email and password, sets session cookie
 // @Tags auth
 // @Accept json
 // @Produce json
 // @Param request body LoginRequest true "Login request with email and password"
-// @Success 200 {object} response.SuccessResponse "Login successful, refresh token set in cookie"
+// @Success 200 {object} response.SuccessResponse "Login successful, session set in cookie"
 // @Failure 400 {object} response.ErrorResponse "Invalid request body or invalid credentials"
 // @Failure 403 {object} response.ErrorResponse "Email not verified"
 // @Failure 500 {object} response.ErrorResponse "Internal server error (transaction, database, or password verification failure)"
@@ -129,26 +129,23 @@ func (h *Handler) Login(c echo.Context) error {
 		}
 	}
 
-	// Generate the refresh token
-	refreshToken, err := generateTokenAndSaveRefreshToken(c, h.Repo, tx, user.ID)
+	expiresAt := time.Now().Add(time.Duration(config.Env().SessionExpiresAt) * time.Second)
+	session, err := generateSession(user.ID, c.Request().UserAgent(), c.RealIP(), expiresAt)
 	if err != nil {
-		zap.L().Error("Failed to generate refresh token", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate refresh token")
+		zap.L().Error("Failed to generate session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate session")
 	}
 
-	accessTokenCookie, err := generateAccessTokenCookieForUser(user.ID)
-	if err != nil {
-		zap.L().Error("Failed to generate access token", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate access token")
+	if err := h.Repo.CreateSession(c.Request().Context(), tx, session); err != nil {
+		zap.L().Error("Failed to create session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create session")
 	}
 
 	// Commit the transaction
 	h.Repo.CommitTransaction(c.Request().Context(), tx)
 
-	// Generate the refresh token cookie
-	refreshTokenCookie := generateRefreshTokenCookie(refreshToken)
-	c.SetCookie(&refreshTokenCookie)
-	c.SetCookie(&accessTokenCookie)
+	sessionCookie := generateSessionCookie(session)
+	c.SetCookie(&sessionCookie)
 
 	return c.JSON(http.StatusOK, response.SuccessMessage("Login successful"))
 }

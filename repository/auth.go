@@ -119,6 +119,35 @@ func (r *PGRepository) GetAccountWithUserByProviderUserID(ctx context.Context, d
 	return &result.A, &result.U, nil
 }
 
+// GetSessionByToken retrieves a session by its token value
+func (r *PGRepository) GetSessionByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Session, error) {
+	query := `SELECT id, user_id, token, user_agent, ip, expires_at, created_at
+	          FROM sessions
+	          WHERE token = $1
+	          LIMIT 1`
+
+	var session models.Session
+	err := tx.QueryRow(ctx, query, token).Scan(
+		&session.ID,
+		&session.UserID,
+		&session.Token,
+		&session.UserAgent,
+		&session.IP,
+		&session.ExpiresAt,
+		&session.CreatedAt,
+	)
+
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &session, nil
+}
+
 // GetRefreshTokenByToken retrieves a refresh token by its token value
 func (r *PGRepository) GetRefreshTokenByToken(ctx context.Context, tx pgx.Tx, token string) (*models.RefreshToken, error) {
 	query := `SELECT id, user_id, token, user_agent, ip, used_at, created_at
@@ -245,6 +274,24 @@ func (r *PGRepository) CreateOAuthToken(ctx context.Context, db pgx.Tx, oauthTok
 	return err
 }
 
+// CreateSession creates a new session in the database
+func (r *PGRepository) CreateSession(ctx context.Context, tx pgx.Tx, session models.Session) error {
+	query := `INSERT INTO sessions (id, user_id, token, user_agent, ip, expires_at, created_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7)`
+
+	_, err := tx.Exec(ctx, query,
+		session.ID,
+		session.UserID,
+		session.Token,
+		session.UserAgent,
+		session.IP,
+		session.ExpiresAt,
+		session.CreatedAt,
+	)
+
+	return err
+}
+
 // CreateRefreshToken creates a new refresh token in the database
 func (r *PGRepository) CreateRefreshToken(ctx context.Context, tx pgx.Tx, token models.RefreshToken) error {
 	query := `INSERT INTO refresh_tokens (id, user_id, token, user_agent, ip, used_at, created_at)
@@ -261,6 +308,51 @@ func (r *PGRepository) CreateRefreshToken(ctx context.Context, tx pgx.Tx, token 
 	)
 
 	return err
+}
+
+// ListActiveSessionsByUserID returns active sessions for a user.
+func (r *PGRepository) ListActiveSessionsByUserID(ctx context.Context, tx pgx.Tx, userID int64, now time.Time) ([]models.Session, error) {
+	query := `SELECT id, user_id, token, user_agent, ip, expires_at, created_at
+	          FROM sessions
+	          WHERE user_id = $1 AND expires_at > $2
+	          ORDER BY created_at DESC`
+
+	var sessions []models.Session
+	if err := pgxscan.Select(ctx, tx, &sessions, query, userID, now); err != nil {
+		return nil, err
+	}
+
+	return sessions, nil
+}
+
+// DeleteSessionByID deletes a session by ID for a user.
+func (r *PGRepository) DeleteSessionByID(ctx context.Context, tx pgx.Tx, userID, sessionID int64) (bool, error) {
+	query := `DELETE FROM sessions WHERE id = $1 AND user_id = $2`
+	result, err := tx.Exec(ctx, query, sessionID, userID)
+	if err != nil {
+		return false, err
+	}
+	return result.RowsAffected() > 0, nil
+}
+
+// DeleteSessionByToken deletes a session by token.
+func (r *PGRepository) DeleteSessionByToken(ctx context.Context, tx pgx.Tx, token string) (bool, error) {
+	query := `DELETE FROM sessions WHERE token = $1`
+	result, err := tx.Exec(ctx, query, token)
+	if err != nil {
+		return false, err
+	}
+	return result.RowsAffected() > 0, nil
+}
+
+// DeleteSessionsExceptToken deletes all sessions except the one with the provided token.
+func (r *PGRepository) DeleteSessionsExceptToken(ctx context.Context, tx pgx.Tx, userID int64, token string) (int64, error) {
+	query := `DELETE FROM sessions WHERE user_id = $1 AND token != $2`
+	result, err := tx.Exec(ctx, query, userID, token)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 // UpdateRefreshTokenUsedAt updates the used_at timestamp for a refresh token

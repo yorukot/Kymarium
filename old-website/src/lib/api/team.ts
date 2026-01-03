@@ -1,19 +1,13 @@
 import type { MemberRole, Team, TeamInvite, TeamMemberWithUser, TeamWithRole } from '$lib/types';
-import { apiRequest } from './utils';
+import { apiRequest, type ApiDefaultBody, type ApiResponse } from './utils';
 
-export type TeamsResponse = {
-  message: string;
-  data: Team[];
-};
+export type TeamsResponse = ApiResponse<Team[]>;
 
 export function getTeams(): Promise<TeamsResponse> {
-	return apiRequest<TeamsResponse>("/teams", { defaultError: 'Failed to fetch teams' });
+	return apiRequest<TeamsResponse>('/teams', { defaultError: 'Failed to fetch teams' });
 }
 
-export type TeamResponse = {
-	message: string;
-	data: TeamWithRole;
-};
+export type TeamResponse = ApiResponse<TeamWithRole>;
 
 export function getTeam(teamID: string): Promise<TeamResponse> {
 	return apiRequest<TeamResponse>(`/teams/${teamID}`, {
@@ -21,10 +15,7 @@ export function getTeam(teamID: string): Promise<TeamResponse> {
 	});
 }
 
-export type CreateTeamResponse = {
-	message: string;
-	data: Team;
-};
+export type CreateTeamResponse = ApiResponse<Team>;
 
 export function createTeam(name: string): Promise<CreateTeamResponse> {
 	return apiRequest<CreateTeamResponse>('/teams', {
@@ -34,10 +25,7 @@ export function createTeam(name: string): Promise<CreateTeamResponse> {
 	});
 }
 
-export type UpdateTeamResponse = {
-	message: string;
-	data: Team;
-};
+export type UpdateTeamResponse = ApiResponse<Team>;
 
 export function updateTeam(teamID: string, name: string): Promise<UpdateTeamResponse> {
 	return apiRequest<UpdateTeamResponse>(`/teams/${teamID}`, {
@@ -47,9 +35,7 @@ export function updateTeam(teamID: string, name: string): Promise<UpdateTeamResp
 	});
 }
 
-export type DeleteTeamResponse = {
-	message: string;
-};
+export type DeleteTeamResponse = ApiDefaultBody;
 
 export function deleteTeam(teamID: string): Promise<DeleteTeamResponse> {
 	return apiRequest<DeleteTeamResponse>(`/teams/${teamID}`, {
@@ -58,9 +44,7 @@ export function deleteTeam(teamID: string): Promise<DeleteTeamResponse> {
 	});
 }
 
-export type LeaveTeamResponse = {
-	message: string;
-};
+export type LeaveTeamResponse = ApiDefaultBody;
 
 export function leaveTeam(teamID: string): Promise<LeaveTeamResponse> {
 	return apiRequest<LeaveTeamResponse>(`/teams/${teamID}/leave`, {
@@ -69,10 +53,7 @@ export function leaveTeam(teamID: string): Promise<LeaveTeamResponse> {
 	});
 }
 
-export type TeamMembersResponse = {
-	message: string;
-	data: TeamMemberWithUser[];
-};
+export type TeamMembersResponse = ApiResponse<TeamMemberWithUser[]>;
 
 export function getTeamMembers(teamID: string): Promise<TeamMembersResponse> {
 	return apiRequest<TeamMembersResponse>(`/teams/${teamID}/members`, {
@@ -80,10 +61,7 @@ export function getTeamMembers(teamID: string): Promise<TeamMembersResponse> {
 	});
 }
 
-export type TeamInvitesResponse = {
-	message: string;
-	data: TeamInvite[];
-};
+export type TeamInvitesResponse = ApiResponse<TeamInvite[]>;
 
 export function getTeamInvites(teamID: string): Promise<TeamInvitesResponse> {
 	return apiRequest<TeamInvitesResponse>(`/teams/${teamID}/invites`, {
@@ -91,10 +69,7 @@ export function getTeamInvites(teamID: string): Promise<TeamInvitesResponse> {
 	});
 }
 
-export type CreateTeamInviteResponse = {
-	message: string;
-	data: TeamInvite;
-};
+export type CreateTeamInviteResponse = ApiResponse<TeamInvite>;
 
 export function createTeamInvite(teamID: string, email: string, role?: MemberRole): Promise<CreateTeamInviteResponse> {
 	return apiRequest<CreateTeamInviteResponse>(`/teams/${teamID}/invites`, {
@@ -104,10 +79,7 @@ export function createTeamInvite(teamID: string, email: string, role?: MemberRol
 	});
 }
 
-export type CancelTeamInviteResponse = {
-	message: string;
-	data: TeamInvite;
-};
+export type CancelTeamInviteResponse = ApiResponse<TeamInvite>;
 
 export function cancelTeamInvite(teamID: string, inviteID: string): Promise<CancelTeamInviteResponse> {
 	return apiRequest<CancelTeamInviteResponse>(`/teams/${teamID}/invites/${inviteID}`, {
@@ -116,10 +88,7 @@ export function cancelTeamInvite(teamID: string, inviteID: string): Promise<Canc
 	});
 }
 
-export type UpdateTeamInviteResponse = {
-	message: string;
-	data: TeamInvite;
-};
+export type UpdateTeamInviteResponse = ApiResponse<TeamInvite>;
 
 export function updateTeamInvite(
 	teamID: string,
@@ -133,9 +102,7 @@ export function updateTeamInvite(
 	});
 }
 
-export type RemoveTeamMemberResponse = {
-	message: string;
-};
+export type RemoveTeamMemberResponse = ApiDefaultBody;
 
 export function removeTeamMember(teamID: string, userID: string): Promise<RemoveTeamMemberResponse> {
 	return apiRequest<RemoveTeamMemberResponse>(`/teams/${teamID}/members/${userID}`, {

@@ -8,9 +8,21 @@ import (
 // CookieName constants
 const (
 	CookieNameOAuthSession = "oauth_session"
+	CookieNameSession      = "_kymarium_session"
 	CookieNameRefreshToken = "refresh_token"
 	CookieNameAccessToken  = "access_token"
 )
+
+// Session represents a persisted user session.
+type Session struct {
+	ID        int64     `json:"id,string" db:"id" example:"175928847299117063"`
+	UserID    int64     `json:"user_id,string" db:"user_id" example:"175928847299117063"`
+	Token     string    `json:"token" db:"token" example:"sess_abcdef123456..."`
+	UserAgent *string   `json:"user_agent" db:"user_agent" example:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"`
+	IP        net.IP    `json:"ip" db:"ip" example:"192.168.1.100"`
+	ExpiresAt time.Time `json:"expires_at" db:"expires_at" example:"2023-01-06T12:00:00Z"`
+	CreatedAt time.Time `json:"created_at" db:"created_at" example:"2023-01-01T12:00:00Z"`
+}
 
 // RefreshToken represents a persisted refresh token session.
 type RefreshToken struct {

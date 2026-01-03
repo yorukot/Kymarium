@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -107,17 +108,16 @@ func (h *Handler) Register(c echo.Context) error {
 		return c.JSON(http.StatusOK, response.SuccessMessage("Verification email sent"))
 	}
 
-	// Generate the refresh token
-	refreshToken, err := generateTokenAndSaveRefreshToken(c, h.Repo, tx, user.ID)
+	expiresAt := time.Now().Add(time.Duration(config.Env().SessionExpiresAt) * time.Second)
+	session, err := generateSession(user.ID, c.Request().UserAgent(), c.RealIP(), expiresAt)
 	if err != nil {
-		zap.L().Error("Failed to generate refresh token", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate refresh token")
+		zap.L().Error("Failed to generate session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate session")
 	}
 
-	accessTokenCookie, err := generateAccessTokenCookieForUser(user.ID)
-	if err != nil {
-		zap.L().Error("Failed to generate access token", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate access token")
+	if err := h.Repo.CreateSession(c.Request().Context(), tx, session); err != nil {
+		zap.L().Error("Failed to create session", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create session")
 	}
 
 	// Commit the transaction
@@ -126,10 +126,8 @@ func (h *Handler) Register(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 	}
 
-	// Generate the refresh token cookie
-	refreshTokenCookie := generateRefreshTokenCookie(refreshToken)
-	c.SetCookie(&refreshTokenCookie)
-	c.SetCookie(&accessTokenCookie)
+	sessionCookie := generateSessionCookie(session)
+	c.SetCookie(&sessionCookie)
 
 	// Respond with the success message
 	return c.JSON(http.StatusOK, response.SuccessMessage("User registered successfully"))

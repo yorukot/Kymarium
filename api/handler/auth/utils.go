@@ -11,10 +11,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/jackc/pgx/v5"
-	"github.com/labstack/echo/v4"
 	"github.com/yorukot/kymarium/models"
-	"github.com/yorukot/kymarium/repository"
 	"github.com/yorukot/kymarium/utils/config"
 	"github.com/yorukot/kymarium/utils/encrypt"
 	"github.com/yorukot/kymarium/utils/id"
@@ -69,82 +66,45 @@ func GenerateUser(registerRequest registerRequest) (models.User, models.Account,
 	return user, account, nil
 }
 
-// generateRefreshToken generates a refresh token for the user
-func generateRefreshToken(userID int64, userAgent string, ip string) (models.RefreshToken, error) {
-	refreshTokenID, err := id.GetID()
+// generateSession generates a server-side session for the user
+func generateSession(userID int64, userAgent string, ip string, expiresAt time.Time) (models.Session, error) {
+	sessionID, err := id.GetID()
 	if err != nil {
-		return models.RefreshToken{}, fmt.Errorf("failed to generate refresh token ID: %w", err)
+		return models.Session{}, fmt.Errorf("failed to generate session ID: %w", err)
 	}
 
-	// Extract IP address, handling cases where port may or may not be present
 	ipStr := ip
 	if host, _, err := net.SplitHostPort(ip); err == nil {
-		// Successfully split, use the host part
 		ipStr = host
 	}
 	parsedIP := net.ParseIP(ipStr)
 
-	refreshToken, err := encrypt.GenerateSecureRefreshToken()
+	sessionToken, err := encrypt.GenerateSecureRefreshToken()
 	if err != nil {
-		return models.RefreshToken{}, fmt.Errorf("failed to generate refresh token: %w", err)
+		return models.Session{}, fmt.Errorf("failed to generate session token: %w", err)
 	}
 
-	return models.RefreshToken{
-		ID:        refreshTokenID,
+	return models.Session{
+		ID:        sessionID,
 		UserID:    userID,
-		Token:     refreshToken,
+		Token:     sessionToken,
 		UserAgent: &userAgent,
 		IP:        parsedIP,
-		UsedAt:    nil,
+		ExpiresAt: expiresAt,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
-// generateRefreshTokenCookie generates a refresh token cookie
-func generateRefreshTokenCookie(refreshToken models.RefreshToken) http.Cookie {
+// generateSessionCookie generates a session cookie
+func generateSessionCookie(session models.Session) http.Cookie {
 	return http.Cookie{
-		Name:     models.CookieNameRefreshToken,
-		Path:     "/api/auth/refresh",
-		Domain:   cookieDomain(),
-		Value:    refreshToken.Token,
-		HttpOnly: true,
-		Secure:   config.Env().AppEnv == config.AppEnvProd,
-		Expires:  refreshToken.CreatedAt.Add(time.Duration(config.Env().RefreshTokenExpiresAt) * time.Second),
-		SameSite: http.SameSiteLaxMode,
-	}
-}
-
-func generateAccessToken(userID int64) (string, error) {
-	accessTokenClaims := encrypt.JWTSecret{
-		Secret: config.Env().JWTSecretKey,
-	}
-
-	return accessTokenClaims.GenerateAccessToken(
-		config.Env().AppName,
-		strconv.FormatInt(userID, 10),
-		time.Now().Add(time.Duration(config.Env().AccessTokenExpiresAt)*time.Second),
-	)
-}
-
-func generateAccessTokenCookieForUser(userID int64) (http.Cookie, error) {
-	accessToken, err := generateAccessToken(userID)
-	if err != nil {
-		return http.Cookie{}, fmt.Errorf("failed to generate access token: %w", err)
-	}
-
-	return generateAccessTokenCookie(accessToken), nil
-}
-
-// generateAccessTokenCookie generates an access token cookie
-func generateAccessTokenCookie(accessToken string) http.Cookie {
-	return http.Cookie{
-		Name:     models.CookieNameAccessToken,
+		Name:     models.CookieNameSession,
 		Path:     "/api",
 		Domain:   cookieDomain(),
-		Value:    accessToken,
+		Value:    session.Token,
 		HttpOnly: true,
-		Secure:   config.Env().AppEnv == config.AppEnvProd,
-		Expires:  time.Now().Add(time.Duration(config.Env().AccessTokenExpiresAt) * time.Second),
+		Secure:   false,
+		Expires:  session.ExpiresAt,
 		SameSite: http.SameSiteLaxMode,
 	}
 }
@@ -190,23 +150,6 @@ func sendVerificationEmail(toEmail string, token string) error {
 
 	body := fmt.Sprintf("Please verify your email by clicking the link below:\n\n%s\n\nIf you did not request this, you can ignore this email.", verifyURL)
 	return config.SendEmail(toEmail, nil, nil, subject, body)
-}
-
-// generateTokenAndSaveRefreshToken generates a refresh token and saves it to the database
-func generateTokenAndSaveRefreshToken(e echo.Context, repo repository.Repository, tx pgx.Tx, userID int64) (models.RefreshToken, error) {
-	userAgent := e.Request().UserAgent()
-	ip := e.RealIP()
-
-	refreshToken, err := generateRefreshToken(userID, userAgent, ip)
-	if err != nil {
-		return models.RefreshToken{}, fmt.Errorf("failed to generate refresh token: %w", err)
-	}
-
-	if err := repo.CreateRefreshToken(e.Request().Context(), tx, refreshToken); err != nil {
-		return models.RefreshToken{}, fmt.Errorf("failed to save refresh token: %w", err)
-	}
-
-	return refreshToken, nil
 }
 
 // +----------------------------------------------+

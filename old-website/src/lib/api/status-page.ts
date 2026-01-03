@@ -4,17 +4,11 @@ import type {
 	StatusPageElementType,
 	StatusPageWithElements
 } from '$lib/types';
-import { apiRequest, publicApiRequest } from './utils';
+import { apiRequest, publicApiRequest, type ApiDefaultBody, type ApiResponse } from './utils';
 
-export type StatusPageListResponse = {
-	message: string;
-	data: StatusPageWithElements[];
-};
+export type StatusPageListResponse = ApiResponse<StatusPageWithElements[]>;
 
-export type StatusPageSingleResponse = {
-	message: string;
-	data: StatusPageWithElements;
-};
+export type StatusPageSingleResponse = ApiResponse<StatusPageWithElements>;
 
 export type StatusPageUpsertRequest = {
 	title: string;
@@ -52,29 +46,15 @@ export type StatusPageUpsertRequest = {
 	}[];
 };
 
-export type StatusPageCreateResponse = {
-	message: string;
-	data: StatusPageWithElements;
-};
+export type StatusPageCreateResponse = ApiResponse<StatusPageWithElements>;
 
-export type StatusPageUpdateResponse = {
-	message: string;
-	data: StatusPageWithElements;
-};
+export type StatusPageUpdateResponse = ApiResponse<StatusPageWithElements>;
 
-export type StatusPageDeleteResponse = {
-	message: string;
-};
+export type StatusPageDeleteResponse = ApiDefaultBody;
 
-export type PublicStatusPageResponse = {
-	message: string;
-	data: PublicStatusPageData;
-};
+export type PublicStatusPageResponse = ApiResponse<PublicStatusPageData>;
 
-export type StatusPageModelResponse = {
-	message: string;
-	data: StatusPage;
-};
+export type StatusPageModelResponse = ApiResponse<StatusPage>;
 
 export function getStatusPages(teamID: string): Promise<StatusPageListResponse> {
 	return apiRequest<StatusPageListResponse>(`/teams/${teamID}/status-pages`, {

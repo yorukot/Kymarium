@@ -1,10 +1,7 @@
 import type { Notification, NotificationType } from '$lib/types';
-import { apiRequest } from './utils';
+import { apiRequest, type ApiDefaultBody, type ApiResponse } from './utils';
 
-export type NotificationsResponse = {
-	message: string;
-	data: Notification[];
-};
+export type NotificationsResponse = ApiResponse<Notification[]>;
 
 export type NotificationCreateRequest = {
 	type: NotificationType;
@@ -22,18 +19,11 @@ export type NotificationCreateRequest = {
 		  };
 };
 
-export type NotificationCreateResponse = {
-	message: string;
-	data: Notification;
-};
+export type NotificationCreateResponse = ApiResponse<Notification>;
 
-export type NotificationDeleteResponse = {
-	message: string;
-};
+export type NotificationDeleteResponse = ApiDefaultBody;
 
-export type NotificationTestResponse = {
-	message: string;
-};
+export type NotificationTestResponse = ApiDefaultBody;
 
 export type NotificationUpdateRequest = Partial<{
 	type: NotificationType;
@@ -51,10 +41,7 @@ export type NotificationUpdateRequest = Partial<{
 		  };
 }>;
 
-export type NotificationUpdateResponse = {
-	message: string;
-	data: Notification;
-};
+export type NotificationUpdateResponse = ApiResponse<Notification>;
 
 export function getNotifications(teamID: string): Promise<NotificationsResponse> {
 	return apiRequest<NotificationsResponse>(`/teams/${teamID}/notifications`, {

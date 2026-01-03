@@ -2,7 +2,6 @@ package user
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/yorukot/kymarium/models"
@@ -17,7 +16,7 @@ import (
 // @Tags users
 // @Produce json
 // @Success 200 {object} response.SuccessResponse "Other sessions revoked successfully"
-// @Failure 400 {object} response.ErrorResponse "Refresh token not found"
+// @Failure 400 {object} response.ErrorResponse "Session not found"
 // @Failure 401 {object} response.ErrorResponse "Unauthorized"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Router /users/me/sessions/revoke-others [post]
@@ -32,9 +31,9 @@ func (h *Handler) RevokeOtherSessions(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
-	refreshCookie, err := c.Cookie(models.CookieNameRefreshToken)
-	if err != nil || refreshCookie == nil || refreshCookie.Value == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Refresh token not found")
+	sessionCookie, err := c.Cookie(models.CookieNameSession)
+	if err != nil || sessionCookie == nil || sessionCookie.Value == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Session not found")
 	}
 
 	tx, err := h.Repo.StartTransaction(c.Request().Context())
@@ -44,23 +43,23 @@ func (h *Handler) RevokeOtherSessions(c echo.Context) error {
 	}
 	defer h.Repo.DeferRollback(c.Request().Context(), tx)
 
-	refreshToken, err := h.Repo.GetRefreshTokenByToken(c.Request().Context(), tx, refreshCookie.Value)
+	session, err := h.Repo.GetSessionByToken(c.Request().Context(), tx, sessionCookie.Value)
 	if err != nil {
-		zap.L().Error("Failed to get refresh token", zap.Error(err))
+		zap.L().Error("Failed to get session", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to revoke sessions")
 	}
 
-	if refreshToken == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Refresh token not found")
+	if session == nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Session not found")
 	}
 
-	if refreshToken.UserID != *userID {
+	if session.UserID != *userID {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
 	}
 
-	_, err = h.Repo.UpdateRefreshTokensUsedAtExcept(c.Request().Context(), tx, *userID, refreshToken.ID, time.Now())
+	_, err = h.Repo.DeleteSessionsExceptToken(c.Request().Context(), tx, *userID, session.Token)
 	if err != nil {
-		zap.L().Error("Failed to revoke other refresh tokens", zap.Error(err))
+		zap.L().Error("Failed to revoke other sessions", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to revoke sessions")
 	}
 

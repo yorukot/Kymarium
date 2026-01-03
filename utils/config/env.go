@@ -48,6 +48,7 @@ type EnvConfig struct {
 	OAuthStateExpiresAt   int `env:"OAUTH_STATE_EXPIRES_AT" envDefault:"600"`        // 10 minutes
 	AccessTokenExpiresAt  int `env:"ACCESS_TOKEN_EXPIRES_AT" envDefault:"900"`       // 15 minutes
 	RefreshTokenExpiresAt int `env:"REFRESH_TOKEN_EXPIRES_AT" envDefault:"31536000"` // 365 days
+	SessionExpiresAt      int `env:"SESSION_EXPIRES_AT" envDefault:"432000"`         // 5 days
 
 	// Email Verification
 	EmailVerifyExpiresAt int    `env:"EMAIL_VERIFY_EXPIRES_AT" envDefault:"900"` // 15 minutes

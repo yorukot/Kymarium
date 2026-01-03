@@ -44,7 +44,7 @@ export async function registerUser(
 ): Promise<ApiDefaultBody> {
 	return apiRequest<ApiDefaultBody>('/auth/register', {
 		method: 'POST',
-		body: { display_name: displayName, email, password },
+		body: { displayName, email, password },
 		defaultError: 'Registration failed'
 	});
 }

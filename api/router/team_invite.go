@@ -11,7 +11,7 @@ import (
 func TeamInviteRouter(api *echo.Group, repo repository.Repository) {
 	handler := &teaminvite.Handler{Repo: repo}
 
-	r := api.Group("/teams/:teamID/invites", middleware.AuthRequiredMiddleware)
+	r := api.Group("/teams/:teamID/invites", middleware.AuthRequiredMiddleware(repo))
 	r.POST("", handler.CreateInvite)
 	r.GET("", handler.ListInvites)
 	r.DELETE("/:inviteID", handler.DeleteInvite)

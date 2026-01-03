@@ -36,16 +36,16 @@ type Repository interface {
 	GetAccountByEmail(ctx context.Context, tx pgx.Tx, email string) (*models.Account, error)
 	GetUserIDByEmail(ctx context.Context, tx pgx.Tx, email string) (*int64, error)
 	GetAccountWithUserByProviderUserID(ctx context.Context, tx pgx.Tx, provider models.Provider, providerUserID string) (*models.Account, *models.User, error)
-	GetRefreshTokenByToken(ctx context.Context, tx pgx.Tx, token string) (*models.RefreshToken, error)
 	CreateAccount(ctx context.Context, tx pgx.Tx, account models.Account) error
 	CreateUserAndAccount(ctx context.Context, tx pgx.Tx, user models.User, account models.Account) error
 	CreateOAuthToken(ctx context.Context, tx pgx.Tx, oauthToken models.OAuthToken) error
-	CreateRefreshToken(ctx context.Context, tx pgx.Tx, token models.RefreshToken) error
-	UpdateRefreshTokenUsedAt(ctx context.Context, tx pgx.Tx, token models.RefreshToken) error
+	CreateSession(ctx context.Context, tx pgx.Tx, session models.Session) error
+	GetSessionByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Session, error)
 	ListAccountsByUserID(ctx context.Context, tx pgx.Tx, userID int64) ([]models.Account, error)
-	ListActiveRefreshTokensByUserID(ctx context.Context, tx pgx.Tx, userID int64) ([]models.RefreshToken, error)
-	UpdateRefreshTokenUsedAtByID(ctx context.Context, tx pgx.Tx, userID, tokenID int64, usedAt time.Time) (bool, error)
-	UpdateRefreshTokensUsedAtExcept(ctx context.Context, tx pgx.Tx, userID, tokenID int64, usedAt time.Time) (int64, error)
+	ListActiveSessionsByUserID(ctx context.Context, tx pgx.Tx, userID int64, now time.Time) ([]models.Session, error)
+	DeleteSessionByID(ctx context.Context, tx pgx.Tx, userID, sessionID int64) (bool, error)
+	DeleteSessionByToken(ctx context.Context, tx pgx.Tx, token string) (bool, error)
+	DeleteSessionsExceptToken(ctx context.Context, tx pgx.Tx, userID int64, token string) (int64, error)
 
 	// Users
 	GetUserByID(ctx context.Context, tx pgx.Tx, userID int64) (*models.User, error)

@@ -1,50 +1,34 @@
 import type { Account, Session, TeamInviteWithTeam, User } from '$lib/types';
-import { apiRequest } from './utils';
+import { apiRequest, type ApiDefaultBody, type ApiResponse } from './utils';
 
-export type UserResponse = {
-	message: string;
-	data: User;
-};
+export type UserResponse = ApiResponse<User>;
 
 export function getUser(): Promise<UserResponse> {
-	return apiRequest<UserResponse>("/users/me", { defaultError: 'Failed to fetch user' });
+	return apiRequest<UserResponse>('/users/me', { defaultError: 'Failed to fetch user' });
 }
 
-export type AccountResponse = {
-	message: string;
-	data: Account[];
-};
+export type AccountResponse = ApiResponse<Account[]>;
 
-export type SessionResponse = {
-	message: string;
-	data: Session[];
-};
+export type SessionResponse = ApiResponse<Session[]>;
 
 export type UpdateUserRequest = Partial<{
 	displayName: string;
 	avatar: string | null;
 }>;
 
-export type UpdateUserResponse = {
-	message: string;
-	data: User;
-};
+export type UpdateUserResponse = ApiResponse<User>;
 
 export type UpdatePasswordRequest = {
 	currentPassword: string;
 	newPassword: string;
 };
 
-export type UpdatePasswordResponse = {
-	message: string;
-};
+export type UpdatePasswordResponse = ApiDefaultBody;
 
-export type RevokeSessionsResponse = {
-	message: string;
-};
+export type RevokeSessionsResponse = ApiDefaultBody;
 
 export function updateUser(payload: UpdateUserRequest): Promise<UpdateUserResponse> {
-	return apiRequest<UpdateUserResponse>("/users/me", {
+	return apiRequest<UpdateUserResponse>('/users/me', {
 		method: 'PATCH',
 		body: payload,
 		defaultError: 'Failed to update user'
@@ -52,11 +36,13 @@ export function updateUser(payload: UpdateUserRequest): Promise<UpdateUserRespon
 }
 
 export function getAccounts(): Promise<AccountResponse> {
-	return apiRequest<AccountResponse>("/users/me/account", { defaultError: 'Failed to fetch account info' });
+	return apiRequest<AccountResponse>('/users/me/account', {
+		defaultError: 'Failed to fetch account info'
+	});
 }
 
 export function updatePassword(payload: UpdatePasswordRequest): Promise<UpdatePasswordResponse> {
-	return apiRequest<UpdatePasswordResponse>("/users/me/password", {
+	return apiRequest<UpdatePasswordResponse>('/users/me/password', {
 		method: 'PATCH',
 		body: payload,
 		defaultError: 'Failed to update password'
@@ -64,16 +50,15 @@ export function updatePassword(payload: UpdatePasswordRequest): Promise<UpdatePa
 }
 
 export function listSessions(): Promise<SessionResponse> {
-	return apiRequest<SessionResponse>("/users/me/sessions", { defaultError: 'Failed to fetch sessions' });
+	return apiRequest<SessionResponse>('/users/me/sessions', {
+		defaultError: 'Failed to fetch sessions'
+	});
 }
 
-export type UserInvitesResponse = {
-	message: string;
-	data: TeamInviteWithTeam[];
-};
+export type UserInvitesResponse = ApiResponse<TeamInviteWithTeam[]>;
 
 export function listUserInvites(): Promise<UserInvitesResponse> {
-	return apiRequest<UserInvitesResponse>("/users/me/invites", {
+	return apiRequest<UserInvitesResponse>('/users/me/invites', {
 		defaultError: 'Failed to fetch invites'
 	});
 }
@@ -86,7 +71,7 @@ export function revokeSession(sessionId: string): Promise<RevokeSessionsResponse
 }
 
 export function revokeOtherSessions(): Promise<RevokeSessionsResponse> {
-	return apiRequest<RevokeSessionsResponse>("/users/me/sessions/revoke-others", {
+	return apiRequest<RevokeSessionsResponse>('/users/me/sessions/revoke-others', {
 		method: 'POST',
 		defaultError: 'Failed to revoke other sessions'
 	});
