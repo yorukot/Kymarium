@@ -6,7 +6,7 @@ import { GalleryVerticalEnd } from "lucide-react";
 import { createAvatar } from "@dicebear/core";
 import { shapes } from "@dicebear/collection";
 
-import { useTeams } from "@/components/teams/teams-context";
+import { useTeams } from "@/components/context/teams-context";
 import { Button } from "@/components/ui/button";
 import {
   Card,

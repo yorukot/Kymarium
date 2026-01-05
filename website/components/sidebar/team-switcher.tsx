@@ -21,7 +21,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { useTeams } from "@/components/teams/teams-context"
+import { useTeams } from "@/components/context/teams-context"
 
 function formatRole(role: string) {
   if (!role) return ""

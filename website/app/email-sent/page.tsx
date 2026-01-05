@@ -1,8 +1,7 @@
 "use client";
 
-import * as React from "react";
+import { useState, use, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,17 +17,21 @@ import { GalleryVerticalEnd } from "lucide-react";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
-export default function EmailSentPage() {
-  const searchParams = useSearchParams();
-  const email = searchParams?.get("email")?.trim() || "";
+export default function EmailSentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string }>;
+}) {
+  const params = use(searchParams);
+  const email = params.email || "";
 
-  const [isResending, setIsResending] = React.useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = React.useState(0);
-  const [status, setStatus] = React.useState<
+  const [isResending, setIsResending] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [status, setStatus] = useState<
     { type: "success" | "error"; message: string } | undefined
   >();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (cooldownSeconds <= 0) return;
 
     const timer = window.setTimeout(() => {
