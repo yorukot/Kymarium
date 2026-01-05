@@ -2,6 +2,10 @@
 
 import * as React from "react"
 import { ChevronsUpDown, Plus } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
+import { createAvatar } from "@dicebear/core"
+import { shapes } from "@dicebear/collection"
 
 import {
   DropdownMenu,
@@ -9,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -18,22 +21,43 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useTeams } from "@/components/teams/teams-context"
 
-export function TeamSwitcher({
-  teams,
-}: {
-  teams: {
-    name: string
-    logo: React.ElementType
-    plan: string
-  }[]
-}) {
+function formatRole(role: string) {
+  if (!role) return ""
+  return role
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase() + part.slice(1))
+    .join(" ")
+}
+
+function avatarFor(seed: string, size: number) {
+  return createAvatar(shapes, {
+    seed,
+    size,
+  }).toDataUri()
+}
+
+export function TeamSwitcher() {
+  const teams = useTeams()
   const { isMobile } = useSidebar()
-  const [activeTeam, setActiveTeam] = React.useState(teams[0])
+  const router = useRouter()
+  const params = useParams<{ teamID?: string }>()
+  const teamID = params.teamID
+  const activeTeam = React.useMemo(() => {
+    if (teamID) {
+      const found = teams.find((team) => team.id === teamID)
+      if (found) return found
+    }
+    return teams[0]
+  }, [teams, teamID])
 
   if (!activeTeam) {
     return null
   }
+
+  const activeRole = formatRole(activeTeam.role)
 
   return (
     <SidebarMenu>
@@ -45,11 +69,18 @@ export function TeamSwitcher({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <activeTeam.logo className="size-4" />
+                <Image
+                  src={avatarFor(activeTeam.id, 32)}
+                  alt=""
+                  width={32}
+                  height={32}
+                  unoptimized
+                  className="rounded-lg"
+                />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{activeTeam.name}</span>
-                <span className="truncate text-xs">{activeTeam.plan}</span>
+                <span className="truncate text-xs">{activeRole}</span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
@@ -63,21 +94,30 @@ export function TeamSwitcher({
             <DropdownMenuLabel className="text-muted-foreground text-xs">
               Teams
             </DropdownMenuLabel>
-            {teams.map((team, index) => (
+            {teams.map((team) => (
               <DropdownMenuItem
-                key={team.name}
-                onClick={() => setActiveTeam(team)}
+                key={team.id}
+                onSelect={() => router.push(`/teams/${team.id}/monitors`)}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-md border">
-                  <team.logo className="size-3.5 shrink-0" />
+                  <Image
+                    src={avatarFor(team.id, 24)}
+                    alt=""
+                    width={24}
+                    height={24}
+                    unoptimized
+                    className="rounded"
+                  />
                 </div>
                 {team.name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
+            <DropdownMenuItem
+              className="gap-2 p-2"
+              onSelect={() => router.push("/teams/new-team")}
+            >
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
               </div>

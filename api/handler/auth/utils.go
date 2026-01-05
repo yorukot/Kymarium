@@ -99,7 +99,7 @@ func generateSession(userID int64, userAgent string, ip string, expiresAt time.T
 func generateSessionCookie(session models.Session) http.Cookie {
 	return http.Cookie{
 		Name:     models.CookieNameSession,
-		Path:     "/api",
+		Path:     "/",
 		Domain:   cookieDomain(),
 		Value:    session.Token,
 		HttpOnly: true,

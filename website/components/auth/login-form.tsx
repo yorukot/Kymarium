@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -51,6 +51,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const resolvedNextPath = normalizeNextPath(
+    nextPath ?? searchParams.get("next") ?? undefined,
+  );
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -76,7 +81,7 @@ export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
       await login(parsed.data);
       form.reset();
 
-      const redirectTarget = normalizeNextPath(nextPath) ?? "/dashboard";
+      const redirectTarget = resolvedNextPath ?? "/teams";
       router.replace(redirectTarget);
     } catch (error) {
       if (error instanceof ApiError) {
@@ -86,13 +91,16 @@ export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
 
           if (message.toLowerCase().includes("email not verified")) {
             router.push(
-              `/email-sent?email=${encodeURIComponent(values.email)}`
+              `/email-sent?email=${encodeURIComponent(values.email)}`,
             );
             return;
           }
         }
 
-        const hasFieldErrors = applyServerFieldErrors(form.setError, error.body);
+        const hasFieldErrors = applyServerFieldErrors(
+          form.setError,
+          error.body,
+        );
 
         if (!hasFieldErrors) {
           form.setError("root", {
