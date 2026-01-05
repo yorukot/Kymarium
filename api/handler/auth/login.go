@@ -34,18 +34,25 @@ type LoginRequest struct {
 // @Failure 400 {object} response.ErrorResponse "Invalid request body or invalid credentials"
 // @Failure 403 {object} response.ErrorResponse "Email not verified"
 // @Failure 500 {object} response.ErrorResponse "Internal server error (transaction, database, or password verification failure)"
-// @Failure 502 {object} response.ErrorResponse "Invalid request body format"
 // @Router /auth/login [post]
 func (h *Handler) Login(c echo.Context) error {
 	// Decode the request body
 	var loginRequest LoginRequest
 	if err := json.NewDecoder(c.Request().Body).Decode(&loginRequest); err != nil {
-		return echo.NewHTTPError(http.StatusBadGateway, "Invalid request body")
+		return c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Message: "Invalid request body",
+		})
 	}
 
 	// Validate the request body
 	if err := validator.New().Struct(loginRequest); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+		if errResponse, ok := response.ValidationErrorResponse(err, "Invalid request body", "VALIDATION_ERROR"); ok {
+			return c.JSON(http.StatusBadRequest, errResponse)
+		}
+
+		return c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Message: "Invalid request body",
+		})
 	}
 
 	// Begin the transaction
@@ -66,7 +73,12 @@ func (h *Handler) Login(c echo.Context) error {
 	// TODO: Need to change this
 	// If the user is not found, return an error
 	if user == nil || user.PasswordHash == nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid credentials")
+		return c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Message: "Invalid credentials",
+			Errors: map[string]string{
+				"root": "Invalid credentials",
+			},
+		})
 	}
 
 	// Compare the password and hash
@@ -78,7 +90,12 @@ func (h *Handler) Login(c echo.Context) error {
 
 	// If the password is not correct, return an error
 	if !match {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid credentials")
+		return c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Message: "Invalid credentials",
+			Errors: map[string]string{
+				"root": "Invalid credentials",
+			},
+		})
 	}
 
 	if !user.Verified {
@@ -125,7 +142,12 @@ func (h *Handler) Login(c echo.Context) error {
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
 			}
 
-			return echo.NewHTTPError(http.StatusForbidden, "Email not verified")
+			return c.JSON(http.StatusForbidden, response.ErrorResponse{
+				Message: "Email not verified",
+				Errors: map[string]string{
+					"root": "Email not verified",
+				},
+			})
 		}
 	}
 
@@ -142,7 +164,10 @@ func (h *Handler) Login(c echo.Context) error {
 	}
 
 	// Commit the transaction
-	h.Repo.CommitTransaction(c.Request().Context(), tx)
+	if err := h.Repo.CommitTransaction(c.Request().Context(), tx); err != nil {
+		zap.L().Error("Failed to commit transaction", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to commit transaction")
+	}
 
 	sessionCookie := generateSessionCookie(session)
 	c.SetCookie(&sessionCookie)

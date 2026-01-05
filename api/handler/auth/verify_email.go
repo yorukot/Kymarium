@@ -95,7 +95,7 @@ func buildFrontendVerificationURL(result string, email string) string {
 	}
 
 	base = strings.TrimRight(base, "/")
-	path := "/auth/verify/" + result
+	path := "/verify/" + result
 
 	if email == "" {
 		return base + path

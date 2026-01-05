@@ -222,6 +222,11 @@ definitions:
     type: object
   response.ErrorResponse:
     properties:
+      code:
+        example: VALIDATION_ERROR
+        type: string
+      errors:
+        type: object
       message:
         example: Invalid request body
         type: string
@@ -430,8 +435,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticates a user with email and password, sets refresh/access
-        token cookies
+      description: Authenticates a user with email and password, sets session cookie
       parameters:
       - description: Login request with email and password
         in: body
@@ -443,7 +447,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Login successful, refresh token set in cookie
+          description: Login successful, session set in cookie
           schema:
             $ref: '#/definitions/response.SuccessResponse'
         "400":
@@ -468,7 +472,7 @@ paths:
       - auth
   /auth/logout:
     post:
-      description: Logs the user out by invalidating refresh token and clearing cookies
+      description: Logs the user out by invalidating session and clearing cookies
       produces:
       - application/json
       responses:
@@ -517,7 +521,7 @@ paths:
       consumes:
       - application/json
       description: Handles OAuth provider callback, processes authorization code,
-        creates/links user accounts, and issues authentication tokens
+        creates/links user accounts, and issues a session cookie
       parameters:
       - description: OAuth provider (e.g., google, github)
         in: path
@@ -552,32 +556,6 @@ paths:
       summary: OAuth callback handler
       tags:
       - oauth
-  /auth/refresh:
-    post:
-      consumes:
-      - application/json
-      description: Refreshes the access token using the refresh token cookie and issues
-        new access/refresh token cookies
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Access token generated successfully, new refresh token set
-            in cookie
-          schema:
-            $ref: '#/definitions/response.SuccessResponse'
-        "401":
-          description: Refresh token not found, invalid, or already used
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "500":
-          description: Internal server error (transaction, database, or token generation
-            failure)
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-      summary: Refresh token
-      tags:
-      - auth
   /auth/register:
     post:
       consumes:
@@ -613,7 +591,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns 200 when the user is authenticated via access token cookie
+      description: Returns 200 when the user is authenticated via session cookie
       produces:
       - application/json
       responses:
@@ -2451,7 +2429,7 @@ paths:
       - users
   /users/me/sessions:
     get:
-      description: Lists active refresh token sessions for the authenticated user
+      description: Lists active sessions for the authenticated user
       produces:
       - application/json
       responses:
@@ -2476,7 +2454,7 @@ paths:
       - users
   /users/me/sessions/{sessionID}/revoke:
     post:
-      description: Revokes a refresh token session for the authenticated user
+      description: Revokes a session for the authenticated user
       parameters:
       - description: Session ID
         in: path
@@ -2520,7 +2498,7 @@ paths:
           schema:
             $ref: '#/definitions/response.SuccessResponse'
         "400":
-          description: Refresh token not found
+          description: Session not found
           schema:
             $ref: '#/definitions/response.ErrorResponse'
         "401":

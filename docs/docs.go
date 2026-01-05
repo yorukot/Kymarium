@@ -26,7 +26,7 @@ const docTemplate = `{
     "paths": {
         "/auth/login": {
             "post": {
-                "description": "Authenticates a user with email and password, sets refresh/access token cookies",
+                "description": "Authenticates a user with email and password, sets session cookie",
                 "consumes": [
                     "application/json"
                 ],
@@ -50,7 +50,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Login successful, refresh token set in cookie",
+                        "description": "Login successful, session set in cookie",
                         "schema": {
                             "$ref": "#/definitions/response.SuccessResponse"
                         }
@@ -84,7 +84,7 @@ const docTemplate = `{
         },
         "/auth/logout": {
             "post": {
-                "description": "Logs the user out by invalidating refresh token and clearing cookies",
+                "description": "Logs the user out by invalidating session and clearing cookies",
                 "produces": [
                     "application/json"
                 ],
@@ -154,7 +154,7 @@ const docTemplate = `{
         },
         "/auth/oauth/{provider}/callback": {
             "get": {
-                "description": "Handles OAuth provider callback, processes authorization code, creates/links user accounts, and issues authentication tokens",
+                "description": "Handles OAuth provider callback, processes authorization code, creates/links user accounts, and issues a session cookie",
                 "consumes": [
                     "application/json"
                 ],
@@ -210,41 +210,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/refresh": {
-            "post": {
-                "description": "Refreshes the access token using the refresh token cookie and issues new access/refresh token cookies",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Refresh token",
-                "responses": {
-                    "201": {
-                        "description": "Access token generated successfully, new refresh token set in cookie",
-                        "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Refresh token not found, invalid, or already used",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error (transaction, database, or token generation failure)",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/register": {
             "post": {
                 "description": "Creates a new user account with email and password; sends verification email when SMTP is enabled",
@@ -293,7 +258,7 @@ const docTemplate = `{
         },
         "/auth/status": {
             "get": {
-                "description": "Returns 200 when the user is authenticated via access token cookie",
+                "description": "Returns 200 when the user is authenticated via session cookie",
                 "consumes": [
                     "application/json"
                 ],
@@ -3048,7 +3013,7 @@ const docTemplate = `{
         },
         "/users/me/sessions": {
             "get": {
-                "description": "Lists active refresh token sessions for the authenticated user",
+                "description": "Lists active sessions for the authenticated user",
                 "produces": [
                     "application/json"
                 ],
@@ -3102,7 +3067,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Refresh token not found",
+                        "description": "Session not found",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -3124,7 +3089,7 @@ const docTemplate = `{
         },
         "/users/me/sessions/{sessionID}/revoke": {
             "post": {
-                "description": "Revokes a refresh token session for the authenticated user",
+                "description": "Revokes a session for the authenticated user",
                 "produces": [
                     "application/json"
                 ],
@@ -3481,6 +3446,13 @@ const docTemplate = `{
         "response.ErrorResponse": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "VALIDATION_ERROR"
+                },
+                "errors": {
+                    "type": "object"
+                },
                 "message": {
                     "type": "string",
                     "example": "Invalid request body"

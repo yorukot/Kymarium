@@ -42,6 +42,10 @@ func (h *Handler) Register(c echo.Context) error {
 
 	// Validate the request body
 	if err := validator.New().Struct(registerRequest); err != nil {
+		if errResponse, ok := response.ValidationErrorResponse(err, "Invalid request body", "VALIDATION_ERROR"); ok {
+			return c.JSON(http.StatusBadRequest, errResponse)
+		}
+
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
 
@@ -63,7 +67,12 @@ func (h *Handler) Register(c echo.Context) error {
 
 	// If the account is found, return an error
 	if checkedAccount != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "This email is already in use")
+		return c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Message: "This email is already in use",
+			Errors: map[string]string{
+				"email": "This email is already in use",
+			},
+		})
 	}
 
 	// Generate the user and account
