@@ -13,7 +13,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"       // Register file source for migrations.
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yorukot/kymarium/models"
 	"github.com/yorukot/kymarium/utils/config"
 	"github.com/yorukot/kymarium/utils/id"
 	"go.uber.org/zap"
@@ -50,7 +49,7 @@ func InitDatabase() (*pgxpool.Pool, error) {
 	runAll := len(os.Args) < 2 || os.Args[1] == "all"
 	if runAll || os.Args[1] == "api" {
 		Migrator()
-		if err := creteRegionsDataIfNotExists(ctx, pool); err != nil {
+		if err := createRegionsDataIfNotExists(ctx, pool); err != nil {
 			pool.Close()
 			return nil, err
 		}
@@ -100,70 +99,34 @@ func Migrator() {
 	zap.L().Info("Database migrated")
 }
 
-func creteRegionsDataIfNotExists(ctx context.Context, pool *pgxpool.Pool) error {
-	
+func createRegionsDataIfNotExists(ctx context.Context, pool *pgxpool.Pool) error {
 	zap.L().Info("Creating regions data if not exists")
 
-	// Check if regions already exist
-	regions := make([]models.Region, 0, len(config.Env().AppRegions))
+	iso3166_2 := regexp.MustCompile(`^[A-Z]{2}-[A-Z0-9]{1,3}$`)
+
 	for _, raw := range config.Env().AppRegions {
-		parts := strings.SplitN(raw, "-", 2)
-		if len(parts) != 2 {
-			return fmt.Errorf("invalid region format %q (expected CC-City)", raw)
+		name := strings.ToUpper(strings.TrimSpace(raw))
+		if name == "" {
+			continue
+		}
+		if !iso3166_2.MatchString(name) {
+			return fmt.Errorf("invalid region format %q (expected ISO 3166-2 like US-CA, TW-TPE)", raw)
 		}
 
-		countryCode := strings.TrimSpace(parts[0])
-		city := prettifyCity(strings.TrimSpace(parts[1]))
-
-		countryName, ok := countryNames[countryCode]
-		if !ok {
-			countryName = countryCode
-		}
-
-		displayName := fmt.Sprintf("%s, %s", countryName, city)
 		regionID, err := id.GetID()
 		if err != nil {
 			return fmt.Errorf("generate region id: %w", err)
 		}
 
-		regions = append(regions, models.Region{
-			ID:          regionID,
-			Name:        raw,
-			DisplayName: displayName,
-		})
-	}
-
-	for _, region := range regions {
 		if _, err := pool.Exec(ctx, `
-			INSERT INTO regions (id, name, display_name)
-			VALUES ($1, $2, $3)
+			INSERT INTO regions (id, name)
+			VALUES ($1, $2)
 			ON CONFLICT (name) DO NOTHING
-		`, region.ID, region.Name, region.DisplayName); err != nil {
-			return fmt.Errorf("insert region %q: %w", region.Name, err)
+		`, regionID, name); err != nil {
+			return fmt.Errorf("insert region %q: %w", name, err)
 		}
 	}
-	
+
 	zap.L().Info("Regions data created or already exists")
 	return nil
-}
-
-var camelCaseWordSplit = regexp.MustCompile(`([a-z])([A-Z])`)
-
-func prettifyCity(city string) string {
-	city = camelCaseWordSplit.ReplaceAllString(city, `$1 $2`)
-	return strings.TrimSpace(city)
-}
-
-var countryNames = map[string]string{
-	"TW": "Taiwan",
-	"US": "United States",
-	"UK": "United Kingdom",
-	"CA": "Canada",
-	"SG": "Singapore",
-	"JP": "Japan",
-	"KR": "South Korea",
-	"AU": "Australia",
-	"IN": "India",
-	"DE": "Germany",
-	"FR": "France",
 }

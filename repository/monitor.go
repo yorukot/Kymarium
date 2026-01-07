@@ -363,7 +363,7 @@ func (r *PGRepository) ListRegionsByIDs(ctx context.Context, tx pgx.Tx, regionID
 	}
 
 	query := `
-		SELECT id, name, display_name
+		SELECT id, name
 		FROM regions
 		WHERE id = ANY($1)
 	`

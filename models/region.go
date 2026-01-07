@@ -4,7 +4,6 @@ package models
 type Region struct {
 	ID          int64  `json:"id,string" db:"id"`
 	Name        string `json:"name" db:"name"`
-	DisplayName string `json:"display_name" db:"display_name"`
 }
 
 // MonitorRegion links a monitor to a specific region with metadata.

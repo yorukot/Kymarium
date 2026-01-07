@@ -3,6 +3,8 @@ package config
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/yorukot/kymarium/models"
@@ -13,7 +15,7 @@ import (
 func InitRegionConfig(pool *pgxpool.Pool) ([]models.Region, error) {
 	ctx := context.Background()
 	regionsOnce.Do(func() {
-		rows, err := pool.Query(ctx, `SELECT id, name, display_name FROM regions ORDER BY id`)
+		rows, err := pool.Query(ctx, `SELECT id, name FROM regions`)
 		if err != nil {
 			regionsErr = fmt.Errorf("list regions: %w", err)
 			return
@@ -25,12 +27,16 @@ func InitRegionConfig(pool *pgxpool.Pool) ([]models.Region, error) {
 
 		for rows.Next() {
 			var r models.Region
-			if err := rows.Scan(&r.ID, &r.Name, &r.DisplayName); err != nil {
+			if err := rows.Scan(&r.ID, &r.Name); err != nil {
 				regionsErr = fmt.Errorf("scan region: %w", err)
 				return
 			}
+
 			byID[r.ID] = r
-			if key := r.Name; key != "" {
+
+			// Cache key normalized to support case-insensitive lookups.
+			key := normalizeRegionName(r.Name)
+			if key != "" {
 				byKey[key] = r
 			}
 		}
@@ -53,6 +59,11 @@ func Regions() []models.Region {
 	for _, r := range regionsByID {
 		result = append(result, r)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ID < result[j].ID
+	})
+
 	return result
 }
 
@@ -64,6 +75,11 @@ func RegionByID(id int64) models.Region {
 
 // RegionByName looks up a cached region by its name (case-insensitive).
 func RegionByName(name string) models.Region {
-	r, _ := regionsByKey[name]
+	key := normalizeRegionName(name)
+	r, _ := regionsByKey[key]
 	return r
+}
+
+func normalizeRegionName(name string) string {
+	return strings.ToUpper(strings.TrimSpace(name))
 }

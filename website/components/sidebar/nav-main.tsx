@@ -2,7 +2,6 @@
 
 import { type LucideIcon } from "lucide-react";
 
-import { Collapsible } from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarMenu,
@@ -29,26 +28,17 @@ export function NavMain({
     <SidebarGroup>
       <SidebarMenu>
         {items.map((item) => (
-          <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <Link href={item.url}>
-              
+          <SidebarMenuItem key={item.title}>
+            <Link href={item.url}>
               <SidebarMenuButton
                 tooltip={item.title}
                 className={item.isActive ? "bg-sidebar-accent" : undefined}
               >
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
+                {item.icon && <item.icon />}
+                <span>{item.title}</span>
               </SidebarMenuButton>
-              </Link>
-              
-            </SidebarMenuItem>
-          </Collapsible>
+            </Link>
+          </SidebarMenuItem>
         ))}
       </SidebarMenu>
     </SidebarGroup>

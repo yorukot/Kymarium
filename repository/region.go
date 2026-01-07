@@ -11,7 +11,7 @@ import (
 // ListAllRegions fetches all regions from the regions table ordered by ID.
 func (r *PGRepository) ListAllRegions(ctx context.Context, tx pgx.Tx) ([]models.Region, error) {
 	const query = `
-		SELECT id, name, display_name
+		SELECT id, name
 		FROM regions
 		ORDER BY id
 	`

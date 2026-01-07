@@ -11,12 +11,12 @@ import (
 
 // MessageInput captures the data used to build a notification message.
 type MessageInput struct {
-	MonitorName       string
-	Status            models.PingStatus
-	RegionDisplayName string
-	LatencyMs         int
-	CheckedAt         time.Time
-	Detail            string
+	MonitorName string
+	Status      models.PingStatus
+	RegionName  string
+	LatencyMs   int
+	CheckedAt   time.Time
+	Detail      string
 }
 
 // FormatMessage generates a title and description for a notification.
@@ -30,8 +30,8 @@ func FormatMessage(input MessageInput) (string, string) {
 
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("Monitor: %s\n", input.MonitorName))
-	if input.RegionDisplayName != "" {
-		builder.WriteString(fmt.Sprintf("Region: %s\n", input.RegionDisplayName))
+	if input.RegionName != "" {
+		builder.WriteString(fmt.Sprintf("Region: %s\n", input.RegionName))
 	}
 	builder.WriteString(fmt.Sprintf("Status: %s\n", strings.ToUpper(string(input.Status))))
 

@@ -47,12 +47,12 @@ func (h *Handler) HandleNotificationDispatch(ctx context.Context, t *asynq.Task)
 	detail := strings.TrimSpace(payload.Detail)
 	region := config.RegionByID(payload.RegionID)
 	title, description := notificationcore.FormatMessage(notificationcore.MessageInput{
-		MonitorName:       monitor.Name,
-		Status:            payload.Ping.Status,
-		RegionDisplayName: region.DisplayName,
-		LatencyMs:         payload.Ping.Latency,
-		CheckedAt:         payload.Ping.Time,
-		Detail:            detail,
+		MonitorName: monitor.Name,
+		Status:      payload.Ping.Status,
+		RegionName:  region.Name,
+		LatencyMs:   payload.Ping.Latency,
+		CheckedAt:   payload.Ping.Time,
+		Detail:      detail,
 	})
 	if err := notificationcore.Send(ctx, *notification, title, description, payload.Ping.Status); err != nil {
 		zap.L().Error("failed to send notification",
