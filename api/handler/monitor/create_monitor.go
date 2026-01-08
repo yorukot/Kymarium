@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/yorukot/kymarium/models"
+	"github.com/yorukot/kymarium/models/monitorm"
 	"github.com/yorukot/kymarium/utils"
 	authutil "github.com/yorukot/kymarium/utils/auth"
 	"github.com/yorukot/kymarium/utils/id"
@@ -63,6 +64,10 @@ func (h *Handler) CreateMonitor(c echo.Context) error {
 
 	if len(req.Regions) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "At least one region is required")
+	}
+
+	if err := validateMonitorConfig(c, req.Type, req.Config); err != nil {
+		return err
 	}
 
 	userID, err := authutil.GetUserIDFromContext(c)
@@ -159,4 +164,37 @@ func (h *Handler) CreateMonitor(c echo.Context) error {
 	monitor.RegionIDs = regionIDs
 
 	return c.JSON(http.StatusOK, response.Success("Monitor created successfully", newMonitorResponse(monitor)))
+}
+
+func validateMonitorConfig(c echo.Context, monitorType models.MonitorType, configRaw json.RawMessage) error {
+	switch monitorType {
+	case models.MonitorTypeHTTP:
+		var config monitorm.HTTPMonitorConfig
+		if err := json.Unmarshal(configRaw, &config); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid monitor config")
+		}
+		if err := validator.New().Struct(config); err != nil {
+			if errResponse, ok := response.ValidationErrorResponse(err, "Invalid request body", "VALIDATION_ERROR"); ok {
+				return c.JSON(http.StatusBadRequest, errResponse)
+			}
+
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+		}
+	case models.MonitorTypePing:
+		var config monitorm.PingMonitorConfig
+		if err := json.Unmarshal(configRaw, &config); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid monitor config")
+		}
+		if err := validator.New().Struct(config); err != nil {
+			if errResponse, ok := response.ValidationErrorResponse(err, "Invalid request body", "VALIDATION_ERROR"); ok {
+				return c.JSON(http.StatusBadRequest, errResponse)
+			}
+
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+		}
+	default:
+		return echo.NewHTTPError(http.StatusBadRequest, "Unsupported monitor type")
+	}
+
+	return nil
 }

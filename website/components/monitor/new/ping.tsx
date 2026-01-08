@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 
 import {
   Card,
@@ -21,11 +21,19 @@ import { Input } from "@/components/ui/input";
 
 import type { MonitorFormValues } from "@/lib/schemas/monitor";
 
+type PingMonitorFormValues = Extract<MonitorFormValues, { type: "ping" }>;
+
 export default function PingMonitorSettings() {
   const {
     register,
+    control,
     formState: { errors },
-  } = useFormContext<MonitorFormValues>();
+  } = useFormContext<PingMonitorFormValues>();
+  const monitorType = useWatch({ control, name: "type" });
+
+  if (monitorType !== "ping") {
+    return null;
+  }
 
   return (
     <Card>

@@ -105,8 +105,8 @@ func (h *Handler) ListMonitors(c echo.Context) error {
 
 func last30DayWindowUTC() (time.Time, time.Time) {
 	now := time.Now().UTC()
-	end := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	start := end.AddDate(0, 0, -30)
+	end := now
+	start := now.Add(-30 * 24 * time.Hour)
 	return start, end
 }
 

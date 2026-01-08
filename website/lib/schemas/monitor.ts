@@ -1,4 +1,3 @@
-import { config } from "next/dist/build/templates/pages";
 import { z } from "zod";
 
 export const monitorTypeValues = ["http", "ping"] as const;
@@ -128,6 +127,20 @@ export const httpConfigSchema = z.object({
   ignoreTLSError: z.boolean(),
 });
 
+export const DEFAULT_HTTP: MonitorFormValues["http"] = {
+  url: "",
+  method: "GET",
+  maxRedirects: 10,
+  requestTimeout: 30,
+  headers: [],
+  bodyEncoding: undefined,
+  body: "",
+  acceptedStatusCodes: [200],
+  upsideDownMode: false,
+  certificateExpiryNotification: true,
+  ignoreTLSError: false,
+};
+
 export const pingConfigSchema = z.object({
   host: z.string().min(1, "Host is required."),
   timeoutSeconds: z.number().int().min(0, "Timeout must be 0 or higher."),
@@ -139,14 +152,19 @@ export const pingConfigSchema = z.object({
     .optional(),
 });
 
-export const monitorSchema = z.object({
+export const DEFAULT_PING: MonitorFormValues["ping"] = {
+  host: "",
+  timeoutSeconds: 5,
+  packetSize: undefined,
+};
+
+const baseSchema = z.object({
   name: z.string().min(1, "Monitor name is required."),
-  type: z.enum(monitorTypeValues),
   interval: z
     .number()
     .int()
-    .min(2, "Interval must be at least 30 seconds.")
-    .max(2592000, "Interval must be 30 days or less."),
+    .min(2, "Interval must be at least 2 seconds.")
+    .max(2592000),
   failureThreshold: z
     .number()
     .int()
@@ -157,10 +175,21 @@ export const monitorSchema = z.object({
     .min(1, "Recovery threshold must be at least 1."),
   regions: z.array(z.string()).min(1, "Select at least one region."),
   notifications: z.array(z.string()),
-  http: httpConfigSchema.optional(),
-  ping: pingConfigSchema.optional(),
   config: z.any().optional(),
 });
+
+export const monitorSchema = z.discriminatedUnion("type", [
+  baseSchema.extend({
+    type: z.literal("http"),
+    http: httpConfigSchema,
+    ping: z.undefined().optional(),
+  }),
+  baseSchema.extend({
+    type: z.literal("ping"),
+    ping: pingConfigSchema,
+    http: z.undefined().optional(),
+  }),
+]);
 
 export type MonitorFormValues = z.infer<typeof monitorSchema>;
 
@@ -176,4 +205,35 @@ export type MonitorResponse = {
 export type CreateMonitorResponse = {
   message: string;
   data?: MonitorResponse;
+};
+
+export type MonitorRawData = {
+  id: string;
+  team_id: string;
+  name: string;
+  type: string;
+  config?: Record<string, unknown> | null;
+  interval: number;
+  status: string;
+  uptime_sli_30?: number | null;
+  last_checked: string;
+  next_check: string;
+  failure_threshold: number;
+  recovery_threshold: number;
+  regions: string[];
+  notification: string[];
+  incidents?: Array<Record<string, unknown>>;
+  updated_at: string;
+  created_at: string;
+};
+
+export type MonitorListItem = {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  targetLabel: string;
+  targetValue: string;
+  lastChecked: string;
+  uptimeSLI30?: number;
 };

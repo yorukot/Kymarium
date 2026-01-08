@@ -30,8 +30,8 @@ func RunHTTP(ctx context.Context, baseClient *http.Client, monitor models.Monito
 		return nil, fmt.Errorf("create http request: %w", err)
 	}
 
-	for k, v := range cfg.Headers {
-		req.Header.Set(k, v)
+	for _, header := range cfg.Headers {
+		req.Header.Set(header.Key, header.Value)
 	}
 
 	if cfg.Body != "" && req.Header.Get("Content-Type") == "" {

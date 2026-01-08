@@ -34,6 +34,25 @@ function uniqueStrings(values: string[]) {
 
 type HeaderKV = { key: string; value: string };
 
+type CreateMonitorPayloadBase = {
+  name: string;
+  interval: number;
+  failureThreshold: number;
+  recoveryThreshold: number;
+  regions: string[];
+  notifications: string[];
+};
+
+type CreateMonitorPayload =
+  | (CreateMonitorPayloadBase & {
+      type: "http";
+      config: HttpMonitorFormConfig;
+    })
+  | (CreateMonitorPayloadBase & {
+      type: "ping";
+      config: PingMonitorFormConfig;
+    });
+
 function recordToHeaderArray(headers?: Record<string, string>): HeaderKV[] {
   return headers
     ? Object.entries(headers).map(([key, value]) => ({ key, value }))
@@ -80,10 +99,9 @@ function buildPingConfig(values: MonitorFormValues): PingMonitorFormConfig {
 
 export function buildCreateMonitorPayload(
   values: MonitorFormValues,
-): MonitorFormValues {
-  const basePayload = {
+): CreateMonitorPayload {
+  const basePayload: CreateMonitorPayloadBase = {
     name: values.name,
-    type: values.type,
     interval: values.interval,
     failureThreshold: values.failureThreshold,
     recoveryThreshold: values.recoveryThreshold,

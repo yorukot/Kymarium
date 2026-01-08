@@ -98,12 +98,15 @@ const statusCodeGroups = statusCodeGroupDefinitions
   })
   .filter((group) => group.options.length > 1);
 
+type HttpMonitorFormValues = Extract<MonitorFormValues, { type: "http" }>;
+
 export default function HttpMonitorSettings() {
   const {
     register,
     control,
     formState: { errors },
-  } = useFormContext<MonitorFormValues>();
+  } = useFormContext<HttpMonitorFormValues>();
+  const monitorType = useWatch({ control, name: "type" });
   const selectedStatusGroupKeysRef = React.useRef<string[]>([]);
 
   const headers = useFieldArray({
@@ -112,6 +115,10 @@ export default function HttpMonitorSettings() {
   });
 
   const bodyEncoding = useWatch({ control, name: "http.bodyEncoding" });
+
+  if (monitorType !== "http") {
+    return null;
+  }
 
   const acceptedStatusCodeErrors = Array.isArray(
     errors.http?.acceptedStatusCodes,

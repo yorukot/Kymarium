@@ -1,0 +1,2 @@
+DROP MATERIALIZED VIEW IF EXISTS monitor_10min_summary;
+DROP MATERIALIZED VIEW IF EXISTS monitor_2min_summary;

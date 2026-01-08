@@ -34,6 +34,8 @@ import {
   monitorSchema,
   monitorTypes,
   MonitorFormValues,
+  DEFAULT_PING,
+  DEFAULT_HTTP,
 } from "@/lib/schemas/monitor";
 import HttpMonitorSettings from "@/components/monitor/new/http";
 import PingMonitorSettings from "@/components/monitor/new/ping";
@@ -59,6 +61,7 @@ import { applyServerFieldErrors } from "@/lib/api/error";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { IconType } from "react-icons/lib";
+import { toast } from "sonner";
 
 const NOTIFICATION_TYPE_ICONS: Partial<Record<NotificationType, IconType>> = {
   email: SiGmail,
@@ -79,6 +82,7 @@ function BasicSettings({
     setValue,
     control,
     formState: { errors },
+    clearErrors,
   } = useFormContext<MonitorFormValues>();
 
   const selectedRegions = useWatch({
@@ -100,6 +104,22 @@ function BasicSettings({
       : [...list, value];
 
     setValue(field, next, { shouldDirty: true, shouldValidate: true });
+  };
+
+  const switchMonitorType = (
+    val: MonitorFormValues["type"],
+    onChange: (v: string) => void,
+  ) => {
+    clearErrors(); // 或 clearErrors("type")
+    onChange(val);
+
+    if (val === "http") {
+      setValue("ping", undefined);
+      setValue("http", DEFAULT_HTTP);
+    } else {
+      setValue("http", undefined);
+      setValue("ping", DEFAULT_PING);
+    }
   };
 
   return (
@@ -127,7 +147,12 @@ function BasicSettings({
                 render={({ field }) => (
                   <RadioGroup
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={(val) =>
+                      switchMonitorType(
+                        val as MonitorFormValues["type"],
+                        field.onChange,
+                      )
+                    }
                     className="mt-3 grid gap-2 sm:grid-cols-2"
                     aria-invalid={!!errors.type}
                   >
@@ -206,8 +231,7 @@ function BasicSettings({
                   {notificationOptions.map((option) => {
                     const Icon =
                       NOTIFICATION_TYPE_ICONS[option.type as NotificationType];
-                    const displayName =
-                      option.name?.trim() || option.typeLabel;
+                    const displayName = option.name?.trim() || option.typeLabel;
                     return (
                       <label
                         key={option.id}
@@ -389,11 +413,6 @@ export default function NewMonitorForm({
         certificateExpiryNotification: true,
         ignoreTLSError: false,
       },
-      ping: {
-        host: "",
-        timeoutSeconds: 5,
-        packetSize: undefined,
-      },
     },
     mode: "onSubmit",
   });
@@ -405,7 +424,7 @@ export default function NewMonitorForm({
 
   const onSubmit = async (values: MonitorFormValues) => {
     form.clearErrors();
-
+    console.info("test");
     const parsed = monitorSchema.safeParse(values);
     if (!parsed.success) {
       form.setError("root", {
@@ -418,6 +437,7 @@ export default function NewMonitorForm({
     try {
       await createMonitor(teamID, parsed.data);
       form.reset();
+      toast.success("Monitor has been successfully created.");
       router.push(`/teams/${teamID}/monitors`);
     } catch (error) {
       if (error instanceof ApiError) {

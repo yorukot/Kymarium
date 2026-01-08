@@ -27,6 +27,12 @@ const (
 	BodyEncodingXML  BodyEncoding = "xml"
 )
 
+// HTTPHeader represents a single request header for an HTTP monitor.
+type HTTPHeader struct {
+	Key   string `json:"key" validate:"required,max=255"`
+	Value string `json:"value" validate:"required,max=65535"`
+}
+
 // HTTPMonitorConfig represents the expected config shape for HTTP monitors.
 // Fields are ordered by importance and functional grouping.
 type HTTPMonitorConfig struct {
@@ -37,7 +43,7 @@ type HTTPMonitorConfig struct {
 
 	// Request options
 	RequestTimeout int               `json:"request_timeout" validate:"gte=0"`
-	Headers        map[string]string `json:"headers,omitempty" validate:"omitempty"`
+	Headers        []HTTPHeader      `json:"headers,omitempty" validate:"omitempty,dive"`
 	BodyEncoding   BodyEncoding      `json:"body_encoding,omitempty" validate:"omitempty,oneof=json xml"`
 	Body           string            `json:"body,omitempty" validate:"lte=1000000,omitempty"`
 

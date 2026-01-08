@@ -14,6 +14,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const schedulerInterval = 1100 * time.Millisecond
+
 // Run starts the scheduler loop that enqueues monitor pings.
 func Run(pgsql *pgxpool.Pool) {
 	redisAddr := fmt.Sprintf("%s:%s", config.Env().RedisHost, config.Env().RedisPort)
@@ -28,7 +30,7 @@ func Run(pgsql *pgxpool.Pool) {
 
 	// TODO: Implementing graceful shutdown
 	// Create ticker to run every 2 seconds
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(schedulerInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -105,7 +107,7 @@ func batchUpdateLastChecked(repo repository.Repository, monitors []models.Monito
 	for i, monitor := range monitors {
 		monitorIDs[i] = monitor.ID
 		// Calculate next check time based on this monitor's specific interval with jitter
-		nextChecks[i] = now.Add(time.Duration(monitor.Interval)*time.Second + calculateJitter(monitor.Interval))
+		nextChecks[i] = now.Add(time.Duration(monitor.Interval) * time.Second)
 	}
 
 	if err := repo.BatchUpdateMonitorsLastChecked(ctx, tx, monitorIDs, nextChecks, now); err != nil {
