@@ -35,6 +35,8 @@ import {
   monitorTypes,
   MonitorFormValues,
 } from "@/lib/schemas/monitor";
+import HttpMonitorSettings from "@/components/monitor/new/http";
+import PingMonitorSettings from "@/components/monitor/new/ping";
 import { SiGmail, SiSlack, SiDiscord, SiTelegram } from "react-icons/si";
 import {
   Select,
@@ -45,16 +47,33 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Region } from "@/lib/schemas/region";
+import type {
+  Notification,
+  NotificationType,
+} from "@/lib/schemas/notification";
 import { ExternalLink } from "lucide-react";
+import { FormDevTools } from "@/components/devtools/form-dev-tools";
+import { createMonitor } from "@/lib/api/monitor";
+import { ApiError } from "@/lib/api/client";
+import { applyServerFieldErrors } from "@/lib/api/error";
+import { Spinner } from "@/components/ui/spinner";
+import { useRouter } from "next/navigation";
+import { IconType } from "react-icons/lib";
 
-const notificationOptions = [
-  { id: "11", name: "email", label: "Email", icon: <SiGmail /> },
-  { id: "12", name: "slack", label: "Slack", icon: <SiSlack /> },
-  { id: "13", name: "discord", label: "Discord", icon: <SiDiscord /> },
-  { id: "14", name: "telegram", label: "Telegram", icon: <SiTelegram /> },
-];
+const NOTIFICATION_TYPE_ICONS: Partial<Record<NotificationType, IconType>> = {
+  email: SiGmail,
+  slack: SiSlack,
+  discord: SiDiscord,
+  telegram: SiTelegram,
+};
 
-function BasicSettings({ regions }: { regions: Region[] }) {
+function BasicSettings({
+  regions,
+  notificationOptions,
+}: {
+  regions: Region[];
+  notificationOptions: Notification[];
+}) {
   const {
     register,
     setValue,
@@ -66,7 +85,7 @@ function BasicSettings({ regions }: { regions: Region[] }) {
     control,
     name: "regions",
   });
-  const notifications = useWatch({
+  const selectedNotifications = useWatch({
     control,
     name: "notifications",
   });
@@ -95,21 +114,6 @@ function BasicSettings({ regions }: { regions: Region[] }) {
       <CardContent>
         <FieldSet>
           <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="monitor-name">Monitor name</FieldLabel>
-              <Input
-                id="monitor-name"
-                placeholder="API - Production"
-                autoComplete="off"
-                aria-invalid={!!errors.name}
-                {...register("name")}
-              />
-              <FieldError errors={[errors.name]} />
-              <FieldDescription>
-                Use a clear label so teammates know what is being checked.
-              </FieldDescription>
-            </Field>
-
             <Field>
               <FieldTitle>Monitor type</FieldTitle>
               <FieldDescription>
@@ -147,21 +151,40 @@ function BasicSettings({ regions }: { regions: Region[] }) {
               <FieldError errors={[errors.type]} />
             </Field>
 
-            <Field>
-              <FieldLabel htmlFor="monitor-interval">Check interval</FieldLabel>
-              <Input
-                id="monitor-interval"
-                type="number"
-                min={2}
-                max={2592000}
-                aria-invalid={!!errors.interval}
-                {...register("interval", { valueAsNumber: true })}
-              />
-              <FieldError errors={[errors.interval]} />
-              <FieldDescription>
-                Interval is in seconds. Minimum 2s, maximum 30 days.
-              </FieldDescription>
-            </Field>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Field className="md:w-xs">
+                <FieldLabel htmlFor="monitor-interval">
+                  Check interval
+                </FieldLabel>
+                <Input
+                  id="monitor-interval"
+                  type="number"
+                  min={2}
+                  max={2592000}
+                  aria-invalid={!!errors.interval}
+                  {...register("interval", { valueAsNumber: true })}
+                />
+                <FieldError errors={[errors.interval]} />
+                <FieldDescription>
+                  Interval is in seconds. Minimum 2s, maximum 30 days.
+                </FieldDescription>
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="monitor-name">Monitor name</FieldLabel>
+                <Input
+                  id="monitor-name"
+                  placeholder="API - Production"
+                  autoComplete="off"
+                  aria-invalid={!!errors.name}
+                  {...register("name")}
+                />
+                <FieldError errors={[errors.name]} />
+                <FieldDescription>
+                  Use a clear label so teammates know what is being checked.
+                </FieldDescription>
+              </Field>
+            </div>
 
             <Field>
               <FieldTitle className="flex items-center justify-between">
@@ -174,28 +197,50 @@ function BasicSettings({ regions }: { regions: Region[] }) {
                 Optional: select channels to notify when incidents occur.
               </FieldDescription>
 
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {notificationOptions.map((option) => (
-                  <label
-                    key={option.id}
-                    className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
-                  >
-                    <Checkbox
-                      checked={notifications.includes(option.id)}
-                      onCheckedChange={() =>
-                        toggleListValue(
-                          option.id,
-                          notifications,
-                          "notifications",
-                        )
-                      }
-                    />
-                    <div className="flex gap-1 items-center">
-                      {option.icon} {option.label}
-                    </div>
-                  </label>
-                ))}
-              </div>
+              {notificationOptions.length === 0 ? (
+                <div className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+                  No notifications yet. Create one to receive alerts.
+                </div>
+              ) : (
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {notificationOptions.map((option) => {
+                    const Icon =
+                      NOTIFICATION_TYPE_ICONS[option.type as NotificationType];
+                    const displayName =
+                      option.name?.trim() || option.typeLabel;
+                    return (
+                      <label
+                        key={option.id}
+                        className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                      >
+                        <Checkbox
+                          checked={selectedNotifications.includes(option.id)}
+                          onCheckedChange={() =>
+                            toggleListValue(
+                              option.id,
+                              selectedNotifications,
+                              "notifications",
+                            )
+                          }
+                        />
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">
+                            {Icon ? <Icon /> : null}
+                          </span>
+                          <div className="flex flex-col leading-tight">
+                            <span className="font-medium">{displayName}</span>
+                            {option.name?.trim() ? (
+                              <span className="text-xs text-muted-foreground">
+                                {option.typeLabel}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
 
               <FieldError errors={[errors.notifications]} />
             </Field>
@@ -310,7 +355,16 @@ function BasicSettings({ regions }: { regions: Region[] }) {
   );
 }
 
-export default function NewMonitorForm({ regions }: { regions: Region[] }) {
+export default function NewMonitorForm({
+  teamID,
+  regions,
+  notifications,
+}: {
+  teamID: string;
+  regions: Region[];
+  notifications: Notification[];
+}) {
+  const router = useRouter();
   const defaultRegions = regions.map((region) => region.id);
   const form = useForm<MonitorFormValues>({
     resolver: zodResolver(monitorSchema),
@@ -318,16 +372,78 @@ export default function NewMonitorForm({ regions }: { regions: Region[] }) {
       name: "API - Production",
       type: "http",
       interval: 60,
-      failureThreshold: 3,
+      failureThreshold: 2,
       recoveryThreshold: 2,
       regions: defaultRegions,
       notifications: [],
+      http: {
+        url: "",
+        method: "GET",
+        maxRedirects: 10,
+        requestTimeout: 30,
+        headers: [],
+        bodyEncoding: undefined,
+        body: "",
+        acceptedStatusCodes: [200],
+        upsideDownMode: false,
+        certificateExpiryNotification: true,
+        ignoreTLSError: false,
+      },
+      ping: {
+        host: "",
+        timeoutSeconds: 5,
+        packetSize: undefined,
+      },
     },
     mode: "onSubmit",
   });
 
+  const monitorType = useWatch({
+    control: form.control,
+    name: "type",
+  });
+
   const onSubmit = async (values: MonitorFormValues) => {
-    console.log(values);
+    form.clearErrors();
+
+    const parsed = monitorSchema.safeParse(values);
+    if (!parsed.success) {
+      form.setError("root", {
+        type: "validate",
+        message: "Invalid form data. Please review the fields.",
+      });
+      return;
+    }
+
+    try {
+      await createMonitor(teamID, parsed.data);
+      form.reset();
+      router.push(`/teams/${teamID}/monitors`);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        const hasFieldErrors = applyServerFieldErrors(
+          form.setError,
+          error.body,
+        );
+
+        if (!hasFieldErrors) {
+          form.setError("root", {
+            type: "server",
+            message:
+              error.status >= 500
+                ? "Server error. Please try again later."
+                : error.message,
+          });
+        }
+
+        return;
+      }
+
+      form.setError("root", {
+        type: "network",
+        message: "Network error. Please try again.",
+      });
+    }
   };
 
   return (
@@ -343,14 +459,43 @@ export default function NewMonitorForm({ regions }: { regions: Region[] }) {
         <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-6">
             <FieldGroup>
-              <BasicSettings regions={regions} />
+              <BasicSettings
+                regions={regions}
+                notificationOptions={notifications}
+              />
             </FieldGroup>
-            <div className="flex justify-end">
-              <Button type="submit">Create new monitor</Button>
+            {monitorType === "http" ? (
+              <FieldGroup>
+                <HttpMonitorSettings />
+              </FieldGroup>
+            ) : null}
+            {monitorType === "ping" ? (
+              <FieldGroup>
+                <PingMonitorSettings />
+              </FieldGroup>
+            ) : null}
+            <div className="flex flex-col gap-3">
+              <FieldError errors={[form.formState.errors.root]} />
+              <div className="flex justify-end">
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? (
+                    <>
+                      <Spinner className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create new monitor"
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </form>
       </FormProvider>
+
+      {process.env.NODE_ENV === "development" && (
+        <FormDevTools control={form.control} />
+      )}
     </div>
   );
 }
