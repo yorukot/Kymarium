@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSidebar } from "@/components/ui/sidebar";
 import {
   Field,
   FieldDescription,
@@ -74,9 +75,11 @@ const NOTIFICATION_TYPE_ICONS: Partial<Record<NotificationType, IconType>> = {
 function BasicSettings({
   regions,
   notificationOptions,
+  isEdit,
 }: {
   regions: Region[];
   notificationOptions: Notification[];
+  isEdit: boolean;
 }) {
   const {
     register,
@@ -111,6 +114,10 @@ function BasicSettings({
     val: MonitorFormValues["type"],
     onChange: (v: string) => void,
   ) => {
+    if (isEdit) {
+      return;
+    }
+
     clearErrors(); // 或 clearErrors("type")
     onChange(val);
 
@@ -148,6 +155,7 @@ function BasicSettings({
                 render={({ field }) => (
                   <RadioGroup
                     value={field.value}
+                    disabled={isEdit}
                     onValueChange={(val) =>
                       switchMonitorType(
                         val as MonitorFormValues["type"],
@@ -165,6 +173,7 @@ function BasicSettings({
                         <RadioGroupItem
                           id={`monitor-type-${type.value}`}
                           value={type.value}
+                          disabled={isEdit}
                           aria-invalid={!!errors.type}
                         />
                         <span>{type.label}</span>
@@ -175,6 +184,11 @@ function BasicSettings({
               />
 
               <FieldError errors={[errors.type]} />
+              {isEdit ? (
+                <FieldDescription className="mt-2">
+                  Monitor type cannot be changed after creation.
+                </FieldDescription>
+              ) : null}
             </Field>
 
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -380,6 +394,7 @@ function BasicSettings({
   );
 }
 
+// 
 export default function NewMonitorForm({
   teamID,
   regions,
@@ -395,6 +410,7 @@ export default function NewMonitorForm({
 }) {
   const router = useRouter();
   const isEdit = Boolean(monitorID && initialValues);
+  const sidebar = useSidebar();
 
   const defaultRegions = useMemo(
     () => regions.map((region) => region.id),
@@ -410,6 +426,7 @@ export default function NewMonitorForm({
       recoveryThreshold: 2,
       regions: defaultRegions,
       notifications: [],
+      ping: undefined,
       http: {
         url: "",
         method: "GET",
@@ -495,6 +512,12 @@ export default function NewMonitorForm({
     }
   };
 
+  const sidebarOffsetClass = sidebar.isMobile
+    ? "left-0 right-0"
+    : sidebar.state === "collapsed"
+      ? "md:left-[var(--sidebar-width-icon)] md:right-0"
+      : "md:left-[var(--sidebar-width)] md:right-0";
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -507,12 +530,17 @@ export default function NewMonitorForm({
       </div>
 
       <FormProvider {...form}>
-        <form noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          noValidate
+          onSubmit={form.handleSubmit(onSubmit)}
+          className={isEdit ? "pb-12" : undefined}
+        >
           <div className="flex flex-col gap-6">
             <FieldGroup>
               <BasicSettings
                 regions={regions}
                 notificationOptions={notifications}
+                isEdit={isEdit}
               />
             </FieldGroup>
             {monitorType === "http" ? (
@@ -526,21 +554,75 @@ export default function NewMonitorForm({
               </FieldGroup>
             ) : null}
             <div className="flex flex-col gap-3">
-              <FieldError errors={[form.formState.errors.root]} />
-              <div className="flex justify-end">
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? (
-                    <>
-                      <Spinner className="mr-2 h-4 w-4 animate-spin" />
-                      {isEdit ? "Updating..." : "Creating..."}
-                    </>
-                  ) : (
-                    (isEdit ? "Update monitor" : "Create new monitor")
-                  )}
-                </Button>
-              </div>
+              {!isEdit ? (
+                <>
+                  <FieldError errors={[form.formState.errors.root]} />
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                      {form.formState.isSubmitting ? (
+                        <>
+                          <Spinner className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        "Create new monitor"
+                      )}
+                    </Button>
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
+
+          {isEdit ? (
+            <div
+              className={[
+                "fixed inset-x-0 bottom-4 z-50",
+                sidebarOffsetClass,
+                "transition-all duration-200 ease-out",
+                form.formState.isDirty
+                  ? "translate-y-0 opacity-100 pointer-events-auto"
+                  : "translate-y-8 opacity-0 pointer-events-none",
+              ].join(" ")}
+            >
+              <div className="mx-auto max-w-5xl px-4 pb-[env(safe-area-inset-bottom)]">
+                <Card className="w-full p-2">
+                  <CardContent className="flex flex-col gap-2 p-0">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-sm">
+                        You have unsaved changes!
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={
+                            form.formState.isSubmitting || !form.formState.isDirty
+                          }
+                          onClick={() => {
+                            form.reset(resolvedDefaultValues);
+                          }}
+                        >
+                          Reset
+                        </Button>
+                        <Button
+                          type="submit"
+                          size="sm"
+                          disabled={
+                            form.formState.isSubmitting || !form.formState.isDirty
+                          }
+                        >
+                          {form.formState.isSubmitting ? "Saving…" : "Save monitor"}
+                        </Button>
+                      </div>
+                    </div>
+                    <FieldError errors={[form.formState.errors.root]} />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : null}
         </form>
       </FormProvider>
 

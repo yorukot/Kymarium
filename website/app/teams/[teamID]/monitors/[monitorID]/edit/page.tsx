@@ -164,6 +164,7 @@ function buildInitialValues(
       ...base,
       type: "http",
       http,
+      ping: undefined,
     };
     return values;
   }
@@ -176,6 +177,7 @@ function buildInitialValues(
     ...base,
     type: "ping",
     ping,
+    http: undefined,
   };
   return values;
 }
