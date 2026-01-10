@@ -31,7 +31,7 @@ export default async function MonitorsPage({
           </Button>
         </Link>
       </div>
-      <Monitor monitors={monitors} />
+      <Monitor teamID={teamID} monitors={monitors} />
     </div>
   );
 }

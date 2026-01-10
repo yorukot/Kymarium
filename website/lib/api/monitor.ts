@@ -40,7 +40,7 @@ type CreateMonitorPayloadBase = {
   failureThreshold: number;
   recoveryThreshold: number;
   regions: string[];
-  notifications: string[];
+  notification: string[];
 };
 
 type CreateMonitorPayload =
@@ -106,7 +106,7 @@ export function buildCreateMonitorPayload(
     failureThreshold: values.failureThreshold,
     recoveryThreshold: values.recoveryThreshold,
     regions: uniqueStrings(values.regions),
-    notifications: uniqueStrings(values.notifications),
+    notification: uniqueStrings(values.notifications),
   };
 
   if (values.type === "http") {
@@ -133,4 +133,22 @@ export function createMonitor(teamID: string, values: MonitorFormValues) {
     defaultError: "Create monitor failed",
     redirectOn401: true,
   });
+}
+
+export function updateMonitor(
+  teamID: string,
+  monitorID: string,
+  values: MonitorFormValues,
+) {
+  const payload = buildCreateMonitorPayload(values);
+
+  return apiRequest<CreateMonitorResponse>(
+    `/api/teams/${teamID}/monitors/${monitorID}`,
+    {
+      method: "PUT",
+      body: payload,
+      defaultError: "Update monitor failed",
+      redirectOn401: true,
+    },
+  );
 }

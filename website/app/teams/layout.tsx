@@ -37,15 +37,6 @@ type AccountsResponse = {
   data?: AccountSummary[]
 }
 
-function debugLog(message: string, details?: Record<string, unknown>) {
-  if (process.env.NODE_ENV === "production") return
-  if (details) {
-    console.info(`[teams/layout] ${message}`, details)
-  } else {
-    console.info(`[teams/layout] ${message}`)
-  }
-}
-
 async function fetchTeams(): Promise<TeamSummary[]> {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL
   if (!apiBase) {
@@ -53,17 +44,11 @@ async function fetchTeams(): Promise<TeamSummary[]> {
   }
 
   const cookieHeader = await buildCookieHeader()
-  debugLog("request cookies", {
-    hasCookieHeader: Boolean(cookieHeader),
-    cookieHeaderLength: cookieHeader.length,
-  })
-
   const res = await fetch(`${apiBase}/api/teams`, {
     method: "GET",
     headers: cookieHeader ? { cookie: cookieHeader } : undefined,
     cache: "no-store",
   })
-  debugLog("teams response", { status: res.status })
 
   if (res.status === 401) {
     redirect("/login?next=/teams")
@@ -92,10 +77,6 @@ async function fetchUser(): Promise<UserSummary> {
   }
 
   const cookieHeader = await buildCookieHeader()
-  debugLog("user request cookies", {
-    hasCookieHeader: Boolean(cookieHeader),
-    cookieHeaderLength: cookieHeader.length,
-  })
 
   const [userRes, accountsRes] = await Promise.all([
     fetch(`${apiBase}/api/users/me`, {
@@ -109,11 +90,6 @@ async function fetchUser(): Promise<UserSummary> {
       cache: "no-store",
     }),
   ])
-
-  debugLog("user response", {
-    status: userRes.status,
-    accountStatus: accountsRes.status,
-  })
 
   if (userRes.status === 401 || accountsRes.status === 401) {
     redirect("/login?next=/teams")
@@ -153,7 +129,6 @@ export default async function TeamsLayout({
   children: ReactNode
 }) {
   const [teams, user] = await Promise.all([fetchTeams(), fetchUser()])
-  debugLog("teams loaded", { count: teams.length })
 
   return (
     <UserProvider user={user}>

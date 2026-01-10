@@ -55,13 +55,14 @@ import type {
 } from "@/lib/schemas/notification";
 import { ExternalLink } from "lucide-react";
 import { FormDevTools } from "@/components/devtools/form-dev-tools";
-import { createMonitor } from "@/lib/api/monitor";
+import { createMonitor, updateMonitor } from "@/lib/api/monitor";
 import { ApiError } from "@/lib/api/client";
 import { applyServerFieldErrors } from "@/lib/api/error";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { IconType } from "react-icons/lib";
 import { toast } from "sonner";
+import { useEffect, useMemo } from "react";
 
 const NOTIFICATION_TYPE_ICONS: Partial<Record<NotificationType, IconType>> = {
   email: SiGmail,
@@ -383,16 +384,25 @@ export default function NewMonitorForm({
   teamID,
   regions,
   notifications,
+  monitorID,
+  initialValues,
 }: {
   teamID: string;
   regions: Region[];
   notifications: Notification[];
+  monitorID?: string;
+  initialValues?: MonitorFormValues;
 }) {
   const router = useRouter();
-  const defaultRegions = regions.map((region) => region.id);
-  const form = useForm<MonitorFormValues>({
-    resolver: zodResolver(monitorSchema),
-    defaultValues: {
+  const isEdit = Boolean(monitorID && initialValues);
+
+  const defaultRegions = useMemo(
+    () => regions.map((region) => region.id),
+    [regions],
+  );
+
+  const createDefaultValues = useMemo<MonitorFormValues>(
+    () => ({
       name: "API - Production",
       type: "http",
       interval: 60,
@@ -413,9 +423,24 @@ export default function NewMonitorForm({
         certificateExpiryNotification: true,
         ignoreTLSError: false,
       },
-    },
+    }),
+    [defaultRegions],
+  );
+
+  const resolvedDefaultValues = useMemo(
+    () => initialValues ?? createDefaultValues,
+    [createDefaultValues, initialValues],
+  );
+
+  const form = useForm<MonitorFormValues>({
+    resolver: zodResolver(monitorSchema),
+    defaultValues: resolvedDefaultValues,
     mode: "onSubmit",
   });
+
+  useEffect(() => {
+    form.reset(resolvedDefaultValues);
+  }, [form, resolvedDefaultValues]);
 
   const monitorType = useWatch({
     control: form.control,
@@ -424,7 +449,6 @@ export default function NewMonitorForm({
 
   const onSubmit = async (values: MonitorFormValues) => {
     form.clearErrors();
-    console.info("test");
     const parsed = monitorSchema.safeParse(values);
     if (!parsed.success) {
       form.setError("root", {
@@ -435,9 +459,14 @@ export default function NewMonitorForm({
     }
 
     try {
-      await createMonitor(teamID, parsed.data);
-      form.reset();
-      toast.success("Monitor has been successfully created.");
+      if (isEdit) {
+        await updateMonitor(teamID, monitorID!, parsed.data);
+        toast.success("Monitor has been successfully updated.");
+      } else {
+        await createMonitor(teamID, parsed.data);
+        form.reset(createDefaultValues);
+        toast.success("Monitor has been successfully created.");
+      }
       router.push(`/teams/${teamID}/monitors`);
     } catch (error) {
       if (error instanceof ApiError) {
@@ -469,7 +498,9 @@ export default function NewMonitorForm({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Create new monitor</h1>
+        <h1 className="text-2xl font-semibold">
+          {isEdit ? "Edit monitor" : "Create new monitor"}
+        </h1>
         <p className="text-sm text-muted-foreground">
           Configure the monitor, then wire it to the API when you are ready.
         </p>
@@ -501,10 +532,10 @@ export default function NewMonitorForm({
                   {form.formState.isSubmitting ? (
                     <>
                       <Spinner className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
+                      {isEdit ? "Updating..." : "Creating..."}
                     </>
                   ) : (
-                    "Create new monitor"
+                    (isEdit ? "Update monitor" : "Create new monitor")
                   )}
                 </Button>
               </div>
