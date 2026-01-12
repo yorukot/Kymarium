@@ -1,6 +1,8 @@
 import snakecaseKeys from "snakecase-keys";
 import camelcaseKeys from "camelcase-keys";
 
+import { isPlainObject } from "@/lib/parsers/guards";
+
 export type ApiOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: Record<string, string>;
@@ -41,10 +43,6 @@ export type ApiResult<T> = {
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function hasStringMessage(x: unknown): x is { message: string } {
   return isPlainObject(x) && typeof x.message === "string";

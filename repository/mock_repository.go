@@ -579,8 +579,8 @@ func (m *MockRepository) ListAllRegions(ctx context.Context, tx pgx.Tx) ([]model
 }
 
 // GetMonitorAnalytics mocks Repository.GetMonitorAnalytics.
-func (m *MockRepository) GetMonitorAnalytics(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time, regionID *int64) ([]models.MonitorAnalyticsBucket, error) {
-	args := m.Called(ctx, tx, monitorID, start, end, regionID)
+func (m *MockRepository) GetMonitorAnalytics(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time, bucket string, regionID *int64) ([]models.MonitorAnalyticsBucket, error) {
+	args := m.Called(ctx, tx, monitorID, start, end, bucket, regionID)
 	buckets, _ := args.Get(0).([]models.MonitorAnalyticsBucket)
 	return buckets, args.Error(1)
 }

@@ -1979,7 +1979,7 @@ const docTemplate = `{
         },
         "/teams/{teamID}/monitors/{id}/analytics": {
             "get": {
-                "description": "Returns uptime and latency analytics for a monitor within a window (default last 24h, bucket 30m)",
+                "description": "Returns uptime and latency analytics for a monitor within a window (default last 24h, bucket auto)",
                 "produces": [
                     "application/json"
                 ],
@@ -2012,12 +2012,6 @@ const docTemplate = `{
                         "type": "string",
                         "description": "End time (ISO8601)",
                         "name": "end",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bucket duration, only 30m supported",
-                        "name": "bucket",
                         "in": "query"
                     },
                     {

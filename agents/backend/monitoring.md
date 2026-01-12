@@ -13,7 +13,7 @@ Use this to reason about the monitoring pipeline, ping execution, incident thres
 - HTTP monitors also run through `core/monitor/http.go`: success is based on accepted status codes (defaults to 2xx) and supports upside-down mode to invert success. Errors/timeouts set status and message accordingly.
 
 ## Persisting ping results
-- Each ping result is buffered in `PingRecorder` (`worker/handler/ping_recorder.go`) and written in batches via `repository.BatchInsertPings`. Flush cadence: 1s ticker; target batch size 1000 with an 80% flush threshold; flush failures fall back to re-queueing the ping in memory.
+- Each ping result is buffered in `PingRecorder` (`worker/handler/ping_recorder.go`) and written in batches via `repository.BatchInsertPings` (COPY fast-path; upsert fallback on duplicates). Flush cadence: 1s ticker; target batch size 1000 with an 80% flush threshold; flush failures fall back to re-queueing the ping in memory.
 
 ## Incident lifecycle (automatic)
 - Trigger point: after every ping in `processIncident` (`worker/handler/monitor_ping.go`), scoped to the monitor + region of the ping.

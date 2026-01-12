@@ -1,17 +1,14 @@
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
+import { isPlainObject } from "@/lib/parsers/guards";
 
 export function applyServerFieldErrors<T extends FieldValues>(
   setError: UseFormSetError<T>,
   body: unknown
 ): boolean {
-  if (!isRecord(body)) return false;
+  if (!isPlainObject(body)) return false;
 
   const errors = body["errors"];
-  if (!isRecord(errors)) return false;
+  if (!isPlainObject(errors)) return false;
 
   let applied = false;
 

@@ -68,14 +68,13 @@ type monitorAnalyticsResponse struct {
 
 // GetAnalytics godoc
 // @Summary Get monitor analytics
-// @Description Returns uptime and latency analytics for a monitor within a window (default last 24h, bucket 30m)
+// @Description Returns uptime and latency analytics for a monitor within a window (default last 24h, bucket auto)
 // @Tags monitors
 // @Produce json
 // @Param teamID path string true "Team ID"
 // @Param id path string true "Monitor ID"
 // @Param start query string false "Start time (ISO8601)"
 // @Param end query string false "End time (ISO8601)"
-// @Param bucket query string false "Bucket duration, only 30m supported"
 // @Param region_id query string false "Region ID to filter"
 // @Success 200 {object} response.SuccessResponse "Analytics returned"
 // @Failure 400 {object} response.ErrorResponse "Invalid parameters"
@@ -123,12 +122,17 @@ func (h *Handler) GetAnalytics(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "start must be before end")
 	}
 
-	bucketParam := c.QueryParam("bucket")
-	if bucketParam == "" {
-		bucketParam = "30m"
-	}
-	if bucketParam != "30m" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Only bucket=30m is supported")
+	now := time.Now().UTC()
+	window := end.Sub(start)
+
+	const buf = 1 * time.Minute
+
+	bucketParam := "30min"
+	switch {
+	case window <= 24*time.Hour+buf && !start.Before(now.Add(-24*time.Hour-buf)):
+		bucketParam = "2min"
+	case window <= 7*24*time.Hour+buf && !start.Before(now.Add(-7*24*time.Hour-buf)):
+		bucketParam = "10min"
 	}
 
 	var regionFilter *int64
@@ -169,7 +173,7 @@ func (h *Handler) GetAnalytics(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "region_id is not associated with this monitor")
 	}
 
-	buckets, err := h.Repo.GetMonitorAnalytics(c.Request().Context(), tx, monitorID, start, end, regionFilter)
+	buckets, err := h.Repo.GetMonitorAnalytics(c.Request().Context(), tx, monitorID, start, end, bucketParam, regionFilter)
 	if err != nil {
 		zap.L().Error("Failed to fetch analytics", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch analytics")

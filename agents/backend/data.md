@@ -20,7 +20,7 @@ Use this to work on persistence, transactions, IDs, and schema expectations.
 - `failure_threshold` and `recovery_threshold` drive incident detection/resolution (see `agents/backend/monitoring.md`). Store them as smallints but treat as ints in code.
 
 ## Ping persistence
-- `PingRecorder` buffers and writes pings via `repository.BatchInsertPings` using COPY for throughput. It expects monotonic inserts and does not dedupe.
+- `PingRecorder` buffers and writes pings via `repository.BatchInsertPings` using COPY for throughput, with an upsert fallback to tolerate duplicate keys.
 - `ListRecentPingsByMonitorIDAndRegion` fetches the newest pings per monitor/region to evaluate incidents. Keep indexes aligned if you change query patterns.
 
 ## Incidents and events

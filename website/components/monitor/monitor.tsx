@@ -1,10 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { Edit, Eye, Link as LinkIcon, MoreVertical, Trash } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import type { MonitorListItem } from "@/lib/schemas/monitor";
-import { formatDistanceStrict } from "date-fns";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -14,23 +14,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-function formatRelativeTime(value: string): string {
-  if (!value) return "--";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "--";
-
-  return formatDistanceStrict(date, new Date(Date.now()), {
-    addSuffix: true,
-    roundingMethod: "round",
-  });
-}
-
-function formatUptime(value?: number) {
-  if (value === undefined || value === null || Number.isNaN(value)) return "--";
-  return `${value.toFixed(2)}%`;
-}
+import { useTeamEntities } from "@/components/context/team-entities-context";
+import { StatusDot } from "./status-dot";
+import { formatRelativeTime } from "@/lib/parsers/datetime";
+import { formatUptime } from "@/lib/parsers/format";
 
 export default function Monitor({
   teamID,
@@ -39,6 +26,14 @@ export default function Monitor({
   teamID: string;
   monitors: MonitorListItem[];
 }) {
+  const { setMonitors } = useTeamEntities();
+
+  useEffect(() => {
+    setMonitors(
+      monitors.map((monitor) => ({ id: monitor.id, name: monitor.name })),
+    );
+  }, [monitors, setMonitors]);
+
   if (!monitors.length) return null;
 
   return (
@@ -48,10 +43,12 @@ export default function Monitor({
           <CardContent className="flex items-center justify-between gap-3 p-0">
             <div className="flex min-w-0 flex-col gap-2">
               <div className="flex items-center gap-2 text-md min-w-0">
-                <div className="inline-flex h-4 w-4 flex-none items-center justify-center rounded-full bg-destructive/40">
-                  <div className="h-2 w-2 rounded-full bg-destructive/70" />
-                </div>
-                <span className="min-w-0 flex-1 truncate">{monitor.name}</span>
+                <StatusDot status={monitor.status} />
+                <span className="min-w-0 flex-1 truncate hover:underline">
+                  <Link href={`/teams/${teamID}/monitors/${monitor.id}`}>
+                    {monitor.name}
+                  </Link>
+                </span>
               </div>
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
@@ -92,8 +89,12 @@ export default function Monitor({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
                     <DropdownMenuGroup>
-                      <DropdownMenuItem>
-                        <Eye /> View
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/teams/${teamID}/monitors/${monitor.id}`}
+                        >
+                          <Eye /> View
+                        </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link

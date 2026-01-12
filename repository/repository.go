@@ -125,7 +125,7 @@ type Repository interface {
 	UpdateMonitorStatus(ctx context.Context, tx pgx.Tx, monitorID int64, status models.MonitorStatus, updatedAt time.Time) error
 
 	// Analytics
-	GetMonitorAnalytics(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time, regionID *int64) ([]models.MonitorAnalyticsBucket, error)
+	GetMonitorAnalytics(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time, bucket string, regionID *int64) ([]models.MonitorAnalyticsBucket, error)
 	ListMonitorDailySummaryByMonitorIDs(ctx context.Context, tx pgx.Tx, monitorIDs []int64, start time.Time, end time.Time) ([]models.MonitorDailySummary, error)
 	ListIncidentsByMonitorIDWithinRange(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time) ([]models.Incident, error)
 }

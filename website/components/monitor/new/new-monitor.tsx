@@ -64,6 +64,7 @@ import { useRouter } from "next/navigation";
 import { IconType } from "react-icons/lib";
 import { toast } from "sonner";
 import { useEffect, useMemo } from "react";
+import { useTeamEntities } from "@/components/context/team-entities-context";
 
 const NOTIFICATION_TYPE_ICONS: Partial<Record<NotificationType, IconType>> = {
   email: SiGmail,
@@ -411,6 +412,7 @@ export default function NewMonitorForm({
   const router = useRouter();
   const isEdit = Boolean(monitorID && initialValues);
   const sidebar = useSidebar();
+  const { setMonitorName } = useTeamEntities();
 
   const defaultRegions = useMemo(
     () => regions.map((region) => region.id),
@@ -458,6 +460,17 @@ export default function NewMonitorForm({
   useEffect(() => {
     form.reset(resolvedDefaultValues);
   }, [form, resolvedDefaultValues]);
+
+  const monitorName = useWatch({
+    control: form.control,
+    name: "name",
+  });
+
+  useEffect(() => {
+    if (!monitorID) return;
+    if (typeof monitorName !== "string") return;
+    setMonitorName(monitorID, monitorName);
+  }, [monitorID, monitorName, setMonitorName]);
 
   const monitorType = useWatch({
     control: form.control,
@@ -519,9 +532,9 @@ export default function NewMonitorForm({
       : "md:left-[var(--sidebar-width)] md:right-0";
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-xl font-semibold">
           {isEdit ? "Edit monitor" : "Create new monitor"}
         </h1>
         <p className="text-sm text-muted-foreground">

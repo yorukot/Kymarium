@@ -1736,7 +1736,7 @@ paths:
   /teams/{teamID}/monitors/{id}/analytics:
     get:
       description: Returns uptime and latency analytics for a monitor within a window
-        (default last 24h, bucket 30m)
+        (default last 24h, bucket auto)
       parameters:
       - description: Team ID
         in: path
@@ -1755,10 +1755,6 @@ paths:
       - description: End time (ISO8601)
         in: query
         name: end
-        type: string
-      - description: Bucket duration, only 30m supported
-        in: query
-        name: bucket
         type: string
       - description: Region ID to filter
         in: query

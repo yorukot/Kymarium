@@ -22,15 +22,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useTeams } from "@/components/context/teams-context"
-
-function formatRole(role: string) {
-  if (!role) return ""
-  return role
-    .split(/[-_]/)
-    .filter(Boolean)
-    .map((part) => part[0]?.toUpperCase() + part.slice(1))
-    .join(" ")
-}
+import { humanizeIdentifier } from "@/lib/parsers/strings"
 
 function avatarFor(seed: string, size: number) {
   return createAvatar(shapes, {
@@ -57,7 +49,7 @@ export function TeamSwitcher() {
     return null
   }
 
-  const activeRole = formatRole(activeTeam.role)
+  const activeRole = humanizeIdentifier(activeTeam.role)
 
   return (
     <SidebarMenu>

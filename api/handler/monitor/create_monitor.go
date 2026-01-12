@@ -6,10 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/yorukot/kymarium/models"
-	"github.com/yorukot/kymarium/models/monitorm"
 	"github.com/yorukot/kymarium/utils"
 	authutil "github.com/yorukot/kymarium/utils/auth"
 	"github.com/yorukot/kymarium/utils/id"
@@ -20,7 +18,7 @@ import (
 type createMonitorRequest struct {
 	Name              string             `json:"name" validate:"required,min=1,max=255"`
 	Type              models.MonitorType `json:"type" validate:"required,oneof=http ping"`
-	Interval          int                `json:"interval" validate:"required,min=30,max=2592000"`
+	Interval          int                `json:"interval" validate:"required,min=2,max=2592000"`
 	Config            json.RawMessage    `json:"config" validate:"required"`
 	FailureThreshold  int16              `json:"failure_threshold" validate:"required,gt=0"`
 	RecoveryThreshold int16              `json:"recovery_threshold" validate:"required,gt=0"`
@@ -51,19 +49,13 @@ func (h *Handler) CreateMonitor(c echo.Context) error {
 
 	var req createMonitorRequest
 	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+		return c.JSON(http.StatusBadRequest, response.ErrorResponse{
+			Message: "Invalid request body",
+		})
 	}
 
-	if err := validator.New().Struct(req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
-	}
-
-	if len(req.Config) == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Monitor config is required")
-	}
-
-	if len(req.Regions) == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "At least one region is required")
+	if err := validateStruct(c, req, "Invalid request body"); err != nil {
+		return err
 	}
 
 	if err := validateMonitorConfig(c, req.Type, req.Config); err != nil {
@@ -164,37 +156,4 @@ func (h *Handler) CreateMonitor(c echo.Context) error {
 	monitor.RegionIDs = regionIDs
 
 	return c.JSON(http.StatusOK, response.Success("Monitor created successfully", newMonitorResponse(monitor)))
-}
-
-func validateMonitorConfig(c echo.Context, monitorType models.MonitorType, configRaw json.RawMessage) error {
-	switch monitorType {
-	case models.MonitorTypeHTTP:
-		var config monitorm.HTTPMonitorConfig
-		if err := json.Unmarshal(configRaw, &config); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid monitor config")
-		}
-		if err := validator.New().Struct(config); err != nil {
-			if errResponse, ok := response.ValidationErrorResponse(err, "Invalid request body", "VALIDATION_ERROR"); ok {
-				return c.JSON(http.StatusBadRequest, errResponse)
-			}
-
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
-		}
-	case models.MonitorTypePing:
-		var config monitorm.PingMonitorConfig
-		if err := json.Unmarshal(configRaw, &config); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid monitor config")
-		}
-		if err := validator.New().Struct(config); err != nil {
-			if errResponse, ok := response.ValidationErrorResponse(err, "Invalid request body", "VALIDATION_ERROR"); ok {
-				return c.JSON(http.StatusBadRequest, errResponse)
-			}
-
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
-		}
-	default:
-		return echo.NewHTTPError(http.StatusBadRequest, "Unsupported monitor type")
-	}
-
-	return nil
 }

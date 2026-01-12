@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -11,25 +12,37 @@ import (
 )
 
 // GetMonitorAnalytics retrieves aggregated uptime/latency buckets for a monitor over a time window.
-// Data comes from the Timescale continuous aggregate monitor_30min_summary.
-func (r *PGRepository) GetMonitorAnalytics(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time, regionID *int64) ([]models.MonitorAnalyticsBucket, error) {
+// Data comes from the Timescale continuous aggregates monitor_2min_summary, monitor_10min_summary, or monitor_30min_summary.
+func (r *PGRepository) GetMonitorAnalytics(ctx context.Context, tx pgx.Tx, monitorID int64, start time.Time, end time.Time, bucket string, regionID *int64) ([]models.MonitorAnalyticsBucket, error) {
+	var view string
+	switch bucket {
+	case "2min":
+		view = "monitor_2min_summary"
+	case "10min":
+		view = "monitor_10min_summary"
+	case "30min":
+		view = "monitor_30min_summary"
+	default:
+		return nil, fmt.Errorf("unsupported analytics bucket: %q", bucket)
+	}
+
 	query := strings.Builder{}
 	query.WriteString(`
-		SELECT
-			bucket,
-			region_id,
-			total_count,
-			good_count,
-			p50_ms,
-			p75_ms,
-			p90_ms,
-			p95_ms,
-			p99_ms
-		FROM monitor_30min_summary
-		WHERE monitor_id = $1
-		  AND bucket >= $2
-		  AND bucket < $3
-	`)
+			SELECT
+				bucket,
+				region_id,
+				total_count,
+				good_count,
+				p50_ms,
+				p75_ms,
+				p90_ms,
+				p95_ms,
+				p99_ms
+			FROM ` + view + `
+			WHERE monitor_id = $1
+			  AND bucket >= $2
+			  AND bucket < $3
+		`)
 
 	args := []any{monitorID, start, end}
 	if regionID != nil {

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { TeamEntitiesProvider } from "@/components/context/team-entities-context";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,35 +16,43 @@ import {
 } from "@/components/ui/sidebar";
 import { TeamBreadcrumbs } from "./team-breadcrumbs";
 
-export default function TeamLayout({ children }: { children: ReactNode }) {
+export default async function TeamLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ teamID: string }>;
+}) {
+  const { teamID } = await params;
+
   return (
     <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="min-w-0 max-w-5xl mx-auto">
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/teams">Teams</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
+      <TeamEntitiesProvider teamID={teamID}>
+        <AppSidebar />
+        <SidebarInset className="min-w-0 max-w-5xl mx-auto">
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4">
+              <SidebarTrigger className="-ml-1" />
+              <Separator
+                orientation="vertical"
+                className="mr-2 data-[orientation=vertical]:h-4"
+              />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem className="hidden md:block">
+                    <BreadcrumbLink href="/teams">Teams</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="hidden md:block" />
                   <TeamBreadcrumbs />
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          </header>
+          <div className="flex flex-1 min-w-0 flex-col gap-4 p-4 pt-0">
+            {children}
           </div>
-        </header>
-        <div className="flex flex-1 min-w-0 flex-col gap-4 p-4 pt-0">
-          {children}
-        </div>
-      </SidebarInset>
+        </SidebarInset>
+      </TeamEntitiesProvider>
     </SidebarProvider>
   );
 }

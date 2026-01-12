@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { login } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { applyServerFieldErrors } from "@/lib/api/error";
+import { isPlainObject } from "@/lib/parsers/guards";
 import {
   LoginFormValues,
   loginPayloadSchema,
@@ -43,10 +44,6 @@ function normalizeNextPath(nextPath?: string) {
   const trimmed = nextPath.trim();
   if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return undefined;
   return trimmed;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
@@ -85,7 +82,7 @@ export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
       router.replace(redirectTarget);
     } catch (error) {
       if (error instanceof ApiError) {
-        if (error.status === 403 && isRecord(error.body)) {
+        if (error.status === 403 && isPlainObject(error.body)) {
           const message =
             typeof error.body.message === "string" ? error.body.message : "";
 

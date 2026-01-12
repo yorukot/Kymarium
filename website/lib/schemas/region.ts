@@ -6,6 +6,8 @@ export type RegionRawData = {
 export type Region = {
   id: string;
   name: string;
+  city: string;
+  country: string;
   displayName: string;
   flag: string;
 };

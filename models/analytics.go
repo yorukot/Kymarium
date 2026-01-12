@@ -3,7 +3,7 @@ package models
 import "time"
 
 // MonitorAnalyticsBucket represents a single aggregated bucket for a monitor.
-// It is sourced from the Timescale continuous aggregate monitor_30min_summary.
+// It is sourced from the Timescale continuous aggregates monitor_2min_summary, monitor_10min_summary, or monitor_30min_summary.
 type MonitorAnalyticsBucket struct {
 	Bucket     time.Time `json:"bucket" db:"bucket"`
 	RegionID   int64     `json:"region_id" db:"region_id"`
