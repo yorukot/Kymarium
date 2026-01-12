@@ -14,6 +14,7 @@ import { humanizeIdentifier } from "@/lib/parsers/strings";
 const LABELS: Record<string, string> = {
   monitors: "Monitors",
   incidents: "Incidents",
+  notifications: "Notifications",
   new: "New",
   view: "View",
   edit: "Edit",
@@ -22,7 +23,12 @@ const LABELS: Record<string, string> = {
 export function TeamBreadcrumbs() {
   const { teamID } = useParams<{ teamID: string }>();
   const pathname = usePathname();
-  const { ensureMonitorLoaded, getMonitorName } = useTeamEntities();
+  const {
+    ensureMonitorLoaded,
+    getMonitorName,
+    ensureIncidentLoaded,
+    getIncidentTitle,
+  } = useTeamEntities();
 
   const rawSegments = pathname.split("/").filter(Boolean);
   const segments = rawSegments[0] === "teams" ? rawSegments.slice(2) : rawSegments;
@@ -39,11 +45,25 @@ export function TeamBreadcrumbs() {
     ? getMonitorName(activeMonitorID)
     : undefined;
 
+  const activeIncidentID =
+    section === "incidents" && idOrAction && idOrAction !== "new"
+      ? idOrAction
+      : null;
+  const activeIncidentTitle = activeIncidentID
+    ? getIncidentTitle(activeIncidentID)
+    : undefined;
+
   useEffect(() => {
     if (!activeMonitorID) return;
     if (activeMonitorName) return;
     ensureMonitorLoaded(activeMonitorID);
   }, [activeMonitorID, activeMonitorName, ensureMonitorLoaded]);
+
+  useEffect(() => {
+    if (!activeIncidentID) return;
+    if (activeIncidentTitle) return;
+    ensureIncidentLoaded(activeIncidentID);
+  }, [activeIncidentID, activeIncidentTitle, ensureIncidentLoaded]);
 
   const crumbs: Array<{ label: string; href?: string }> = [];
 
@@ -68,10 +88,12 @@ export function TeamBreadcrumbs() {
       }
     }
   } else if (section === "incidents") {
-    if (idOrAction) {
+    if (idOrAction === "new") {
+      crumbs.push({ label: LABELS.new });
+    } else if (idOrAction) {
       const incidentID = idOrAction;
       crumbs.push({
-        label: incidentID,
+        label: activeIncidentTitle ?? "Incident",
         href: action ? `/teams/${teamID}/incidents/${incidentID}` : undefined,
       });
 

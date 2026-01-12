@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   Activity,
+  Bell,
   LayoutTemplate,
   Settings,
   TriangleAlert,
@@ -36,6 +37,11 @@ const data = {
       icon: TriangleAlert,
     },
     {
+      title: "Notifications",
+      url: "/teams/{teamID}/notifications",
+      icon: Bell,
+    },
+    {
       title: "Status Pages",
       url: "/teams/{teamID}/status-pages",
       icon: LayoutTemplate,
@@ -62,7 +68,7 @@ function isActivePath(pathname: string, href: string) {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const params = useParams<{ teamID: string }>();
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const navItems = React.useMemo(() => {
     const teamID = params.teamID;

@@ -8,11 +8,21 @@ type MonitorSummary = {
   name: string;
 };
 
+type IncidentSummary = {
+  id: string;
+  title: string;
+};
+
 type TeamEntitiesContextValue = {
   getMonitorName: (monitorID: string) => string | undefined;
   setMonitorName: (monitorID: string, name: string) => void;
   setMonitors: (monitors: MonitorSummary[]) => void;
   ensureMonitorLoaded: (monitorID: string) => void;
+
+  getIncidentTitle: (incidentID: string) => string | undefined;
+  setIncidentTitle: (incidentID: string, title: string) => void;
+  setIncidents: (incidents: IncidentSummary[]) => void;
+  ensureIncidentLoaded: (incidentID: string) => void;
 };
 
 const TeamEntitiesContext = React.createContext<TeamEntitiesContextValue | null>(
@@ -36,6 +46,17 @@ export function TeamEntitiesProvider({
   }, [monitorsByID]);
 
   const inflightRef = React.useRef<Set<string>>(new Set());
+
+  const [incidentsByID, setIncidentsByID] = React.useState<
+    Record<string, IncidentSummary>
+  >({});
+
+  const incidentsRef = React.useRef(incidentsByID);
+  React.useEffect(() => {
+    incidentsRef.current = incidentsByID;
+  }, [incidentsByID]);
+
+  const inflightIncidentsRef = React.useRef<Set<string>>(new Set());
 
   const setMonitorName = React.useCallback((monitorID: string, name: string) => {
     const trimmed = name.trim();
@@ -107,14 +128,102 @@ export function TeamEntitiesProvider({
     [setMonitorName, teamID],
   );
 
+  const setIncidentTitle = React.useCallback(
+    (incidentID: string, title: string) => {
+      const trimmed = title.trim();
+      if (!trimmed) return;
+
+      setIncidentsByID((prev) => {
+        const existing = prev[incidentID];
+        if (existing?.title === trimmed) return prev;
+        return {
+          ...prev,
+          [incidentID]: {
+            id: incidentID,
+            title: trimmed,
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const setIncidents = React.useCallback((incidents: IncidentSummary[]) => {
+    setIncidentsByID((prev) => {
+      let next: Record<string, IncidentSummary> | null = null;
+
+      for (const incident of incidents) {
+        if (!incident?.id) continue;
+        const title =
+          typeof incident.title === "string" ? incident.title.trim() : "";
+        if (!title) continue;
+
+        const existing = prev[incident.id];
+        if (existing?.title === title) continue;
+
+        if (!next) next = { ...prev };
+        next[incident.id] = { id: incident.id, title };
+      }
+
+      return next ?? prev;
+    });
+  }, []);
+
+  const getIncidentTitle = React.useCallback(
+    (incidentID: string) => incidentsByID[incidentID]?.title,
+    [incidentsByID],
+  );
+
+  const ensureIncidentLoaded = React.useCallback(
+    (incidentID: string) => {
+      if (!incidentID) return;
+      if (incidentsRef.current[incidentID]?.title) return;
+      if (inflightIncidentsRef.current.has(incidentID)) return;
+
+      inflightIncidentsRef.current.add(incidentID);
+
+      void apiRequest<{ data?: { id?: string; title?: string | null } }>(
+        `/api/teams/${teamID}/incidents/${incidentID}`,
+        {
+          defaultError: "Failed to load incident",
+          redirectOn401: true,
+        },
+      )
+        .then((res) => {
+          const incident = res.data?.data;
+          if (incident?.id && typeof incident.title === "string") {
+            setIncidentTitle(incident.id, incident.title);
+          }
+        })
+        .finally(() => {
+          inflightIncidentsRef.current.delete(incidentID);
+        });
+    },
+    [setIncidentTitle, teamID],
+  );
+
   const value = React.useMemo<TeamEntitiesContextValue>(
     () => ({
       getMonitorName,
       setMonitorName,
       setMonitors,
       ensureMonitorLoaded,
+
+      getIncidentTitle,
+      setIncidentTitle,
+      setIncidents,
+      ensureIncidentLoaded,
     }),
-    [ensureMonitorLoaded, getMonitorName, setMonitorName, setMonitors],
+    [
+      ensureIncidentLoaded,
+      ensureMonitorLoaded,
+      getIncidentTitle,
+      getMonitorName,
+      setIncidentTitle,
+      setIncidents,
+      setMonitorName,
+      setMonitors,
+    ],
   );
 
   return (

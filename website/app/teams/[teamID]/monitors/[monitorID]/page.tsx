@@ -2,9 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { buildCookieHeader } from "@/lib/api/cookies";
 import { parseRegions } from "@/lib/parsers/regions";
-import type {
-  MonitorAnalyticsRawData,
-} from "@/lib/schemas/monitor-analytics";
+import type { MonitorAnalyticsRawData } from "@/lib/schemas/monitor-analytics";
 import { isRFC3339Seconds } from "@/lib/parsers/datetime";
 import type { Region, RegionRawData } from "@/lib/schemas/region";
 import { MonitorHydrator } from "./monitor-hydrator";
@@ -66,7 +64,10 @@ async function fetchMonitorAnalytics(
   return body?.data ?? null;
 }
 
-async function fetchRegions(teamID: string, monitorID: string): Promise<Region[]> {
+async function fetchRegions(
+  teamID: string,
+  monitorID: string,
+): Promise<Region[]> {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!apiBase) {
     throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
@@ -104,8 +105,12 @@ export default async function MonitorSummaryPage({
 }) {
   const { teamID, monitorID } = await params;
   const qp = (await searchParams) ?? {};
-  const start = typeof qp.start === "string" && isRFC3339Seconds(qp.start) ? qp.start : undefined;
-  const end = typeof qp.end === "string" && isRFC3339Seconds(qp.end) ? qp.end : undefined;
+  const start =
+    typeof qp.start === "string" && isRFC3339Seconds(qp.start)
+      ? qp.start
+      : undefined;
+  const end =
+    typeof qp.end === "string" && isRFC3339Seconds(qp.end) ? qp.end : undefined;
 
   const [analytics, regions] = await Promise.all([
     fetchMonitorAnalytics(teamID, monitorID, { start, end }),
@@ -119,7 +124,11 @@ export default async function MonitorSummaryPage({
   return (
     <div className="flex flex-col gap-4">
       <MonitorHydrator monitorID={monitorID} name={analytics.monitor.name} />
-      <MonitorDetail teamID={teamID} monitorID={monitorID} analytics={analytics} />
+      <MonitorDetail
+        teamID={teamID}
+        monitorID={monitorID}
+        analytics={analytics}
+      />
       <MonitorChartBar analytics={analytics} regions={regions} />
     </div>
   );
