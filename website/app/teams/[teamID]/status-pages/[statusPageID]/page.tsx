@@ -1,14 +1,23 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import StatusPageEditor from "@/components/status-page/status-page-editor";
 import { buildCookieHeader } from "@/lib/api/cookies";
+import { parseMonitors } from "@/lib/parsers/monitors";
 import { parseStatusPageDetail } from "@/lib/parsers/status-pages";
-import type { StatusPageDetailItem, StatusPageRawData } from "@/lib/schemas/status-page";
+import type { MonitorListItem, MonitorRawData } from "@/lib/schemas/monitor";
+import type {
+  StatusPageDetailItem,
+  StatusPageRawData,
+} from "@/lib/schemas/status-page";
 
 type StatusPageResponse = {
   message?: string;
   data?: StatusPageRawData;
+};
+
+type MonitorsResponse = {
+  message?: string;
+  data?: MonitorRawData[];
 };
 
 async function fetchStatusPage(
@@ -46,43 +55,54 @@ async function fetchStatusPage(
   return parseStatusPageDetail(body.data);
 }
 
+async function fetchMonitors(
+  teamID: string,
+  statusPageID: string,
+): Promise<MonitorListItem[]> {
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (!apiBase) {
+    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+  }
+
+  const cookieHeader = await buildCookieHeader();
+  const res = await fetch(`${apiBase}/api/teams/${teamID}/monitors`, {
+    method: "GET",
+    headers: cookieHeader ? { cookie: cookieHeader } : undefined,
+    cache: "no-store",
+  });
+
+  if (res.status === 401) {
+    redirect(`/login?next=/teams/${teamID}/status-pages/${statusPageID}`);
+  }
+
+  if (!res.ok) {
+    throw new Error("Failed to load monitors");
+  }
+
+  const body = (await res.json()) as MonitorsResponse;
+  if (!Array.isArray(body?.data)) {
+    return [];
+  }
+
+  return parseMonitors(body.data);
+}
+
 export default async function StatusPageDetail({
   params,
 }: {
   params: Promise<{ teamID: string; statusPageID: string }>;
 }) {
   const { teamID, statusPageID } = await params;
-  const statusPage = await fetchStatusPage(teamID, statusPageID);
+  const [statusPage, monitors] = await Promise.all([
+    fetchStatusPage(teamID, statusPageID),
+    fetchMonitors(teamID, statusPageID),
+  ]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-center">
-        <div className="flex flex-col gap-1">
-          <span className="text-xl font-bold">{statusPage.title}</span>
-          <span className="text-sm text-muted-foreground">/{statusPage.slug}</span>
-        </div>
-
-        <Link href={`/teams/${teamID}/status-pages`}>
-          <Button variant="outline">Back to list</Button>
-        </Link>
-      </div>
-
-      <div className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
-        Status page editor UI is coming soon. This page currently shows basic details
-        only.
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="rounded-md border px-3 py-2">
-          <div className="text-sm text-muted-foreground">Elements</div>
-          <div className="text-lg font-semibold">{statusPage.elementCount}</div>
-        </div>
-        <div className="rounded-md border px-3 py-2">
-          <div className="text-sm text-muted-foreground">Monitors</div>
-          <div className="text-lg font-semibold">{statusPage.monitorCount}</div>
-        </div>
-      </div>
-    </div>
+    <StatusPageEditor
+      teamID={teamID}
+      statusPage={statusPage}
+      monitorOptions={monitors}
+    />
   );
 }
-
