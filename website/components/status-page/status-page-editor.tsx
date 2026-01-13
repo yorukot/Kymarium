@@ -1,6 +1,13 @@
 "use client";
 
-import { ChartLine, CircleDot, GripVertical, Plus, Save, Trash2 } from "lucide-react";
+import {
+  ChartLine,
+  CircleDot,
+  GripVertical,
+  Plus,
+  Save,
+  Trash2,
+} from "lucide-react";
 import {
   closestCenter,
   DndContext,
@@ -24,9 +31,18 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
@@ -56,11 +72,25 @@ import {
 import { ApiError } from "@/lib/api/client";
 import { updateStatusPage } from "@/lib/api/status-page";
 import type { MonitorListItem } from "@/lib/schemas/monitor";
-import type { StatusPageDetailItem, StatusPageElementRawData, StatusPageElementType } from "@/lib/schemas/status-page";
+import type {
+  StatusPageDetailItem,
+  StatusPageElementRawData,
+  StatusPageElementType,
+} from "@/lib/schemas/status-page";
 
 const ROOT_CONTAINER_ID = "container:root";
 const containerID = (key: string) => `container:${key}`;
-const isValidSlug = (value: string) => /^[a-zA-Z0-9]{3,255}$/.test(value);
+
+const statusPageBasicsSchema = z.object({
+  title: z.string().min(1, "Title is required.").max(255, "Title is too long."),
+  slug: z
+    .string()
+    .min(3, "Slug must be at least 3 characters.")
+    .max(255, "Slug is too long.")
+    .regex(/^[a-zA-Z0-9]+$/, "Slug must be alphanumeric (no dashes)."),
+});
+
+type StatusPageBasicsValues = z.infer<typeof statusPageBasicsSchema>;
 
 type MonitorItem = {
   uid: string;
@@ -82,6 +112,30 @@ type EditorElement =
       kind: "monitor";
     } & MonitorItem);
 
+function validateElementNames(elements: EditorElement[]): Record<string, string> {
+  const errors: Record<string, string> = {};
+
+  for (const element of elements) {
+    if (element.kind === "group") {
+      if (!element.name.trim()) {
+        errors[element.uid] = "Group name is required.";
+      }
+      for (const monitor of element.monitors) {
+        if (!monitor.name.trim()) {
+          errors[monitor.uid] = "Monitor name is required.";
+        }
+      }
+      continue;
+    }
+
+    if (!element.name.trim()) {
+      errors[element.uid] = "Monitor name is required.";
+    }
+  }
+
+  return errors;
+}
+
 function uid(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return `${prefix}_${crypto.randomUUID()}`;
@@ -89,7 +143,11 @@ function uid(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2)}`;
 }
 
-function toMonitorItem(raw: { monitor_id: string; name: string; type: StatusPageElementType }): MonitorItem {
+function toMonitorItem(raw: {
+  monitor_id: string;
+  name: string;
+  type: StatusPageElementType;
+}): MonitorItem {
   return {
     uid: uid("monitor"),
     monitorId: raw.monitor_id,
@@ -98,7 +156,9 @@ function toMonitorItem(raw: { monitor_id: string; name: string; type: StatusPage
   };
 }
 
-function fromStatusPageElements(elements: StatusPageElementRawData[]): EditorElement[] {
+function fromStatusPageElements(
+  elements: StatusPageElementRawData[],
+): EditorElement[] {
   return (elements ?? []).map((element) => {
     if (element.monitor && element.monitor_id) {
       return {
@@ -124,7 +184,9 @@ function fromStatusPageElements(elements: StatusPageElementRawData[]): EditorEle
   });
 }
 
-function monitorItemToElement(item: MonitorItem): Extract<EditorElement, { kind: "monitor" }> {
+function monitorItemToElement(
+  item: MonitorItem,
+): Extract<EditorElement, { kind: "monitor" }> {
   return {
     uid: item.uid,
     kind: "monitor",
@@ -142,7 +204,10 @@ function containerKeyFromID(id: string): string | null {
   return isContainerID(id) ? id.slice("container:".length) : null;
 }
 
-function findContainerKey(elements: EditorElement[], id: string): string | null {
+function findContainerKey(
+  elements: EditorElement[],
+  id: string,
+): string | null {
   const containerKey = containerKeyFromID(id);
   if (containerKey) return containerKey;
 
@@ -156,15 +221,22 @@ function findContainerKey(elements: EditorElement[], id: string): string | null 
   return null;
 }
 
-function findItemKind(elements: EditorElement[], id: string): "group" | "monitor" | null {
+function findItemKind(
+  elements: EditorElement[],
+  id: string,
+): "group" | "monitor" | null {
   for (const element of elements) {
     if (element.uid === id) return element.kind;
-    if (element.kind === "group" && element.monitors.some((m) => m.uid === id)) return "monitor";
+    if (element.kind === "group" && element.monitors.some((m) => m.uid === id))
+      return "monitor";
   }
   return null;
 }
 
-function getOverContainerKey(elements: EditorElement[], overID: unknown): string | null {
+function getOverContainerKey(
+  elements: EditorElement[],
+  overID: unknown,
+): string | null {
   if (!overID) return null;
   return findContainerKey(elements, String(overID));
 }
@@ -177,14 +249,22 @@ function groupIndex(elements: EditorElement[], groupUID: string): number {
   return elements.findIndex((el) => el.kind === "group" && el.uid === groupUID);
 }
 
-function groupMonitorIndex(elements: EditorElement[], groupUID: string, monitorUID: string): number {
+function groupMonitorIndex(
+  elements: EditorElement[],
+  groupUID: string,
+  monitorUID: string,
+): number {
   const idx = groupIndex(elements, groupUID);
   if (idx === -1) return -1;
   const group = elements[idx] as Extract<EditorElement, { kind: "group" }>;
   return group.monitors.findIndex((m) => m.uid === monitorUID);
 }
 
-function getInsertionIndex(elements: EditorElement[], containerKey: string, overID: unknown): number {
+function getInsertionIndex(
+  elements: EditorElement[],
+  containerKey: string,
+  overID: unknown,
+): number {
   if (!overID || isContainerID(overID)) {
     if (containerKey === "root") return elements.length;
     const idx = groupIndex(elements, containerKey);
@@ -203,7 +283,10 @@ function getInsertionIndex(elements: EditorElement[], containerKey: string, over
   if (idx === -1) {
     const groupIdx = groupIndex(elements, containerKey);
     if (groupIdx === -1) return 0;
-    const group = elements[groupIdx] as Extract<EditorElement, { kind: "group" }>;
+    const group = elements[groupIdx] as Extract<
+      EditorElement,
+      { kind: "group" }
+    >;
     return group.monitors.length;
   }
   return idx;
@@ -263,7 +346,11 @@ function moveMonitorBetweenContainers(
   return next;
 }
 
-function reorderWithinRoot(elements: EditorElement[], activeID: string, overID: unknown): EditorElement[] {
+function reorderWithinRoot(
+  elements: EditorElement[],
+  activeID: string,
+  overID: unknown,
+): EditorElement[] {
   const oldIndex = rootIndex(elements, activeID);
   if (oldIndex === -1) return elements;
 
@@ -335,8 +422,6 @@ export default function StatusPageEditor({
   statusPage: StatusPageDetailItem;
   monitorOptions: MonitorListItem[];
 }) {
-  const [title, setTitle] = useState(() => statusPage.title);
-  const [slug, setSlug] = useState(() => statusPage.slug);
   const [elements, setElements] = useState<EditorElement[]>(() =>
     fromStatusPageElements(statusPage.elements),
   );
@@ -344,19 +429,53 @@ export default function StatusPageEditor({
   const [overContainerKey, setOverContainerKey] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const basicsForm = useForm<StatusPageBasicsValues>({
+    resolver: zodResolver(statusPageBasicsSchema),
+    defaultValues: {
+      title: statusPage.title,
+      slug: statusPage.slug,
+    },
+    mode: "onSubmit",
+  });
+
+  const title = basicsForm.watch("title");
+  const slug = basicsForm.watch("slug");
+
+  const [nameErrors, setNameErrors] = useState<Record<string, string>>({});
+
+  const setNameError = (uid: string, message: string | null) => {
+    setNameErrors((prev) => {
+      if (!message) {
+        if (!(uid in prev)) return prev;
+        const next = { ...prev };
+        delete next[uid];
+        return next;
+      }
+
+      if (prev[uid] === message) return prev;
+      return { ...prev, [uid]: message };
+    });
+  };
+
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<DropTarget | null>(null);
 
   const [confirmDeleteGroupOpen, setConfirmDeleteGroupOpen] = useState(false);
-  const [confirmDeleteGroupUid, setConfirmDeleteGroupUid] = useState<string | null>(null);
+  const [confirmDeleteGroupUid, setConfirmDeleteGroupUid] = useState<
+    string | null
+  >(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const rootItems = useMemo(() => elements.map((e) => e.uid), [elements]);
-  const { setNodeRef: setRootNodeRef } = useDroppable({ id: ROOT_CONTAINER_ID });
+  const { setNodeRef: setRootNodeRef } = useDroppable({
+    id: ROOT_CONTAINER_ID,
+  });
 
   const openMonitorPicker = (target: DropTarget) => {
     setPickerTarget(target);
@@ -391,15 +510,28 @@ export default function StatusPageEditor({
     setElements((prev) => {
       if (target.container === "root") {
         const next = [...prev];
-        next.splice(Math.max(0, Math.min(target.index, next.length)), 0, monitorItemToElement(item));
+        next.splice(
+          Math.max(0, Math.min(target.index, next.length)),
+          0,
+          monitorItemToElement(item),
+        );
         return next;
       }
 
-      const groupIndex = prev.findIndex((e) => e.kind === "group" && e.uid === target.groupUid);
+      const groupIndex = prev.findIndex(
+        (e) => e.kind === "group" && e.uid === target.groupUid,
+      );
       if (groupIndex === -1) return prev;
-      const group = prev[groupIndex] as Extract<EditorElement, { kind: "group" }>;
+      const group = prev[groupIndex] as Extract<
+        EditorElement,
+        { kind: "group" }
+      >;
       const monitors = [...group.monitors];
-      monitors.splice(Math.max(0, Math.min(target.index, monitors.length)), 0, item);
+      monitors.splice(
+        Math.max(0, Math.min(target.index, monitors.length)),
+        0,
+        item,
+      );
       const next = [...prev];
       next[groupIndex] = { ...group, monitors };
       return next;
@@ -417,8 +549,12 @@ export default function StatusPageEditor({
     setConfirmDeleteGroupUid(null);
     if (!groupUid) return;
 
+    setNameError(groupUid, null);
+
     setElements((prev) => {
-      const idx = prev.findIndex((e) => e.kind === "group" && e.uid === groupUid);
+      const idx = prev.findIndex(
+        (e) => e.kind === "group" && e.uid === groupUid,
+      );
       if (idx === -1) return prev;
       const group = prev[idx] as Extract<EditorElement, { kind: "group" }>;
       const ungrouped = group.monitors.map(monitorItemToElement);
@@ -429,12 +565,18 @@ export default function StatusPageEditor({
   };
 
   const deleteMonitorElement = (monitorUid: string) => {
-    setElements((prev) => prev.filter((e) => !(e.kind === "monitor" && e.uid === monitorUid)));
+    setNameError(monitorUid, null);
+    setElements((prev) =>
+      prev.filter((e) => !(e.kind === "monitor" && e.uid === monitorUid)),
+    );
   };
 
   const deleteGroupMonitor = (groupUid: string, monitorUid: string) => {
+    setNameError(monitorUid, null);
     setElements((prev) => {
-      const idx = prev.findIndex((e) => e.kind === "group" && e.uid === groupUid);
+      const idx = prev.findIndex(
+        (e) => e.kind === "group" && e.uid === groupUid,
+      );
       if (idx === -1) return prev;
       const group = prev[idx] as Extract<EditorElement, { kind: "group" }>;
       const nextMonitors = group.monitors.filter((m) => m.uid !== monitorUid);
@@ -444,36 +586,35 @@ export default function StatusPageEditor({
     });
   };
 
-  const save = async () => {
-    const trimmedTitle = title.trim();
-    const trimmedSlug = slug.trim();
-
-    if (!trimmedTitle) {
-      toast.error("Title is required.");
-      return;
-    }
-    if (!isValidSlug(trimmedSlug)) {
-      toast.error("Slug must be alphanumeric and at least 3 characters (no dashes).");
+  const save = basicsForm.handleSubmit(async (values) => {
+    const nextNameErrors = validateElementNames(elements);
+    if (Object.keys(nextNameErrors).length > 0) {
+      setNameErrors(nextNameErrors);
+      toast.error("Fix the element name errors before saving.");
       return;
     }
 
     setIsSaving(true);
     try {
       const res = await updateStatusPage(teamID, statusPage.id, {
-        title: trimmedTitle,
-        slug: trimmedSlug,
+        title: values.title.trim(),
+        slug: values.slug.trim(),
         elements: buildUpsertElements(elements),
       });
       if (res.data?.data) {
-        setTitle(res.data.data.status_page.title);
-        setSlug(res.data.data.status_page.slug);
+        basicsForm.reset({
+          title: res.data.data.status_page.title,
+          slug: res.data.data.status_page.slug,
+        });
         setElements(fromStatusPageElements(res.data.data.elements));
       }
       toast.success("Status page saved.");
     } catch (error) {
       if (error instanceof ApiError) {
         toast.error(
-          error.status >= 500 ? "Server error. Please try again later." : error.message,
+          error.status >= 500
+            ? "Server error. Please try again later."
+            : error.message,
         );
       } else {
         toast.error("Network error. Please try again.");
@@ -481,10 +622,13 @@ export default function StatusPageEditor({
     } finally {
       setIsSaving(false);
     }
-  };
+  }, () => {
+    toast.error("Fix the validation errors before saving.");
+  });
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
-  const publicUrl = apiBase ? `${apiBase}/status-pages/${slug.trim()}` : null;
+  const slugForUrl = slug?.trim() || statusPage.slug;
+  const publicUrl = apiBase ? `${apiBase}/status-pages/${slugForUrl}` : null;
   const activeOverlay = useMemo(() => {
     if (!activeID) return null;
     for (const el of elements) {
@@ -519,9 +663,7 @@ export default function StatusPageEditor({
     const overId = String(over.id);
     const overKind = findItemKind(elements, overId);
     const nextOverContainer =
-      overKind === "group"
-        ? overId
-        : getOverContainerKey(elements, over.id);
+      overKind === "group" ? overId : getOverContainerKey(elements, over.id);
 
     setOverContainerKey(nextOverContainer);
 
@@ -532,12 +674,18 @@ export default function StatusPageEditor({
       const toKey =
         overKind === "group"
           ? overId
-          : getOverContainerKey(prev, over.id) ?? nextOverContainer;
+          : (getOverContainerKey(prev, over.id) ?? nextOverContainer);
 
       if (!fromKey || !toKey) return prev;
       if (fromKey === toKey) return prev;
 
-      return moveMonitorBetweenContainers(prev, activeId, fromKey, toKey, over.id);
+      return moveMonitorBetweenContainers(
+        prev,
+        activeId,
+        fromKey,
+        toKey,
+        over.id,
+      );
     });
   };
 
@@ -567,7 +715,8 @@ export default function StatusPageEditor({
 
       // Groups can only be sorted on the root list.
       if (activeKind === "group") {
-        const effectiveOverID = overContainer === "root" ? overId : overContainer;
+        const effectiveOverID =
+          overContainer === "root" ? overId : overContainer;
         return reorderWithinRoot(prev, activeId, effectiveOverID);
       }
 
@@ -598,24 +747,29 @@ export default function StatusPageEditor({
     setOverContainerKey(null);
   };
 
-	  return (
-	    <div className="flex flex-col gap-4 pb-12">
-	      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-	        <div className="flex flex-col gap-1 min-w-0">
-	          <h1 className="text-xl font-semibold truncate">{title}</h1>
-	          <p className="text-sm text-muted-foreground truncate">/{slug}</p>
-	        </div>
+  return (
+    <div className="flex flex-col gap-4 pb-12">
+      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-1 min-w-0">
+          <h1 className="text-xl font-semibold truncate">{title}</h1>
+          <p className="text-sm text-muted-foreground truncate">/{slug}</p>
+        </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <Button variant="outline" onClick={() => addGroup()}>
             <Plus />
             <span className="sr-only sm:not-sr-only sm:inline">Add group</span>
           </Button>
-          <Button variant="outline" onClick={() => openMonitorPicker({ container: "root", index: elements.length })}>
+          <Button
+            variant="outline"
+            onClick={() =>
+              openMonitorPicker({ container: "root", index: elements.length })
+            }
+          >
             <Plus />
             <span className="sr-only sm:not-sr-only sm:inline">Add monitor</span>
           </Button>
-          <Button onClick={save} disabled={isSaving}>
+          <Button onClick={() => void save()} disabled={isSaving}>
             {isSaving ? (
               <>
                 <Spinner /> Saving…
@@ -632,49 +786,68 @@ export default function StatusPageEditor({
       {publicUrl ? (
         <div className="rounded-md border px-3 py-2 text-sm">
           Public URL:{" "}
-          <a href={publicUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4">
+          <a
+            href={publicUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-4"
+          >
             {publicUrl}
           </a>
         </div>
-	      ) : null}
+      ) : null}
 
-	      <Card>
-	        <CardHeader>
-	          <CardTitle>Basics</CardTitle>
-	          <CardDescription>Update the public title and slug (slug must be alphanumeric).</CardDescription>
-	        </CardHeader>
-	        <CardContent>
-	          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-	            <div className="flex flex-col gap-1.5">
-	              <div className="text-sm font-medium">Title</div>
-	              <Input
-	                value={title}
-	                onChange={(e) => setTitle(e.target.value)}
-	                placeholder="Kymarium Status"
-	                aria-label="Status page title"
-	              />
-	            </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Basics</CardTitle>
+          <CardDescription>
+            Update the public title and slug (slug must be alphanumeric).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <div className="text-sm font-medium">Title</div>
+              <Input
+                {...basicsForm.register("title")}
+                placeholder="Kymarium Status"
+                aria-label="Status page title"
+                aria-invalid={!!basicsForm.formState.errors.title}
+              />
+              {basicsForm.formState.errors.title?.message ? (
+                <div className="text-sm text-destructive">
+                  {basicsForm.formState.errors.title.message}
+                </div>
+              ) : null}
+            </div>
 
-	            <div className="flex flex-col gap-1.5">
-	              <div className="text-sm font-medium">Slug</div>
-	              <Input
-	                value={slug}
-	                onChange={(e) => setSlug(e.target.value)}
-	                placeholder="kymariumstatus"
-	                aria-invalid={slug.trim().length > 0 && !isValidSlug(slug.trim())}
-	                aria-label="Status page slug"
-	              />
-	              <div className="text-xs text-muted-foreground">No dashes; only a-z, A-Z, 0-9.</div>
-	            </div>
-	          </div>
-	        </CardContent>
-	      </Card>
+            <div className="flex flex-col gap-1.5">
+              <div className="text-sm font-medium">Slug</div>
+              <Input
+                {...basicsForm.register("slug")}
+                placeholder="kymariumstatus"
+                aria-label="Status page slug"
+                aria-invalid={!!basicsForm.formState.errors.slug}
+              />
+              <div className="text-xs text-muted-foreground">
+                No dashes; only a-z, A-Z, 0-9.
+              </div>
+              {basicsForm.formState.errors.slug?.message ? (
+                <div className="text-sm text-destructive">
+                  {basicsForm.formState.errors.slug.message}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-	      <div className="flex flex-col gap-2">
-	        <div className="flex flex-col gap-0.5">
-	          <h2 className="text-sm font-medium">Layout</h2>
-	          <p className="text-sm text-muted-foreground">
-	            Top-level order must be consecutive. Group contents are ordered independently.
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-sm font-medium">Layout</h2>
+          <p className="text-sm text-muted-foreground">
+            Top-level order must be consecutive. Group contents are ordered
+            independently.
           </p>
         </div>
 
@@ -685,7 +858,10 @@ export default function StatusPageEditor({
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={rootItems} strategy={verticalListSortingStrategy}>
+          <SortableContext
+            items={rootItems}
+            strategy={verticalListSortingStrategy}
+          >
             <div ref={setRootNodeRef} className="flex flex-col gap-2">
               {elements.length === 0 ? (
                 <div className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
@@ -693,88 +869,146 @@ export default function StatusPageEditor({
                 </div>
               ) : null}
 
-              {elements.map((element) => {
-                if (element.kind === "monitor") {
+                {elements.map((element) => {
+                  if (element.kind === "monitor") {
+                    return (
+                      <SortableRootMonitor
+                        key={element.uid}
+                        element={element}
+                        onChangeName={(nextName) => {
+                          setElements((prev) =>
+                            prev.map((e) =>
+                              e.uid === element.uid && e.kind === "monitor"
+                                ? { ...e, name: nextName }
+                                : e,
+                            ),
+                          );
+                          if (nextName.trim()) setNameError(element.uid, null);
+                        }}
+                        onBlurName={() =>
+                          setNameError(
+                            element.uid,
+                            element.name.trim()
+                              ? null
+                              : "Monitor name is required.",
+                          )
+                        }
+                        onChangeType={(nextType) =>
+                          setElements((prev) =>
+                            prev.map((e) =>
+                              e.uid === element.uid && e.kind === "monitor"
+                                ? { ...e, type: nextType }
+                                : e,
+                            ),
+                          )
+                        }
+                        onDelete={() => deleteMonitorElement(element.uid)}
+                        nameError={nameErrors[element.uid]}
+                      />
+                    );
+                  }
+
                   return (
-                    <SortableRootMonitor
-                      key={element.uid}
-                      element={element}
-                      onChangeName={(nextName) =>
-                        setElements((prev) =>
-                          prev.map((e) =>
-                            e.uid === element.uid && e.kind === "monitor" ? { ...e, name: nextName } : e,
-                          ),
+                      <SortableGroup
+                        key={element.uid}
+                        group={element}
+                        overContainerKey={overContainerKey}
+                        onChangeName={(nextName) => {
+                          setElements((prev) =>
+                            prev.map((e) =>
+                              e.uid === element.uid && e.kind === "group"
+                                ? { ...e, name: nextName }
+                                : e,
+                            ),
+                          );
+                          if (nextName.trim()) setNameError(element.uid, null);
+                        }}
+                      onBlurName={() =>
+                        setNameError(
+                          element.uid,
+                          element.name.trim()
+                            ? null
+                            : "Group name is required.",
                         )
                       }
                       onChangeType={(nextType) =>
                         setElements((prev) =>
                           prev.map((e) =>
-                            e.uid === element.uid && e.kind === "monitor" ? { ...e, type: nextType } : e,
+                            e.uid === element.uid && e.kind === "group"
+                              ? { ...e, type: nextType }
+                              : e,
                           ),
                         )
                       }
-                      onDelete={() => deleteMonitorElement(element.uid)}
+                      onAddMonitor={() =>
+                        openMonitorPicker({
+                          container: "group",
+                          groupUid: element.uid,
+                          index: element.monitors.length,
+                        })
+                      }
+                      onDelete={() => requestDeleteGroup(element.uid)}
+                      onDeleteMonitor={(monitorUid) =>
+                        deleteGroupMonitor(element.uid, monitorUid)
+                      }
+                        onChangeMonitorName={(monitorUid, nextName) => {
+                          setElements((prev) =>
+                            prev.map((e) => {
+                              if (e.kind !== "group" || e.uid !== element.uid)
+                                return e;
+                              return {
+                                ...e,
+                                monitors: e.monitors.map((m) =>
+                                  m.uid === monitorUid
+                                    ? { ...m, name: nextName }
+                                    : m,
+                                ),
+                              };
+                            }),
+                          );
+                          if (nextName.trim()) setNameError(monitorUid, null);
+                        }}
+                      onBlurMonitorName={(monitorUid, currentName) =>
+                        setNameError(
+                          monitorUid,
+                          currentName.trim()
+                            ? null
+                            : "Monitor name is required.",
+                        )
+                      }
+                      onChangeMonitorType={(monitorUid, nextType) =>
+                        setElements((prev) =>
+                          prev.map((e) => {
+                            if (e.kind !== "group" || e.uid !== element.uid)
+                              return e;
+                            return {
+                              ...e,
+                              monitors: e.monitors.map((m) =>
+                                m.uid === monitorUid
+                                  ? { ...m, type: nextType }
+                                  : m,
+                              ),
+                            };
+                          }),
+                        )
+                      }
+                      groupNameError={nameErrors[element.uid]}
+                      monitorNameErrors={nameErrors}
                     />
                   );
-                }
-
-                return (
-                  <SortableGroup
-                    key={element.uid}
-                    group={element}
-                    overContainerKey={overContainerKey}
-                    onChangeName={(nextName) =>
-                      setElements((prev) =>
-                        prev.map((e) => (e.uid === element.uid && e.kind === "group" ? { ...e, name: nextName } : e)),
-                      )
-                    }
-                    onChangeType={(nextType) =>
-                      setElements((prev) =>
-                        prev.map((e) =>
-                          e.uid === element.uid && e.kind === "group" ? { ...e, type: nextType } : e,
-                        ),
-                      )
-                    }
-                    onAddMonitor={() =>
-                      openMonitorPicker({
-                        container: "group",
-                        groupUid: element.uid,
-                        index: element.monitors.length,
-                      })
-                    }
-                    onDelete={() => requestDeleteGroup(element.uid)}
-                    onDeleteMonitor={(monitorUid) => deleteGroupMonitor(element.uid, monitorUid)}
-                    onChangeMonitorName={(monitorUid, nextName) =>
-                      setElements((prev) =>
-                        prev.map((e) => {
-                          if (e.kind !== "group" || e.uid !== element.uid) return e;
-                          return {
-                            ...e,
-                            monitors: e.monitors.map((m) => (m.uid === monitorUid ? { ...m, name: nextName } : m)),
-                          };
-                        }),
-                      )
-                    }
-                    onChangeMonitorType={(monitorUid, nextType) =>
-                      setElements((prev) =>
-                        prev.map((e) => {
-                          if (e.kind !== "group" || e.uid !== element.uid) return e;
-                          return {
-                            ...e,
-                            monitors: e.monitors.map((m) => (m.uid === monitorUid ? { ...m, type: nextType } : m)),
-                          };
-                        }),
-                      )
-                    }
-                  />
-                );
-              })}
+                })}
             </div>
           </SortableContext>
 
           <DragOverlay>
             {activeOverlay ? (
-              <OverlayItem label={activeOverlay.kind === "group" ? activeOverlay.name : activeOverlay.name} />
+              <OverlayItem
+                label={
+                  activeOverlay.kind === "group"
+                    ? activeOverlay.name
+                    : activeOverlay.name
+                }
+              />
             ) : null}
           </DragOverlay>
         </DndContext>
@@ -794,16 +1028,23 @@ export default function StatusPageEditor({
         }}
       />
 
-      <Dialog open={confirmDeleteGroupOpen} onOpenChange={setConfirmDeleteGroupOpen}>
+      <Dialog
+        open={confirmDeleteGroupOpen}
+        onOpenChange={setConfirmDeleteGroupOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete group?</DialogTitle>
             <DialogDescription>
-              This will remove the group container and ungroup its monitors (they will become top-level items).
+              This will remove the group container and ungroup its monitors
+              (they will become top-level items).
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDeleteGroupOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDeleteGroupOpen(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={() => deleteGroup()}>
@@ -858,8 +1099,12 @@ function MonitorPickerDialog({
                         onPick(monitor);
                       }}
                     >
-                      <span className="min-w-0 flex-1 truncate">{monitor.name}</span>
-                      <span className="text-xs text-muted-foreground">{monitor.type}</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        {monitor.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {monitor.type}
+                      </span>
                     </CommandItem>
                   );
                 })}
@@ -873,7 +1118,11 @@ function MonitorPickerDialog({
 }
 
 function OverlayItem({ label }: { label: string }) {
-  return <div className="rounded-md border bg-card px-3 py-2 shadow-sm text-sm">{label}</div>;
+  return (
+    <div className="rounded-md border bg-card px-3 py-2 shadow-sm text-sm">
+      {label}
+    </div>
+  );
 }
 
 function ElementTypeSelect({
@@ -906,8 +1155,15 @@ function ElementTypeSelect({
   const SelectedIcon = selected?.Icon;
 
   return (
-    <Select value={value} onValueChange={(v) => onChange(v as StatusPageElementType)}>
-      <SelectTrigger size="sm" className="w-14 px-2 sm:w-55 sm:px-3" aria-label={ariaLabel}>
+    <Select
+      value={value}
+      onValueChange={(v) => onChange(v as StatusPageElementType)}
+    >
+      <SelectTrigger
+        size="sm"
+        className="w-14 px-2 sm:w-[220px] sm:px-3"
+        aria-label={ariaLabel}
+      >
         <span className="flex items-center gap-2">
           {SelectedIcon ? <SelectedIcon className="size-4" /> : null}
           <span className="hidden sm:inline">{selected?.label ?? ""}</span>
@@ -954,15 +1210,27 @@ function SortableHandle({
 function SortableRootMonitor({
   element,
   onChangeName,
+  onBlurName,
   onChangeType,
   onDelete,
+  nameError,
 }: {
   element: Extract<EditorElement, { kind: "monitor" }>;
   onChangeName: (name: string) => void;
+  onBlurName: () => void;
   onChangeType: (type: StatusPageElementType) => void;
   onDelete: () => void;
+  nameError?: string;
 }) {
-  const { setNodeRef, attributes, listeners, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: element.uid,
     data: { kind: "monitor", container: "root" },
   });
@@ -976,7 +1244,10 @@ function SortableRootMonitor({
     <div
       ref={setNodeRef}
       style={style}
-      className={cn("rounded-md border bg-card px-3 py-2", isDragging && "opacity-60")}
+      className={cn(
+        "rounded-md border bg-card px-3 py-2",
+        isDragging && "opacity-60",
+      )}
     >
       <div className="flex items-center gap-2">
         <SortableHandle
@@ -989,16 +1260,27 @@ function SortableRootMonitor({
           onChange={(e) => onChangeName(e.target.value)}
           className="flex-1"
           aria-label="Monitor name"
+          onBlur={onBlurName}
+          aria-invalid={!!nameError}
         />
         <ElementTypeSelect
           value={element.type}
           onChange={onChangeType}
           ariaLabel="Monitor element type"
         />
-        <Button type="button" variant="ghost" size="icon" aria-label="Remove monitor" onClick={onDelete}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Remove monitor"
+          onClick={onDelete}
+        >
           <Trash2 size={16} />
         </Button>
       </div>
+      {nameError ? (
+        <div className="mt-1 text-sm text-destructive">{nameError}</div>
+      ) : null}
     </div>
   );
 }
@@ -1007,24 +1289,43 @@ function SortableGroup({
   group,
   overContainerKey,
   onChangeName,
+  onBlurName,
   onChangeType,
   onAddMonitor,
   onDelete,
   onDeleteMonitor,
   onChangeMonitorName,
+  onBlurMonitorName,
   onChangeMonitorType,
+  groupNameError,
+  monitorNameErrors,
 }: {
   group: Extract<EditorElement, { kind: "group" }>;
   overContainerKey: string | null;
   onChangeName: (name: string) => void;
+  onBlurName: () => void;
   onChangeType: (type: StatusPageElementType) => void;
   onAddMonitor: () => void;
   onDelete: () => void;
   onDeleteMonitor: (monitorUid: string) => void;
   onChangeMonitorName: (monitorUid: string, name: string) => void;
-  onChangeMonitorType: (monitorUid: string, type: StatusPageElementType) => void;
+  onBlurMonitorName: (monitorUid: string, currentName: string) => void;
+  onChangeMonitorType: (
+    monitorUid: string,
+    type: StatusPageElementType,
+  ) => void;
+  groupNameError?: string;
+  monitorNameErrors: Record<string, string>;
 }) {
-  const { setNodeRef, attributes, listeners, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: group.uid,
     data: { kind: "group", container: "root" },
   });
@@ -1036,11 +1337,17 @@ function SortableGroup({
 
   const groupContainerID = containerID(group.uid);
   const monitorItems = group.monitors.map((m) => m.uid);
-  const { setNodeRef: setMonitorsNodeRef, isOver } = useDroppable({ id: groupContainerID });
+  const { setNodeRef: setMonitorsNodeRef, isOver } = useDroppable({
+    id: groupContainerID,
+  });
   const isHighlighted = isOver || overContainerKey === group.uid;
 
   return (
-    <div ref={setNodeRef} style={style} className={cn("rounded-md border bg-card", isDragging && "opacity-60")}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn("rounded-md border bg-card", isDragging && "opacity-60")}
+    >
       <div className="flex items-center gap-2 px-3 py-2">
         <SortableHandle
           setActivatorNodeRef={setActivatorNodeRef}
@@ -1052,6 +1359,8 @@ function SortableGroup({
           onChange={(e) => onChangeName(e.target.value)}
           className="flex-1"
           aria-label="Group name"
+          onBlur={onBlurName}
+          aria-invalid={!!groupNameError}
         />
         <ElementTypeSelect
           value={group.type}
@@ -1059,26 +1368,47 @@ function SortableGroup({
           ariaLabel="Group element type"
         />
         <div className="flex items-center gap-1 shrink-0">
-          <Button type="button" variant="outline" size="sm" onClick={onAddMonitor} aria-label="Add monitor to group">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onAddMonitor}
+            aria-label="Add monitor to group"
+          >
             <Plus />
             <span className="sr-only sm:not-sr-only sm:inline">Add</span>
           </Button>
-          <Button type="button" variant="ghost" size="icon" aria-label="Delete group" onClick={onDelete}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Delete group"
+            onClick={onDelete}
+          >
             <Trash2 size={16} />
           </Button>
         </div>
       </div>
 
+      {groupNameError ? (
+        <div className="px-3 pb-2 text-sm text-destructive">{groupNameError}</div>
+      ) : null}
+
       <div className="border-t px-3 py-2">
         <div className="text-sm text-muted-foreground mb-2">Monitors</div>
 
-        <SortableContext items={monitorItems} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={monitorItems}
+          strategy={verticalListSortingStrategy}
+        >
           <div
             ref={setMonitorsNodeRef}
             className={cn(
               "flex flex-col gap-2 rounded-md p-2 transition-colors min-h-14",
               "border border-dashed",
-              isHighlighted ? "border-primary bg-primary/5" : "border-transparent",
+              isHighlighted
+                ? "border-primary bg-primary/5"
+                : "border-transparent",
             )}
           >
             {group.monitors.length === 0 ? (
@@ -1093,8 +1423,10 @@ function SortableGroup({
                 monitor={monitor}
                 groupUid={group.uid}
                 onChangeName={(name) => onChangeMonitorName(monitor.uid, name)}
+                onBlurName={() => onBlurMonitorName(monitor.uid, monitor.name)}
                 onChangeType={(type) => onChangeMonitorType(monitor.uid, type)}
                 onDelete={() => onDeleteMonitor(monitor.uid)}
+                nameError={monitorNameErrors[monitor.uid]}
               />
             ))}
           </div>
@@ -1108,16 +1440,28 @@ function SortableGroupMonitor({
   monitor,
   groupUid,
   onChangeName,
+  onBlurName,
   onChangeType,
   onDelete,
+  nameError,
 }: {
   monitor: MonitorItem;
   groupUid: string;
   onChangeName: (name: string) => void;
+  onBlurName: () => void;
   onChangeType: (type: StatusPageElementType) => void;
   onDelete: () => void;
+  nameError?: string;
 }) {
-  const { setNodeRef, attributes, listeners, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: monitor.uid,
     data: { kind: "monitor", container: groupUid },
   });
@@ -1131,7 +1475,10 @@ function SortableGroupMonitor({
     <div
       ref={setNodeRef}
       style={style}
-      className={cn("rounded-md border bg-background px-3 py-2", isDragging && "opacity-60")}
+      className={cn(
+        "rounded-md border bg-background px-3 py-2",
+        isDragging && "opacity-60",
+      )}
     >
       <div className="flex items-center gap-2">
         <SortableHandle
@@ -1144,16 +1491,27 @@ function SortableGroupMonitor({
           onChange={(e) => onChangeName(e.target.value)}
           className="flex-1"
           aria-label="Monitor name"
+          onBlur={onBlurName}
+          aria-invalid={!!nameError}
         />
         <ElementTypeSelect
           value={monitor.type}
           onChange={onChangeType}
           ariaLabel="Monitor element type"
         />
-        <Button type="button" variant="ghost" size="icon" aria-label="Remove monitor" onClick={onDelete}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Remove monitor"
+          onClick={onDelete}
+        >
           <Trash2 size={16} />
         </Button>
       </div>
+      {nameError ? (
+        <div className="mt-1 text-sm text-destructive">{nameError}</div>
+      ) : null}
     </div>
   );
 }
