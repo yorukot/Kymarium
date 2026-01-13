@@ -84,7 +84,7 @@ export default function NewIncidentForm({
   const toggleMonitor = (monitorID: string) => {
     const current = form.getValues("monitorIds");
     const next = current.includes(monitorID)
-      ? current.filter((id) => id !== monitorID)
+      ? current.filter((id: string) => id !== monitorID)
       : [...current, monitorID];
 
     form.setValue("monitorIds", next, { shouldDirty: true, shouldValidate: true });
@@ -96,8 +96,8 @@ export default function NewIncidentForm({
     const normalized = {
       ...values,
       monitorIds: uniqueStrings(values.monitorIds),
-      title: values.title.trim() || undefined,
-      message: values.message.trim() || undefined,
+      title: values.title?.trim() || undefined,
+      message: values.message?.trim() || undefined,
     };
 
     const parsed = createIncidentPayloadSchema.safeParse(normalized);

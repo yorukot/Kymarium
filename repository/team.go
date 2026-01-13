@@ -137,6 +137,33 @@ func (r *PGRepository) DeleteTeamMemberByUserID(ctx context.Context, tx pgx.Tx, 
 	return nil
 }
 
+// UpdateTeamMemberRoleByUserID updates a team member's role.
+func (r *PGRepository) UpdateTeamMemberRoleByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64, role models.MemberRole, updatedAt time.Time) (*models.TeamMember, error) {
+	query := `
+		UPDATE team_members
+		SET role = $1, updated_at = $2
+		WHERE team_id = $3 AND user_id = $4
+		RETURNING id, team_id, user_id, role, updated_at, created_at
+	`
+
+	var member models.TeamMember
+	if err := tx.QueryRow(ctx, query, role, updatedAt, teamID, userID).Scan(
+		&member.ID,
+		&member.TeamID,
+		&member.UserID,
+		&member.Role,
+		&member.UpdatedAt,
+		&member.CreatedAt,
+	); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &member, nil
+}
+
 // UpdateTeamName updates a team's name.
 func (r *PGRepository) UpdateTeamName(ctx context.Context, tx pgx.Tx, teamID int64, name string, updatedAt time.Time) (*models.Team, error) {
 	query := `

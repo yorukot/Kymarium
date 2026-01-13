@@ -18,5 +18,35 @@ export function createTeam(payload: TeamPayload) {
     method: "POST",
     body: payload,
     defaultError: "Create team failed",
+    redirectOn401: true,
+  });
+}
+
+type MessageResponse = {
+  message?: string;
+};
+
+export function updateTeam(teamID: string, payload: TeamPayload) {
+  return apiRequest<{ message?: string; data?: TeamResponse }>(`/api/teams/${teamID}`, {
+    method: "PUT",
+    body: payload,
+    defaultError: "Update team failed",
+    redirectOn401: true,
+  });
+}
+
+export function deleteTeam(teamID: string) {
+  return apiRequest<MessageResponse>(`/api/teams/${teamID}`, {
+    method: "DELETE",
+    defaultError: "Delete team failed",
+    redirectOn401: true,
+  });
+}
+
+export function leaveTeam(teamID: string) {
+  return apiRequest<MessageResponse>(`/api/teams/${teamID}/leave`, {
+    method: "POST",
+    defaultError: "Leave team failed",
+    redirectOn401: true,
   });
 }

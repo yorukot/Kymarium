@@ -61,6 +61,7 @@ type Repository interface {
 	CreateTeam(ctx context.Context, tx pgx.Tx, team models.Team) error
 	CreateTeamMember(ctx context.Context, tx pgx.Tx, member models.TeamMember) error
 	DeleteTeamMemberByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64) error
+	UpdateTeamMemberRoleByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64, role models.MemberRole, updatedAt time.Time) (*models.TeamMember, error)
 	UpdateTeamName(ctx context.Context, tx pgx.Tx, teamID int64, name string, updatedAt time.Time) (*models.Team, error)
 	DeleteTeam(ctx context.Context, tx pgx.Tx, teamID int64) error
 

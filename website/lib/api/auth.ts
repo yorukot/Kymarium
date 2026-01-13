@@ -4,6 +4,7 @@ import type { LoginPayload, SignupPayload } from "@/lib/schemas/auth";
 export type SignupResponse = { message: string };
 export type ResendVerifyResponse = { message: string };
 export type LoginResponse = { message: string };
+export type LogoutResponse = { message: string };
 
 export function signup(payload: SignupPayload) {
   return apiRequest<SignupResponse>("/api/auth/register", {
@@ -26,5 +27,12 @@ export function login(payload: LoginPayload) {
     method: "POST",
     body: payload,
     defaultError: "Login failed",
+  });
+}
+
+export function logout() {
+  return apiRequest<LogoutResponse>("/api/auth/logout", {
+    method: "POST",
+    defaultError: "Logout failed",
   });
 }

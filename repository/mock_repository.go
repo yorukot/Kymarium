@@ -314,6 +314,13 @@ func (m *MockRepository) DeleteTeamMemberByUserID(ctx context.Context, tx pgx.Tx
 	return args.Error(0)
 }
 
+// UpdateTeamMemberRoleByUserID mocks Repository.UpdateTeamMemberRoleByUserID.
+func (m *MockRepository) UpdateTeamMemberRoleByUserID(ctx context.Context, tx pgx.Tx, teamID, userID int64, role models.MemberRole, updatedAt time.Time) (*models.TeamMember, error) {
+	args := m.Called(ctx, tx, teamID, userID, role, updatedAt)
+	member, _ := args.Get(0).(*models.TeamMember)
+	return member, args.Error(1)
+}
+
 // UpdateTeamName mocks Repository.UpdateTeamName.
 func (m *MockRepository) UpdateTeamName(ctx context.Context, tx pgx.Tx, teamID int64, name string, updatedAt time.Time) (*models.Team, error) {
 	args := m.Called(ctx, tx, teamID, name, updatedAt)

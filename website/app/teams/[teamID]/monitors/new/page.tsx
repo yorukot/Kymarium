@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { buildCookieHeader } from "@/lib/api/cookies";
 import { Region } from "@/lib/schemas/region";
 import { parseRegions } from "@/lib/parsers/regions";
-import { Notification, NotificationRawData } from "@/lib/schemas/notification";
+import type { Notification, NotificationRawData } from "@/lib/schemas/notification";
 import { parseNotifications } from "@/lib/parsers/notifications";
 import NewMonitorForm from "@/components/monitor/new/new-monitor";
 

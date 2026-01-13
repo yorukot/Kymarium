@@ -15,6 +15,8 @@ const LABELS: Record<string, string> = {
   monitors: "Monitors",
   incidents: "Incidents",
   notifications: "Notifications",
+  settings: "Settings",
+  account: "Account",
   new: "New",
   view: "View",
   edit: "Edit",

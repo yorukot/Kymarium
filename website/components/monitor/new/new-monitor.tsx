@@ -40,7 +40,6 @@ import {
 } from "@/lib/schemas/monitor";
 import HttpMonitorSettings from "@/components/monitor/new/http";
 import PingMonitorSettings from "@/components/monitor/new/ping";
-import { SiGmail, SiSlack, SiDiscord, SiTelegram } from "react-icons/si";
 import {
   Select,
   SelectContent,
@@ -60,18 +59,13 @@ import { createMonitor, updateMonitor } from "@/lib/api/monitor";
 import { ApiError } from "@/lib/api/client";
 import { applyServerFieldErrors } from "@/lib/api/error";
 import { Spinner } from "@/components/ui/spinner";
-import { useRouter } from "next/navigation";
-import { IconType } from "react-icons/lib";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useEffect, useMemo } from "react";
 import { useTeamEntities } from "@/components/context/team-entities-context";
-
-const NOTIFICATION_TYPE_ICONS: Partial<Record<NotificationType, IconType>> = {
-  email: SiGmail,
-  slack: SiSlack,
-  discord: SiDiscord,
-  telegram: SiTelegram,
-};
+import Link from "next/link";
+import { getNotificationTypeMeta } from "@/lib/parsers/notification-meta";
+import { notificationTypeValues } from "@/lib/schemas/notification";
 
 function BasicSettings({
   regions,
@@ -82,6 +76,7 @@ function BasicSettings({
   notificationOptions: Notification[];
   isEdit: boolean;
 }) {
+  const { teamID } = useParams<{ teamID: string }>();
   const {
     register,
     setValue,
@@ -230,9 +225,15 @@ function BasicSettings({
             <Field>
               <FieldTitle className="flex items-center justify-between">
                 Notifications
-                <Button variant="outline" size="sm">
-                  Create new notifications <ExternalLink />
-                </Button>
+                <Link
+                  href={`/teams/${teamID}/notifications`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Button variant="outline" size="sm">
+                    Create new notifications <ExternalLink />
+                  </Button>
+                </Link>
               </FieldTitle>
               <FieldDescription>
                 Optional: select channels to notify when incidents occur.
@@ -245,9 +246,19 @@ function BasicSettings({
               ) : (
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   {notificationOptions.map((option) => {
-                    const Icon =
-                      NOTIFICATION_TYPE_ICONS[option.type as NotificationType];
                     const displayName = option.name?.trim() || option.typeLabel;
+                    const canShowMeta = notificationTypeValues.includes(
+                      option.type as NotificationType,
+                    );
+                    const meta = canShowMeta
+                      ? getNotificationTypeMeta(option.type as NotificationType)
+                      : null;
+                    const Icon = meta?.Icon;
+                    const subtitleParts = [
+                      option.name?.trim() ? option.typeLabel : null,
+                      option.detail ?? null,
+                    ].filter(Boolean);
+                    const subtitle = subtitleParts.join(" · ");
                     return (
                       <label
                         key={option.id}
@@ -269,9 +280,9 @@ function BasicSettings({
                           </span>
                           <div className="flex flex-col leading-tight">
                             <span className="font-medium">{displayName}</span>
-                            {option.name?.trim() ? (
+                            {subtitle ? (
                               <span className="text-xs text-muted-foreground">
-                                {option.typeLabel}
+                                {subtitle}
                               </span>
                             ) : null}
                           </div>
