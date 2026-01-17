@@ -22,6 +22,9 @@ export default function DeleteNotificationAlertDialog({
   teamID,
   notificationID,
   notificationName,
+  open: controlledOpen,
+  onOpenChange,
+  showDefaultTrigger = true,
   disabled,
   onDeleted,
   buttonClassName,
@@ -30,12 +33,21 @@ export default function DeleteNotificationAlertDialog({
   teamID: string;
   notificationID: string;
   notificationName: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showDefaultTrigger?: boolean;
   disabled?: boolean;
   onDeleted: () => void;
   buttonClassName?: string;
   trigger?: ReactElement;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = (nextOpen: boolean) => {
+    if (!isControlled) setUncontrolledOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  };
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -79,7 +91,8 @@ export default function DeleteNotificationAlertDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {triggerNode ?? (
+      {triggerNode ??
+        (showDefaultTrigger ? (
         <Button
           type="button"
           variant="destructive"
@@ -90,7 +103,7 @@ export default function DeleteNotificationAlertDialog({
           {deleting ? <Spinner /> : <Trash />}
           Delete
         </Button>
-      )}
+        ) : null)}
 
       <DialogContent showCloseButton={!deleting}>
         <DialogHeader>

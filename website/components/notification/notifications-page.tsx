@@ -124,6 +124,7 @@ function NotificationCard({
     notification.type as NotificationType,
   );
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const meta = canEdit
     ? getNotificationTypeMeta(notification.type as NotificationType)
     : null;
@@ -197,18 +198,13 @@ function NotificationCard({
 
                   <DropdownMenuSeparator />
 
-                  <DeleteNotificationAlertDialog
-                    teamID={teamID}
-                    notificationID={notification.id}
-                    notificationName={displayName}
-                    onDeleted={onChanged}
-                    trigger={
-                      <DropdownMenuItem variant="destructive">
-                        <Trash />
-                        Delete
-                      </DropdownMenuItem>
-                    }
-                  />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onSelect={() => setDeleteOpen(true)}
+                  >
+                    <Trash />
+                    Delete
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -225,6 +221,16 @@ function NotificationCard({
             onOpenChange={setEditOpen}
           />
         ) : null}
+
+        <DeleteNotificationAlertDialog
+          teamID={teamID}
+          notificationID={notification.id}
+          notificationName={displayName}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          showDefaultTrigger={false}
+          onDeleted={onChanged}
+        />
       </CardContent>
     </Card>
   );

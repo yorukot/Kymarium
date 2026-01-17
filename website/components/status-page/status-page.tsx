@@ -44,7 +44,11 @@ export default function StatusPageList({
                   className="flex-none shrink-0"
                   aria-label="Status page slug"
                 />
-                <span className="min-w-0 flex-1 truncate">/{page.slug}</span>
+                <Link href={`/s/${page.slug}`}>
+                  <span className="min-w-0 flex-1 truncate">
+                    /s/{page.slug}
+                  </span>
+                </Link>
               </div>
             </div>
 
@@ -86,4 +90,3 @@ export default function StatusPageList({
     </>
   );
 }
-
