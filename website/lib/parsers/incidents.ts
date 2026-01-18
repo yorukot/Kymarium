@@ -12,6 +12,7 @@ export function parseIncident(raw: IncidentRawData): IncidentListItem {
     title: raw.title ?? undefined,
     status: raw.status,
     severity: raw.severity,
+    isPublic: raw.is_public,
     startedAt: raw.started_at,
     resolvedAt: raw.resolved_at ?? undefined,
   };

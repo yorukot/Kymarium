@@ -48,8 +48,8 @@ type publicStatusPageElement struct {
 
 type publicIncidentResponse struct {
 	models.Incident
-	Timeline  []models.EventTimeline `json:"timeline"`
-	MonitorID string                 `json:"monitor_id"`
+	Timeline   []models.EventTimeline `json:"timeline"`
+	MonitorIDs []string               `json:"monitor_id"`
 }
 
 type publicStatusPageResponse struct {
@@ -133,13 +133,19 @@ func (h *Handler) GetPublicStatusPage(c echo.Context) error {
 	incidentIDs := make([]int64, 0, len(incidents))
 	incidentResponses := make([]publicIncidentResponse, 0, len(incidents))
 	for _, incident := range incidents {
-		if incident.Status != models.IncidentStatusResolved {
-			openPublicIncident[incident.MonitorID] = true
-		}
 		incidentIDs = append(incidentIDs, incident.ID)
+
+		monitorIDs := make([]string, 0, len(incident.MonitorIDs))
+		for _, monitorID := range incident.MonitorIDs {
+			monitorIDs = append(monitorIDs, formatID(monitorID))
+			if incident.Status != models.IncidentStatusResolved {
+				openPublicIncident[monitorID] = true
+			}
+		}
+
 		incidentResponses = append(incidentResponses, publicIncidentResponse{
-			Incident:  incident.Incident,
-			MonitorID: formatID(incident.MonitorID),
+			Incident:   incident.Incident,
+			MonitorIDs: monitorIDs,
 		})
 	}
 

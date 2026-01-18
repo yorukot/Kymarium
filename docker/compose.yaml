@@ -2,91 +2,46 @@ services:
   timescale:
     image: timescale/timescaledb:latest-pg17
     container_name: kymarium-timescale
-    env_file:
-      - ../.env
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-kymarium}
+      POSTGRES_USER: ${DB_USER:-kymarium}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kymarium-this-is-a-really-long-password}
     ports:
       - "5432:5432"
     volumes:
       - timescale_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly
     container_name: kymarium-dragonfly
     command: ["--default_lua_flags=allow-undeclared-keys"]
-    env_file:
-      - ../.env
     environment:
-      - DFLY_requirepass=${REDIS_PASSWORD}
+      - DFLY_requirepass=${REDIS_PASSWORD:-kymarium-dragonfly-password}
     ports:
       - "6379:6379"
     volumes:
       - dragonfly_data:/data
 
-  api:
+  backend:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.api
-    env_file:
-      - ../.env
+      dockerfile: docker/Dockerfile
+    container_name: kymarium-backend
+    depends_on:
+      - timescale
+      - dragonfly
     ports:
-      - "${APP_PORT:-8000}:8000"
-    depends_on:
-      timescale:
-        condition: service_healthy
-      dragonfly:
-        condition: service_started
-    restart: unless-stopped
+      - "8000:8000"
+    command: ["/app/kymarium"]
 
-  worker:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.worker
-    env_file:
-      - ../.env
-    depends_on:
-      timescale:
-        condition: service_healthy
-      dragonfly:
-        condition: service_started
-    restart: unless-stopped
-
-  schedular:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.schedular
-    env_file:
-      - ../.env
-    depends_on:
-      timescale:
-        condition: service_healthy
-      dragonfly:
-        condition: service_started
-    restart: unless-stopped
-
-  web:
+  website:
     build:
       context: ..
       dockerfile: docker/Dockerfile.web
-      args:
-        PUBLIC_API_BASE: ${PUBLIC_API_BASE:-http://localhost:8000/api}
-    environment:
-      PUBLIC_API_BASE: ${PUBLIC_API_BASE:-http://localhost:8000/api}
-      HOST: 0.0.0.0
-      PORT: 3000
-    ports:
-      - "${WEB_PORT:-3000}:3000"
+    container_name: kymarium-website
     depends_on:
-      - api
-    restart: unless-stopped
+      - backend
+    ports:
+      - "3000:3000"
 
 volumes:
   timescale_data:

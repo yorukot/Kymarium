@@ -67,7 +67,8 @@ export type PublicIncidentRaw = {
   created_at: string;
   updated_at: string;
   timeline: PublicIncidentTimelineRaw[];
-  monitor_id: string;
+  // API returns monitor_id as an array when an incident spans multiple monitors.
+  monitor_id: string | string[];
 };
 
 export type PublicStatusPageResponseRaw = {
@@ -140,7 +141,8 @@ export type PublicIncident = {
   createdAt: string;
   updatedAt: string;
   timeline: PublicIncidentTimeline[];
-  monitorId: string;
+  monitorIds: string[];
+  statusPageSlug?: string;
 };
 
 export type PublicStatusPageData = {

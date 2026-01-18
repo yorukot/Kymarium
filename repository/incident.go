@@ -35,9 +35,9 @@ func (r *PGRepository) GetOpenIncidentByMonitorID(ctx context.Context, tx pgx.Tx
 }
 
 // ListPublicIncidentsByMonitorIDs returns public incidents for the provided monitors.
-func (r *PGRepository) ListPublicIncidentsByMonitorIDs(ctx context.Context, tx pgx.Tx, monitorIDs []int64) ([]models.IncidentWithMonitorID, error) {
+func (r *PGRepository) ListPublicIncidentsByMonitorIDs(ctx context.Context, tx pgx.Tx, monitorIDs []int64) ([]models.IncidentWithMonitorIDs, error) {
 	if len(monitorIDs) == 0 {
-		return []models.IncidentWithMonitorID{}, nil
+		return []models.IncidentWithMonitorIDs{}, nil
 	}
 
 	const query = `
@@ -52,15 +52,26 @@ func (r *PGRepository) ListPublicIncidentsByMonitorIDs(ctx context.Context, tx p
 			i.resolved_at,
 			i.created_at,
 			i.updated_at,
-			im.monitor_id
+			ARRAY_AGG(im.monitor_id ORDER BY im.monitor_id) AS monitor_ids
 		FROM incidents i
 		INNER JOIN incident_monitors im ON im.incident_id = i.id
 		WHERE im.monitor_id = ANY($1)
 		  AND i.is_public = true
+		GROUP BY
+			i.id,
+			i.title,
+			i.status,
+			i.severity,
+			i.is_public,
+			i.auto_resolve,
+			i.started_at,
+			i.resolved_at,
+			i.created_at,
+			i.updated_at
 		ORDER BY i.started_at DESC, i.id DESC
 	`
 
-	var incidents []models.IncidentWithMonitorID
+	var incidents []models.IncidentWithMonitorIDs
 	if err := pgxscan.Select(ctx, tx, &incidents, query, monitorIDs); err != nil {
 		return nil, err
 	}

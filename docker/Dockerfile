@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG GO_VERSION=1.24.3
+ARG GO_VERSION=1.24.11
 
 FROM golang:${GO_VERSION}-alpine AS build
 RUN apk add --no-cache ca-certificates git
@@ -12,6 +12,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
 COPY . .
+
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 go build \
@@ -30,7 +31,5 @@ WORKDIR /app
 COPY --from=build /out/kymarium /app/kymarium
 COPY migrations /app/migrations
 
-ENV APP_ENV=prod
-
 USER app
-CMD ["/app/kymarium", "schedular"]
+CMD ["/app/kymarium"]

@@ -118,6 +118,21 @@ CREATE UNIQUE INDEX "uq_refresh_tokens_token" ON "public"."refresh_tokens" ("tok
 CREATE INDEX "idx_refresh_tokens_created_at" ON "public"."refresh_tokens" ("created_at");
 CREATE INDEX "idx_refresh_tokens_user_id" ON "public"."refresh_tokens" ("user_id");
 
+CREATE TABLE "public"."sessions" (
+    "id" bigint NOT NULL,
+    "user_id" bigint NOT NULL,
+    "token" text NOT NULL UNIQUE,
+    "user_agent" text,
+    "ip" inet,
+    "expires_at" timestamp NOT NULL,
+    "created_at" timestamp NOT NULL,
+    PRIMARY KEY ("id")
+);
+-- Indexes
+CREATE UNIQUE INDEX "uq_sessions_token" ON "public"."sessions" ("token");
+CREATE INDEX "idx_sessions_user_id" ON "public"."sessions" ("user_id");
+CREATE INDEX "idx_sessions_expires_at" ON "public"."sessions" ("expires_at");
+
 CREATE TABLE "public"."incidents" (
     "id" bigint NOT NULL,
     "status" incident_status NOT NULL,
@@ -209,12 +224,10 @@ CREATE INDEX "idx_team_invites_status" ON "public"."team_invites" ("status");
 CREATE TABLE "public"."regions" (
     "id" bigint NOT NULL,
     "name" text NOT NULL,
-    "display_name" text NOT NULL,
     CONSTRAINT "pk_regions_id" PRIMARY KEY ("id")
 );
 -- Indexes
 CREATE UNIQUE INDEX "uq_regions_name" ON "public"."regions" ("name");
-CREATE UNIQUE INDEX "uq_regions_display_name" ON "public"."regions" ("display_name");
 
 CREATE TABLE "public"."monitors" (
     "id" bigint NOT NULL,
@@ -290,6 +303,68 @@ SELECT add_retention_policy('monitor_30min_summary', INTERVAL '1 year');
 ALTER MATERIALIZED VIEW monitor_30min_summary
 SET (timescaledb.materialized_only = false);
 
+CREATE MATERIALIZED VIEW monitor_2min_summary
+WITH (timescaledb.continuous) AS
+SELECT
+    monitor_id,
+    region_id,
+    time_bucket('2 minutes', time) AS bucket,
+    count(*) AS total_count,
+    count(*) FILTER (
+        WHERE status = 'successful' AND latency <= 5000
+    ) AS good_count,
+    percentile_cont(0.50) WITHIN GROUP (ORDER BY latency) AS p50_ms,
+    percentile_cont(0.75) WITHIN GROUP (ORDER BY latency) AS p75_ms,
+    percentile_cont(0.90) WITHIN GROUP (ORDER BY latency) AS p90_ms,
+    percentile_cont(0.95) WITHIN GROUP (ORDER BY latency) AS p95_ms,
+    percentile_cont(0.99) WITHIN GROUP (ORDER BY latency) AS p99_ms
+FROM pings
+GROUP BY monitor_id, region_id, bucket
+WITH NO DATA;
+
+SELECT add_continuous_aggregate_policy(
+    'monitor_2min_summary',
+    start_offset => INTERVAL '24 hours',
+    end_offset   => INTERVAL '2 minutes',
+    schedule_interval => INTERVAL '1 minute'
+);
+
+SELECT add_retention_policy('monitor_2min_summary', INTERVAL '24 hours');
+
+ALTER MATERIALIZED VIEW monitor_2min_summary
+SET (timescaledb.materialized_only = false);
+
+CREATE MATERIALIZED VIEW monitor_10min_summary
+WITH (timescaledb.continuous) AS
+SELECT
+    monitor_id,
+    region_id,
+    time_bucket('10 minutes', time) AS bucket,
+    count(*) AS total_count,
+    count(*) FILTER (
+        WHERE status = 'successful' AND latency <= 5000
+    ) AS good_count,
+    percentile_cont(0.50) WITHIN GROUP (ORDER BY latency) AS p50_ms,
+    percentile_cont(0.75) WITHIN GROUP (ORDER BY latency) AS p75_ms,
+    percentile_cont(0.90) WITHIN GROUP (ORDER BY latency) AS p90_ms,
+    percentile_cont(0.95) WITHIN GROUP (ORDER BY latency) AS p95_ms,
+    percentile_cont(0.99) WITHIN GROUP (ORDER BY latency) AS p99_ms
+FROM pings
+GROUP BY monitor_id, region_id, bucket
+WITH NO DATA;
+
+SELECT add_continuous_aggregate_policy(
+    'monitor_10min_summary',
+    start_offset => INTERVAL '7 days',
+    end_offset   => INTERVAL '10 minutes',
+    schedule_interval => INTERVAL '5 minutes'
+);
+
+SELECT add_retention_policy('monitor_10min_summary', INTERVAL '7 days');
+
+ALTER MATERIALIZED VIEW monitor_10min_summary
+SET (timescaledb.materialized_only = false);
+
 -- Foreign key constraints
 -- Schema: public
 ALTER TABLE "public"."accounts" ADD CONSTRAINT "fk_accounts_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
@@ -307,6 +382,7 @@ ALTER TABLE "public"."oauth_tokens" ADD CONSTRAINT "fk_oauth_tokens_account_id_a
 ALTER TABLE "public"."pings" ADD CONSTRAINT "fk_pings_monitor_id_monitors_id" FOREIGN KEY("monitor_id") REFERENCES "public"."monitors"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."pings" ADD CONSTRAINT "fk_pings_region_id_regions_id" FOREIGN KEY("region_id") REFERENCES "public"."regions"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."refresh_tokens" ADD CONSTRAINT "fk_refresh_tokens_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
+ALTER TABLE "public"."sessions" ADD CONSTRAINT "fk_sessions_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."status_page_monitors" ADD CONSTRAINT "fk_status_page_monitors_group_id_status_page_groups_id" FOREIGN KEY("group_id") REFERENCES "public"."status_page_groups"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."status_page_monitors" ADD CONSTRAINT "fk_status_page_monitors_monitor_id_monitors_id" FOREIGN KEY("monitor_id") REFERENCES "public"."monitors"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."status_pages" ADD CONSTRAINT "fk_status_pages_team_id_teams_id" FOREIGN KEY("team_id") REFERENCES "public"."teams"("id") ON DELETE CASCADE;

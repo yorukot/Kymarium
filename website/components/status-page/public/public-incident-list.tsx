@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { Clock3, Ticket } from "lucide-react";
@@ -18,20 +19,31 @@ import { humanizeIdentifier } from "@/lib/parsers/strings";
 import { formatRelativeTime } from "@/lib/parsers/datetime";
 import { IncidentStatusDot } from "@/components/incident/status-dot";
 
-export function PublicIncidentList({ incidents }: { incidents: PublicIncident[] }) {
+type Props = {
+  incidents: PublicIncident[];
+  monitorNames?: Record<string, string>;
+  slug?: string;
+};
+
+export function PublicIncidentList({
+  incidents,
+  monitorNames = {},
+  slug,
+}: Props) {
   const grouped = useMemo(() => {
     type Aggregated = PublicIncident & { monitorIds: Set<string> };
     const byKey = new Map<string, Aggregated>();
 
     incidents.forEach((incident) => {
       const key = `${(incident.title ?? "").trim().toLowerCase() || incident.id}-${incident.startedAt}`;
+      const ids = incident.monitorIds?.length ? incident.monitorIds : [];
       const existing = byKey.get(key);
       if (!existing) {
-        byKey.set(key, { ...incident, monitorIds: new Set([incident.monitorId]) });
+        byKey.set(key, { ...incident, monitorIds: new Set(ids) });
         return;
       }
 
-      existing.monitorIds.add(incident.monitorId);
+      ids.forEach((id) => existing.monitorIds.add(id));
       // Prefer a resolved timestamp if any copy has it.
       if (!existing.resolvedAt && incident.resolvedAt) {
         existing.resolvedAt = incident.resolvedAt;
@@ -67,7 +79,12 @@ export function PublicIncidentList({ incidents }: { incidents: PublicIncident[] 
   return (
     <div className="space-y-4">
       {grouped.map((incident) => (
-        <IncidentCard key={incident.id} incident={incident} />
+        <IncidentCard
+          key={incident.id}
+          incident={incident}
+          monitorNames={monitorNames}
+          slug={slug}
+        />
       ))}
     </div>
   );
@@ -75,19 +92,86 @@ export function PublicIncidentList({ incidents }: { incidents: PublicIncident[] 
 
 type AggregatedIncident = PublicIncident & { monitorIds?: string[] };
 
-function IncidentCard({ incident }: { incident: AggregatedIncident }) {
+function IncidentCard({
+  incident,
+  monitorNames,
+  slug,
+}: {
+  incident: AggregatedIncident;
+  monitorNames: Record<string, string>;
+  slug?: string;
+}) {
+  const isResolved =
+    (incident.status ?? "").toLowerCase() === "resolved" || Boolean(incident.resolvedAt);
   const timeline = useMemo(
     () =>
       [...(incident.timeline ?? [])].sort((a, b) => {
         const aTime = new Date(a.createdAt).getTime();
         const bTime = new Date(b.createdAt).getTime();
-        return aTime - bTime;
+        if (Number.isNaN(aTime) || Number.isNaN(bTime)) return 0;
+        // Newest first
+        return bTime - aTime;
       }),
     [incident.timeline],
   );
 
   const startedLabel = formatRelativeTime(incident.startedAt);
   const resolvedLabel = incident.resolvedAt ? formatRelativeTime(incident.resolvedAt) : null;
+
+  if (isResolved) {
+    const body = (
+      <Card className="border-border/80">
+        <CardHeader className="gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <IncidentStatusDot status={incident.status} />
+            <CardTitle className="text-lg font-semibold">
+              {incident.title || `Incident ${incident.id}`}
+            </CardTitle>
+          </div>
+          <CardDescription className="flex flex-wrap items-center gap-3 text-sm">
+            <span className="flex items-center gap-1">
+              <Clock3 className="h-4 w-4" />
+              Started {startedLabel}
+            </span>
+            {resolvedLabel ? (
+              <span className="flex items-center gap-1">
+                <Clock3 className="h-4 w-4" />
+                Resolved {resolvedLabel}
+              </span>
+            ) : null}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {incident.monitorIds?.length ? (
+            <div className="space-y-2">
+              <Separator />
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground/80">Related monitors:</span>
+                {incident.monitorIds.map((id) => {
+                  const label = monitorNames[id] ?? id;
+                  return (
+                    <Badge key={id} variant="outline" className="bg-muted text-[11px]">
+                      {label}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    );
+
+    if (slug) {
+      return (
+        <Link key={incident.id} href={`/s/${slug}/${incident.id}`} className="block">
+          {body}
+        </Link>
+      );
+    }
+
+    return body;
+  }
 
   return (
     <Card className="border-border/80">
@@ -146,11 +230,14 @@ function IncidentCard({ incident }: { incident: AggregatedIncident }) {
             <Separator />
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span className="font-semibold text-foreground/80">Related monitors:</span>
-              {incident.monitorIds.map((id) => (
-                <Badge key={id} variant="outline" className="bg-muted text-[11px]">
-                  {id}
-                </Badge>
-              ))}
+              {incident.monitorIds.map((id) => {
+                const label = monitorNames[id] ?? id;
+                return (
+                  <Badge key={id} variant="outline" className="bg-muted text-[11px]">
+                    {label}
+                  </Badge>
+                );
+              })}
             </div>
           </div>
         ) : null}

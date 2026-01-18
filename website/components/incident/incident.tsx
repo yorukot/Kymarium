@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { IncidentListItem } from "@/lib/schemas/incident";
 import { formatRelativeTime } from "@/lib/parsers/datetime";
 import { humanizeIdentifier } from "@/lib/parsers/strings";
-import { Clock, Eye, MoreVertical } from "lucide-react";
+import { Clock, Eye, EyeOff, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { IncidentStatusDot } from "./status-dot";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { updateIncidentStatus } from "@/lib/api/incident";
+import { updateIncidentSettings, updateIncidentStatus } from "@/lib/api/incident";
 import type { IncidentStatus } from "@/lib/schemas/incident";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/client";
@@ -102,6 +102,29 @@ export default function IncidentList({
                         <Link href={`/teams/${teamID}/incidents/${incident.id}`}>
                           <Eye /> View
                         </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onSelect={async () => {
+                          try {
+                            await updateIncidentSettings(teamID, incident.id, {
+                              public: !incident.isPublic,
+                            });
+                            toast.success(
+                              incident.isPublic ? "Marked as private" : "Made public",
+                            );
+                            router.refresh();
+                          } catch (error) {
+                            if (error instanceof ApiError) {
+                              toast.error(error.message);
+                              return;
+                            }
+                            toast.error("Failed to update visibility");
+                          }
+                        }}
+                      >
+                        {incident.isPublic ? <EyeOff /> : <Eye />}
+                        {incident.isPublic ? "Make private" : "Make public"}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {(

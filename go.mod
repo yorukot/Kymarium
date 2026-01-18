@@ -1,6 +1,6 @@
 module github.com/yorukot/kymarium
 
-go 1.24.3
+go 1.24.11
 
 require (
 	github.com/MarceloPetrucio/go-scalar-api-reference v0.0.0-20240521013641-ce5d2efe0e06

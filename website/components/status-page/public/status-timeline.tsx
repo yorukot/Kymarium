@@ -4,15 +4,20 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
-import type { PublicTimelinePoint } from "@/lib/schemas/public-status-page";
+import type {
+  PublicIncident,
+  PublicTimelinePoint,
+} from "@/lib/schemas/public-status-page";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import Link from "next/link";
+import { IncidentStatusDot } from "@/components/incident/status-dot";
 
 const DEVICE_DAY_WINDOWS = [
-  { minWidth: 1280, days: 90 },
+  { minWidth: 1000, days: 90 },
   { minWidth: 700, days: 60 },
   { minWidth: 0, days: 30 },
 ] as const;
@@ -49,8 +54,8 @@ type TimelineTone = "success" | "warning" | "danger" | "muted";
 
 function toneForUptime(pct: number | null): TimelineTone {
   if (pct === null) return "muted";
-  if (pct >= 100) return "success";
-  if (pct >= 99.9) return "warning";
+  if (pct >= 99.9) return "success";
+  if (pct >= 99.5) return "warning";
   return "danger";
 }
 
@@ -69,9 +74,11 @@ function dayLabel(value: string): string {
 
 export function StatusTimeline({
   timeline,
+  incidents,
 }: {
   timeline?: PublicTimelinePoint[];
   label?: string;
+  incidents?: PublicIncident[];
 }) {
   const visibleDays = useResponsiveTimelineDays();
   const points = useMemo(
@@ -106,6 +113,22 @@ export function StatusTimeline({
           const tone = toneForUptime(pct);
           const uptimeLabel = pct === null ? "No data" : `${pct.toFixed(2)}%`;
           const date = dayLabel(point.day);
+          const dayDate = new Date(point.day);
+          const dayStart = new Date(dayDate);
+          dayStart.setHours(0, 0, 0, 0);
+          const dayEnd = new Date(dayDate);
+          dayEnd.setHours(23, 59, 59, 999);
+          const relatedIncident =
+            incidents
+              ?.filter((incident) => {
+                const start = new Date(incident.startedAt);
+                const resolved = incident.resolvedAt ? new Date(incident.resolvedAt) : null;
+                return start <= dayEnd && (!resolved || resolved >= dayStart);
+              })
+              .sort(
+                (a, b) =>
+                  new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
+              )[0] ?? null;
 
           return (
             <HoverCard
@@ -128,6 +151,19 @@ export function StatusTimeline({
                 <div className="text-muted-foreground text-[11px]">
                   Success {point.success} · Fail {point.fail}
                 </div>
+                {relatedIncident ? (
+                  <div className="mt-3">
+                    <Link
+                      href={`/s/${relatedIncident.statusPageSlug ?? ""}/${relatedIncident.id}`}
+                      className="flex w-full items-center gap-2 rounded-md border border-border/60 bg-muted/60 px-3 py-2 text-[11px] text-foreground hover:border-foreground/60 hover:bg-muted/80 transition-colors"
+                    >
+                      <IncidentStatusDot status={relatedIncident.status} />
+                      <span className="truncate">
+                        {relatedIncident.title || `Incident ${relatedIncident.id}`}
+                      </span>
+                    </Link>
+                  </div>
+                ) : null}
               </HoverCardContent>
             </HoverCard>
           );

@@ -75,6 +75,12 @@ function toIncidentTimeline(
 }
 
 function toIncident(raw: PublicIncidentRaw): PublicIncident {
+  const monitorIds = Array.isArray(raw.monitor_id)
+    ? raw.monitor_id.filter(Boolean)
+    : raw.monitor_id
+      ? [raw.monitor_id]
+      : [];
+
   return {
     id: raw.id,
     title: raw.title ?? null,
@@ -86,8 +92,10 @@ function toIncident(raw: PublicIncidentRaw): PublicIncident {
     resolvedAt: raw.resolved_at ?? null,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
-    monitorId: raw.monitor_id,
+    monitorIds,
     timeline: (raw.timeline ?? []).map(toIncidentTimeline),
+    // Filled later when status page context is known
+    statusPageSlug: undefined,
   };
 }
 
@@ -114,7 +122,10 @@ export function parsePublicStatusPage(
 
   const statusPage = toStatusPageModel(statusPageRaw);
   const elements = elementRawList.map(toElement).sort(sortBySortOrder);
-  const incidents = incidentRawList.map(toIncident).sort(sortIncidentsByStart);
+  const incidents = incidentRawList
+    .map(toIncident)
+    .map((incident) => ({ ...incident, statusPageSlug: statusPage.slug }))
+    .sort(sortIncidentsByStart);
 
   return { statusPage, elements, incidents };
 }

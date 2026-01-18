@@ -517,9 +517,9 @@ func (m *MockRepository) ListIncidentsByTeamID(ctx context.Context, tx pgx.Tx, t
 }
 
 // ListPublicIncidentsByMonitorIDs mocks Repository.ListPublicIncidentsByMonitorIDs.
-func (m *MockRepository) ListPublicIncidentsByMonitorIDs(ctx context.Context, tx pgx.Tx, monitorIDs []int64) ([]models.IncidentWithMonitorID, error) {
+func (m *MockRepository) ListPublicIncidentsByMonitorIDs(ctx context.Context, tx pgx.Tx, monitorIDs []int64) ([]models.IncidentWithMonitorIDs, error) {
 	args := m.Called(ctx, tx, monitorIDs)
-	incidents, _ := args.Get(0).([]models.IncidentWithMonitorID)
+	incidents, _ := args.Get(0).([]models.IncidentWithMonitorIDs)
 	return incidents, args.Error(1)
 }
 

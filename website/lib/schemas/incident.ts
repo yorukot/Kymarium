@@ -90,6 +90,7 @@ export type IncidentListItem = {
   title?: string;
   status: string;
   severity: string;
+  isPublic: boolean;
   startedAt: string;
   resolvedAt?: string;
 };
