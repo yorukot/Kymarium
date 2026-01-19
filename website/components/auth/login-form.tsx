@@ -7,6 +7,8 @@ import { useForm } from "react-hook-form";
 
 import { cn } from "@/lib/utils";
 import { login } from "@/lib/api/auth";
+import { buildOAuthUrl } from "@/lib/auth/oauth";
+import { normalizeNextPath } from "@/lib/auth/next-path";
 import { ApiError } from "@/lib/api/client";
 import { applyServerFieldErrors } from "@/lib/api/error";
 import { isPlainObject } from "@/lib/parsers/guards";
@@ -39,19 +41,13 @@ type LoginFormProps = React.ComponentProps<"div"> & {
   nextPath?: string;
 };
 
-function normalizeNextPath(nextPath?: string) {
-  if (!nextPath) return undefined;
-  const trimmed = nextPath.trim();
-  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return undefined;
-  return trimmed;
-}
-
 export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const resolvedNextPath = normalizeNextPath(
     nextPath ?? searchParams.get("next") ?? undefined,
   );
+  const oauthRedirectTarget = resolvedNextPath ?? "/teams";
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -78,8 +74,7 @@ export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
       await login(parsed.data);
       form.reset();
 
-      const redirectTarget = resolvedNextPath ?? "/teams";
-      router.replace(redirectTarget);
+      router.replace(oauthRedirectTarget);
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 403 && isPlainObject(error.body)) {
@@ -119,6 +114,27 @@ export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
     }
   };
 
+  const [isOAuthRedirecting, setIsOAuthRedirecting] = React.useState(false);
+
+  const startGoogleOAuth = () => {
+    if (isOAuthRedirecting) return;
+
+    try {
+      const oauthUrl = buildOAuthUrl("google", oauthRedirectTarget);
+      setIsOAuthRedirecting(true);
+      window.location.assign(oauthUrl);
+    } catch (error) {
+      setIsOAuthRedirecting(false);
+      form.setError("root", {
+        type: "oauth",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to start Google login.",
+      });
+    }
+  };
+
   const {
     register,
     handleSubmit,
@@ -138,18 +154,34 @@ export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
           <form noValidate onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>
               <Field>
-                <Button variant="outline" type="button" className="w-full">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  Login with Google
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="w-full"
+                  onClick={startGoogleOAuth}
+                  disabled={isSubmitting || isOAuthRedirecting}
+                >
+                  {isOAuthRedirecting ? (
+                    <>
+                      <Spinner className="mr-2 h-4 w-4 animate-spin" />
+                      Redirecting to Google...
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="mr-2 h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                      Login with Google
+                    </>
+                  )}
                 </Button>
               </Field>
 
