@@ -34,7 +34,6 @@ services:
       APP_REGION: ${APP_REGION:-TW-Taipei}
       APP_REGIONS: ${APP_REGIONS:-TW-Taipei,US-San Francisco}
 
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-localhost}
       BACKEND_URL: ${BACKEND_URL:-http://localhost:8000}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
 

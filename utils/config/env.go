@@ -28,7 +28,6 @@ type EnvConfig struct {
 
 	// Security Settings
 	JWTSecretKey string `env:"JWT_SECRET_KEY,required" envDefault:"change_me_to_a_secure_key"`
-	CookieDomain string `env:"COOKIE_DOMAIN" envDefault:""`
 	FrontendURL  string `env:"FRONTEND_URL" envDefault:"http://localhost:3000"`
 
 	// PostgreSQL Settings

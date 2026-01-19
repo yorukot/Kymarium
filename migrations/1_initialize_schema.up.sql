@@ -103,21 +103,6 @@ CREATE TABLE "public"."monitor_notifications" (
 -- Indexes
 CREATE UNIQUE INDEX "uq_monitor_notifications_monitor_id_notification_id" ON "public"."monitor_notifications" ("monitor_id", "notification_id");
 
-CREATE TABLE "public"."refresh_tokens" (
-    "id" bigint NOT NULL,
-    "user_id" bigint NOT NULL,
-    "token" text NOT NULL UNIQUE,
-    "user_agent" text,
-    "ip" inet,
-    "used_at" timestamp,
-    "created_at" timestamp NOT NULL,
-    PRIMARY KEY ("id")
-);
--- Indexes
-CREATE UNIQUE INDEX "uq_refresh_tokens_token" ON "public"."refresh_tokens" ("token");
-CREATE INDEX "idx_refresh_tokens_created_at" ON "public"."refresh_tokens" ("created_at");
-CREATE INDEX "idx_refresh_tokens_user_id" ON "public"."refresh_tokens" ("user_id");
-
 CREATE TABLE "public"."sessions" (
     "id" bigint NOT NULL,
     "user_id" bigint NOT NULL,
@@ -381,7 +366,6 @@ ALTER TABLE "public"."notifications" ADD CONSTRAINT "fk_notifications_team_id_te
 ALTER TABLE "public"."oauth_tokens" ADD CONSTRAINT "fk_oauth_tokens_account_id_accounts_id" FOREIGN KEY("account_id") REFERENCES "public"."accounts"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."pings" ADD CONSTRAINT "fk_pings_monitor_id_monitors_id" FOREIGN KEY("monitor_id") REFERENCES "public"."monitors"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."pings" ADD CONSTRAINT "fk_pings_region_id_regions_id" FOREIGN KEY("region_id") REFERENCES "public"."regions"("id") ON DELETE CASCADE;
-ALTER TABLE "public"."refresh_tokens" ADD CONSTRAINT "fk_refresh_tokens_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."sessions" ADD CONSTRAINT "fk_sessions_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."status_page_monitors" ADD CONSTRAINT "fk_status_page_monitors_group_id_status_page_groups_id" FOREIGN KEY("group_id") REFERENCES "public"."status_page_groups"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."status_page_monitors" ADD CONSTRAINT "fk_status_page_monitors_monitor_id_monitors_id" FOREIGN KEY("monitor_id") REFERENCES "public"."monitors"("id") ON DELETE CASCADE;
