@@ -1,17 +1,11 @@
 import { notFound } from "next/navigation";
-import {
-  CalendarClock,
-  Clock3,
-  Dot,
-  Flame,
-  Shield,
-  TimerReset,
-} from "lucide-react";
+import { Clock3, Flame, Shield, TimerReset } from "lucide-react";
 
 import { StatusDot } from "@/components/monitor/status-dot";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Timeline, type TimelineItem } from "@/components/ui/timeline";
 import { parsePublicStatusPage } from "@/lib/parsers/public-status-page";
 import { formatRelativeTime } from "@/lib/parsers/datetime";
 import type {
@@ -132,6 +126,31 @@ export default async function PublicIncidentDetailPage({
     return bTime - aTime; // newest first
   });
 
+  const timelineItems: TimelineItem[] = timeline.map((event) => {
+    const at = new Date(event.createdAt);
+    const absoluteLabel = Number.isNaN(at.getTime())
+      ? event.createdAt
+      : at.toLocaleString();
+
+    return {
+      id: event.id,
+      title: (
+        <div className="flex flex-wrap items-center gap-2">
+          <span>{humanizeIdentifier(event.eventType)}</span>
+          <span className="text-xs text-muted-foreground">
+            {formatRelativeTime(event.createdAt)}
+          </span>
+        </div>
+      ),
+      description: <p className="text-sm leading-relaxed text-foreground">{event.message}</p>,
+      children: (
+        <div className="text-xs text-muted-foreground" suppressHydrationWarning>
+          {absoluteLabel}
+        </div>
+      ),
+    };
+  });
+
   const relatedMonitorNames =
     incident.monitorIds?.map((id) => monitorNames[id] ?? id) ?? [];
 
@@ -189,10 +208,6 @@ export default async function PublicIncidentDetailPage({
                   Resolved {resolvedLabel}
                 </span>
               ) : null}
-              <span className="flex items-center gap-2">
-                <CalendarClock className="h-4 w-4" />
-                Created {formatRelativeTime(incident.createdAt)}
-              </span>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -215,42 +230,13 @@ export default async function PublicIncidentDetailPage({
 
             <Separator />
 
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Updates
-              </h3>
-              {!timeline.length ? (
-                <div className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
-                  No public updates yet.
-                </div>
-              ) : (
-                <ul className="space-y-3">
-                  {timeline.map((event) => {
-                    const at = new Date(event.createdAt);
-                    const atLabel = Number.isNaN(at.getTime())
-                      ? event.createdAt
-                      : `${at.toLocaleString()} (${formatRelativeTime(event.createdAt)})`;
-                    return (
-                      <li
-                        key={event.id}
-                        className="rounded-xl border border-border/70 bg-muted/30 p-4"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-2 text-foreground">
-                            <Dot className="h-4 w-4" />
-                            {humanizeIdentifier(event.eventType)}
-                          </span>
-                          <span>{atLabel}</span>
-                        </div>
-                        <p className="mt-2 text-sm leading-relaxed text-foreground">
-                          {event.message}
-                        </p>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+            {!timeline.length ? (
+              <div className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                No public updates yet.
+              </div>
+            ) : (
+              <Timeline items={timelineItems} compact />
+            )}
           </CardContent>
         </Card>
       </div>

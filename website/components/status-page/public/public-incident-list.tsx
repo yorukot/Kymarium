@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { format } from "date-fns";
 import { Clock3, Ticket } from "lucide-react";
 
 import {
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Timeline, type TimelineItem } from "@/components/ui/timeline";
 import type { PublicIncident } from "@/lib/schemas/public-status-page";
 import { humanizeIdentifier } from "@/lib/parsers/strings";
 import { formatRelativeTime } from "@/lib/parsers/datetime";
@@ -115,6 +115,33 @@ function IncidentCard({
     [incident.timeline],
   );
 
+  const timelineItems: TimelineItem[] = timeline.map((event) => {
+    const at = new Date(event.createdAt);
+    const absoluteLabel = Number.isNaN(at.getTime())
+      ? event.createdAt
+      : at.toLocaleString();
+
+    return {
+      id: event.id,
+      title: (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="capitalize">{humanizeIdentifier(event.eventType)}</span>
+          <span className="text-xs text-muted-foreground">
+            {formatRelativeTime(event.createdAt)}
+          </span>
+        </div>
+      ),
+      description: (
+        <p className="text-sm leading-relaxed text-foreground">{event.message}</p>
+      ),
+      children: (
+        <div className="text-xs text-muted-foreground" suppressHydrationWarning>
+          {absoluteLabel}
+        </div>
+      ),
+    };
+  });
+
   const startedLabel = formatRelativeTime(incident.startedAt);
   const resolvedLabel = incident.resolvedAt ? formatRelativeTime(incident.resolvedAt) : null;
 
@@ -197,33 +224,11 @@ function IncidentCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <Separator />
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <Ticket className="h-4 w-4" />
-            Updates
-          </div>
-          {!timeline.length ? (
-            <div className="text-sm text-muted-foreground">No public updates yet.</div>
-          ) : (
-            <ul className="space-y-3">
-              {timeline.map((event) => {
-                const at = new Date(event.createdAt);
-                const atLabel = Number.isNaN(at.getTime())
-                  ? event.createdAt
-                  : `${format(at, "MMM d, yyyy HH:mm")} (${formatRelativeTime(event.createdAt)})`;
-                return (
-                  <li key={event.id} className="rounded-lg border border-border/70 bg-muted/30 p-3">
-                    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                      <span className="capitalize">{humanizeIdentifier(event.eventType)}</span>
-                      <span>{atLabel}</span>
-                    </div>
-                    <p className="text-sm leading-relaxed text-foreground">{event.message}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+        {!timeline.length ? (
+          <div className="text-sm text-muted-foreground">No public updates yet.</div>
+        ) : (
+          <Timeline items={timelineItems} compact />
+        )}
 
         {incident.monitorIds?.length ? (
           <div className="space-y-2">

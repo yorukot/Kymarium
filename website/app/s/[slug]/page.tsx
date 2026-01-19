@@ -131,27 +131,26 @@ export default async function PublicStatusPage({
           <PublicStatusElements elements={data.elements} incidents={data.incidents} />
         </section>
 
-        <Separator />
+        {pastIncidents.length > 0 && (
+          <>
+            <Separator />
 
-        <section className="space-y-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-semibold">Public incidents</h2>
-            <p className="text-sm text-muted-foreground">
-              Previously resolved and historical incidents.
-            </p>
-          </div>
-          {pastIncidents.length ? (
-            <PublicIncidentList
-              incidents={pastIncidents}
-              monitorNames={monitorNames}
-              slug={slug}
-            />
-          ) : (
-            <div className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
-              No past public incidents yet.
-            </div>
-          )}
-        </section>
+            <section className="space-y-4">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-lg font-semibold">Public incidents</h2>
+                <p className="text-sm text-muted-foreground">
+                  Previously resolved and historical incidents.
+                </p>
+              </div>
+
+              <PublicIncidentList
+                incidents={pastIncidents}
+                monitorNames={monitorNames}
+                slug={slug}
+              />
+            </section>
+          </>
+        )}
       </div>
     </main>
   );

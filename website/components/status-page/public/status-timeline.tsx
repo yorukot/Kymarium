@@ -50,18 +50,15 @@ function uptimePercent(point: PublicTimelinePoint): number | null {
   return (point.success / total) * 100;
 }
 
-type TimelineTone = "success" | "warning" | "danger" | "muted";
+type TimelineTone = "success" | "danger" | "muted";
 
 function toneForUptime(pct: number | null): TimelineTone {
   if (pct === null) return "muted";
-  if (pct >= 99.9) return "success";
-  if (pct >= 99.5) return "warning";
-  return "danger";
+  return pct === 100 ? "success" : "danger";
 }
 
 const toneClassMap: Record<TimelineTone, string> = {
   success: "bg-successed",
-  warning: "bg-amber-400 dark:bg-amber-500",
   danger: "bg-destructive",
   muted: "bg-border",
 };
