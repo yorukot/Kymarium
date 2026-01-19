@@ -636,7 +636,7 @@ export default function StatusPageEditor({
     },
   );
 
-  const apiBase = process.env.NEXT_PUBLIC_WEBSITE;
+  const apiBase = process.env.NEXT_PUBLIC_FRONTEND_URL;
   const slugForUrl = slug?.trim() || statusPage.slug;
   const publicUrl = apiBase ? `${apiBase}/s/${slugForUrl}` : null;
   const activeOverlay = useMemo(() => {

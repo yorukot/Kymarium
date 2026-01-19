@@ -33,9 +33,11 @@ services:
       APP_PORT: ${APP_PORT:-8000}
       APP_REGION: ${APP_REGION:-TW-Taipei}
       APP_REGIONS: ${APP_REGIONS:-TW-Taipei,US-San Francisco}
-      FRONTEND_DOMAIN: ${FRONTEND_DOMAIN:-localhost:5173}
+
       COOKIE_DOMAIN: ${COOKIE_DOMAIN:-localhost}
       BACKEND_URL: ${BACKEND_URL:-http://localhost:8000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+
       PUBLIC_API_BASE: ${PUBLIC_API_BASE:-https://api.kymarium.com/api}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-thisisasecret}
 
@@ -51,8 +53,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-kymarium-dragonfly-password}
 
       OAUTH_STATE_EXPIRES_AT: ${OAUTH_STATE_EXPIRES_AT:-600}
-      ACCESS_TOKEN_EXPIRES_AT: ${ACCESS_TOKEN_EXPIRES_AT:-900}
-      REFRESH_TOKEN_EXPIRES_AT: ${REFRESH_TOKEN_EXPIRES_AT:-31536000}
+      SESSION_EXPIRES_AT: ${SESSION_EXPIRES_AT:-432000}
       EMAIL_VERIFY_EXPIRES_AT: ${EMAIL_VERIFY_EXPIRES_AT:-900}
 
       SMTP_ENABLED: ${SMTP_ENABLED:-false}
@@ -76,11 +77,11 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.web
       args:
-        BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
-        FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+        NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
+        NEXT_PUBLIC_FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     environment:
-      NEXT_PUBLIC_API_BASE_URL: ${BACKEND_URL:-http://backend:8000}
-      NEXT_PUBLIC_WEBSITE: ${FRONTEND_URL:-http://localhost:3000}
+      NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
+      NEXT_PUBLIC_FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     container_name: kymarium-website
     depends_on:
       - backend

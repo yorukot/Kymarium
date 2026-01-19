@@ -42,9 +42,9 @@ async function fetchRegions(
   teamID: string,
   monitorID: string,
 ): Promise<Region[]> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!apiBase) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+    throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
   }
 
   const cookieHeader = await buildCookieHeader();
@@ -74,9 +74,9 @@ async function fetchNotifications(
   teamID: string,
   monitorID: string,
 ): Promise<Notification[]> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!apiBase) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+    throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
   }
 
   const cookieHeader = await buildCookieHeader();
@@ -106,9 +106,9 @@ async function fetchMonitor(
   teamID: string,
   monitorID: string,
 ): Promise<MonitorRawData | null> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!apiBase) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+    throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
   }
 
   const cookieHeader = await buildCookieHeader();

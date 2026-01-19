@@ -25,9 +25,9 @@ type ApiResponse = {
 async function fetchPublicStatusPage(
   slug: string,
 ): Promise<PublicStatusPageData | null> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!apiBase) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+    throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
   }
 
   const res = await fetch(`${apiBase}/api/status-pages/${slug}`, {

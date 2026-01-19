@@ -42,9 +42,9 @@ type MonitorsResponse = {
 };
 
 async function fetchMonitors(teamID: string): Promise<MonitorListItem[]> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!apiBase) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+    throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
   }
 
   const cookieHeader = await buildCookieHeader();

@@ -25,9 +25,9 @@ type InvitesResponse = {
 };
 
 async function fetchTeamRole(teamID: string): Promise<TeamRole> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!apiBase) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+    throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
   }
 
   const cookieHeader = await buildCookieHeader();
@@ -50,9 +50,9 @@ async function fetchTeamRole(teamID: string): Promise<TeamRole> {
 }
 
 async function fetchMembers(teamID: string): Promise<TeamMember[]> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!apiBase) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+    throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
   }
 
   const cookieHeader = await buildCookieHeader();
@@ -79,9 +79,9 @@ async function fetchMembers(teamID: string): Promise<TeamMember[]> {
 }
 
 async function fetchInvites(teamID: string): Promise<TeamInvite[]> {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!apiBase) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+    throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
   }
 
   const cookieHeader = await buildCookieHeader();

@@ -42,7 +42,7 @@ export type ApiResult<T> = {
   data: T;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 function hasStringMessage(x: unknown): x is { message: string } {
   return isPlainObject(x) && typeof x.message === "string";
@@ -83,7 +83,7 @@ export async function apiRequest<T>(
   path: string,
   options: ApiOptions = {},
 ): Promise<ApiResult<T>> {
-  if (!API_BASE) throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+  if (!API_BASE) throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
 
   const {
     method = "GET",

@@ -1,12 +1,12 @@
 import { normalizeNextPath } from "@/lib/auth/next-path";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export type OAuthProvider = "google";
 
 export function buildOAuthUrl(provider: OAuthProvider, nextPath?: string) {
   if (!API_BASE) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL");
+    throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
   }
 
   const url = new URL(`/api/auth/oauth/${provider}`, API_BASE);
