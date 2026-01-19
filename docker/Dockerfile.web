@@ -5,9 +5,9 @@ WORKDIR /app
 
 # Build-time API base fallback; override in your deployment panel if needed.
 ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+ENV NEXT_PUBLIC_API_BASE_URL=${BACKEND_URL}
 ARG NEXT_PUBLIC_WEBSITE=http://localhost:3000
-ENV NEXT_PUBLIC_WEBSITE=${NEXT_PUBLIC_WEBSITE}
+ENV NEXT_PUBLIC_WEBSITE=${FRONTEND_URL}
 
 RUN apk add --no-cache libc6-compat && corepack enable
 
