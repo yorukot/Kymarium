@@ -30,6 +30,7 @@ type EnvConfig struct {
 	JWTSecretKey string `env:"JWT_SECRET_KEY,required" envDefault:"change_me_to_a_secure_key"`
 	CookieDomain string `env:"COOKIE_DOMAIN" envDefault:""`
 	FrontendURL  string `env:"FRONTEND_URL" envDefault:"http://localhost:3000"`
+	BackendURL   string `env:"BACKEND_URL" envDefault:"http://localhost:8000"`
 
 	// PostgreSQL Settings
 	DBHost     string `env:"DB_HOST,required"`
@@ -49,8 +50,7 @@ type EnvConfig struct {
 	SessionExpiresAt    int `env:"SESSION_EXPIRES_AT" envDefault:"432000"`  // 5 days
 
 	// Email Verification
-	EmailVerifyExpiresAt int    `env:"EMAIL_VERIFY_EXPIRES_AT" envDefault:"900"` // 15 minutes
-	BackendURL           string `env:"BACKEND_URL" envDefault:"http://localhost:8000"`
+	EmailVerifyExpiresAt int `env:"EMAIL_VERIFY_EXPIRES_AT" envDefault:"900"` // 15 minutes
 
 	// SMTP Settings
 	SMTPEnabled  bool   `env:"SMTP_ENABLED" envDefault:"false"`

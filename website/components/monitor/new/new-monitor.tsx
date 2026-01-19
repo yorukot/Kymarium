@@ -53,7 +53,6 @@ import type {
   Notification,
   NotificationType,
 } from "@/lib/schemas/notification";
-import { ExternalLink } from "lucide-react";
 import { FormDevTools } from "@/components/devtools/form-dev-tools";
 import { createMonitor, updateMonitor } from "@/lib/api/monitor";
 import { ApiError } from "@/lib/api/client";
@@ -227,12 +226,9 @@ function BasicSettings({
                 Notifications
                 <Link
                   href={`/teams/${teamID}/notifications`}
-                  target="_blank"
-                  rel="noreferrer"
+                  className="text-sm font-medium underline underline-offset-4"
                 >
-                  <Button variant="outline" size="sm">
-                    Create new notifications <ExternalLink />
-                  </Button>
+                  Go to notifications list
                 </Link>
               </FieldTitle>
               <FieldDescription>

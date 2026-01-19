@@ -34,7 +34,12 @@ export default function Monitor({
     );
   }, [monitors, setMonitors]);
 
-  if (!monitors.length) return null;
+  if (!monitors.length)
+    return (
+      <div className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+        No monitors yet. Create one to start tracking uptime.
+      </div>
+    );
 
   return (
     <>

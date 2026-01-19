@@ -43,7 +43,12 @@ export default function IncidentList({
     );
   }, [incidents, setIncidents]);
 
-  if (!incidents.length) return null;
+  if (!incidents.length)
+    return (
+      <div className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+        No incidents yet. Add monitors to start receiving incident reports.
+      </div>
+    );
 
   return (
     <>

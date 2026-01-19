@@ -41,8 +41,6 @@ export function MonitorDetail({
       : null;
 
   const uptimeTone = monitor.status === "up" ? "successed" : "destructive";
-  const failTone =
-    failureCount !== null && failureCount > 0 ? "destructive" : "successed";
 
   return (
     <>
@@ -87,7 +85,7 @@ export function MonitorDetail({
         <MonitorStatusCard
           title="FAIL"
           value={formatCount(failureCount)}
-          tone={failTone}
+          tone={"destructive"}
           icon={<CircleX className="h-4 w-4" />}
         />
         <MonitorStatusCard
