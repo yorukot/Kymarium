@@ -78,6 +78,9 @@ services:
       args:
         BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
         FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${BACKEND_URL:-http://backend:8000}
+      NEXT_PUBLIC_WEBSITE: ${FRONTEND_URL:-http://localhost:3000
     container_name: kymarium-website
     depends_on:
       - backend
