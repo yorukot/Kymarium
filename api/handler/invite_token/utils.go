@@ -9,7 +9,7 @@ import (
 )
 
 func buildFrontendInviteURL(result string, teamID int64, email string) string {
-	base := strings.TrimSpace(config.FrontendOrigin())
+	base := strings.TrimSpace(config.Env().FrontendURL)
 	if base == "" {
 		return "/"
 	}

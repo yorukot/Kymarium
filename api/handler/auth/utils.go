@@ -15,7 +15,6 @@ import (
 	"github.com/yorukot/kymarium/utils/config"
 	"github.com/yorukot/kymarium/utils/encrypt"
 	"github.com/yorukot/kymarium/utils/id"
-	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
 
@@ -326,23 +325,30 @@ func generateOAuthSessionCookie(session string) http.Cookie {
 }
 
 func cookieDomain() string {
-	f, _ := url.Parse(config.Env().FrontendURL)
-	host := f.Hostname()
-	if isLocalOrIP(host) {
-		return ""
-	}
-	root, err := publicsuffix.EffectiveTLDPlusOne(host)
-	if err != nil {
-		return ""
-	}
-
-	return root
+	return normalizeCookieDomain(config.Env().CookieDomain)
 }
 
-func isLocalOrIP(host string) bool {
-	if net.ParseIP(host) != nil {
-		return true
+func normalizeCookieDomain(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return ""
 	}
-	h := strings.ToLower(host)
-	return h == "localhost" || strings.HasSuffix(h, ".localhost")
+
+	if strings.Contains(trimmed, "://") {
+		parsed, err := url.Parse(trimmed)
+		if err == nil && parsed.Hostname() != "" {
+			return parsed.Hostname()
+		}
+	}
+
+	parsed, err := url.Parse("http://" + trimmed)
+	if err == nil && parsed.Hostname() != "" {
+		return parsed.Hostname()
+	}
+
+	if host, _, err := net.SplitHostPort(trimmed); err == nil {
+		return host
+	}
+
+	return trimmed
 }

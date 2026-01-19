@@ -85,7 +85,7 @@ func (h *Handler) VerifyEmail(c echo.Context) error {
 }
 
 func buildFrontendVerificationURL(result string, email string) string {
-	base := strings.TrimSpace(config.FrontendOrigin())
+	base := strings.TrimSpace(config.Env().FrontendURL)
 	if base == "" {
 		return "/"
 	}

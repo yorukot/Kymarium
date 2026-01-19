@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strings"
 
 	scalar "github.com/MarceloPetrucio/go-scalar-api-reference"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,7 +26,7 @@ func Run(db *pgxpool.Pool) {
 	e.Use(echoMiddleware.Recover())
 
 	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
-		AllowOrigins:     frontendOrigins(config.FrontendDomain()),
+		AllowOrigins:     []string{config.Env().FrontendURL},
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 		AllowCredentials: true,
@@ -84,18 +83,4 @@ func scalarDocsHandler() echo.HandlerFunc {
 
 		return c.HTML(http.StatusOK, html)
 	}
-}
-
-// frontendOrigins builds allowed origins for CORS from the configured frontend domain.
-func frontendOrigins(domain string) []string {
-	trimmed := strings.TrimSpace(domain)
-	if trimmed == "" {
-		return nil
-	}
-
-	if strings.HasPrefix(trimmed, "http://") || strings.HasPrefix(trimmed, "https://") {
-		return []string{trimmed}
-	}
-
-	return []string{"https://" + trimmed, "http://" + trimmed}
 }
