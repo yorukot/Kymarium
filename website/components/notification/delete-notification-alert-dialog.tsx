@@ -1,6 +1,12 @@
 "use client";
 
 import { cloneElement, useState, type ReactElement } from "react";
+
+type TriggerElement = ReactElement<{
+  disabled?: boolean;
+  onClick?: (event: unknown) => void;
+  onSelect?: (event: unknown) => void;
+}>;
 import { toast } from "sonner";
 import { Trash } from "lucide-react";
 
@@ -39,7 +45,7 @@ export default function DeleteNotificationAlertDialog({
   disabled?: boolean;
   onDeleted: () => void;
   buttonClassName?: string;
-  trigger?: ReactElement;
+  trigger?: TriggerElement;
 }) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -72,7 +78,6 @@ export default function DeleteNotificationAlertDialog({
 
   const triggerNode = trigger
     ? cloneElement(trigger, {
-        ...trigger.props,
         disabled: Boolean(trigger.props.disabled || disabled || deleting),
         onClick: (event: unknown) => {
           trigger.props.onClick?.(event);

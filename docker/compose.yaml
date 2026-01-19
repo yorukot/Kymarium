@@ -31,7 +31,6 @@ services:
       - dragonfly
     ports:
       - "8000:8000"
-    command: ["/app/kymarium"]
 
   website:
     build:

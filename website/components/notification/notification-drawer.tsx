@@ -3,7 +3,11 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFieldArray, useForm } from "react-hook-form";
+import {
+  useFieldArray,
+  useForm,
+  type FieldError as RHFFieldError,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
@@ -267,6 +271,34 @@ export default function NotificationDrawer(props: Props) {
   } = form;
 
   const disabled = isSubmitting || loading;
+  const configErrors = errors.config;
+
+  const emailAddressErrors =
+    type === "email" && configErrors && "emailAddresses" in configErrors
+      ? configErrors.emailAddresses
+      : undefined;
+
+  const webhookUrlError =
+    (type === "slack" || type === "discord") &&
+    configErrors &&
+    "webhookUrl" in configErrors
+      ? configErrors.webhookUrl
+      : undefined;
+
+  const botTokenError =
+    type === "telegram" && configErrors && "botToken" in configErrors
+      ? configErrors.botToken
+      : undefined;
+
+  const chatIdError =
+    type === "telegram" && configErrors && "chatId" in configErrors
+      ? configErrors.chatId
+      : undefined;
+
+  const emailAddressValueErrors =
+    Array.isArray(emailAddressErrors)
+      ? (emailAddressErrors as Array<{ value?: RHFFieldError }>)
+      : [];
 
   return (
     <Sheet
@@ -331,7 +363,7 @@ export default function NotificationDrawer(props: Props) {
                         <Input
                           placeholder="name@company.com"
                           aria-invalid={
-                            !!errors.config?.emailAddresses?.[index]?.value
+                            !!emailAddressValueErrors?.[index]?.value
                           }
                           disabled={disabled}
                           {...register(`config.emailAddresses.${index}.value`)}
@@ -363,10 +395,8 @@ export default function NotificationDrawer(props: Props) {
 
                   <FieldError
                     errors={[
-                      errors.config?.emailAddresses,
-                      ...(Array.isArray(errors.config?.emailAddresses)
-                        ? errors.config?.emailAddresses.map((e) => e?.value)
-                        : []),
+                      emailAddressErrors,
+                      ...emailAddressValueErrors.map((e) => e?.value),
                     ]}
                   />
                 </Field>
@@ -377,11 +407,11 @@ export default function NotificationDrawer(props: Props) {
                   <FieldLabel>Webhook URL</FieldLabel>
                   <Input
                     placeholder="https://..."
-                    aria-invalid={!!errors.config?.webhookUrl}
+                    aria-invalid={!!webhookUrlError}
                     disabled={disabled}
                     {...register("config.webhookUrl")}
                   />
-                  <FieldError errors={[errors.config?.webhookUrl]} />
+                  <FieldError errors={[webhookUrlError]} />
                 </Field>
               ) : null}
 
@@ -391,22 +421,22 @@ export default function NotificationDrawer(props: Props) {
                     <FieldLabel>Bot token</FieldLabel>
                     <Input
                       placeholder="123456:ABC..."
-                      aria-invalid={!!errors.config?.botToken}
+                      aria-invalid={!!botTokenError}
                       disabled={disabled}
                       {...register("config.botToken")}
                     />
-                    <FieldError errors={[errors.config?.botToken]} />
+                    <FieldError errors={[botTokenError]} />
                   </Field>
 
                   <Field>
                     <FieldLabel>Chat ID</FieldLabel>
                     <Input
                       placeholder="e.g. -1001234567890"
-                      aria-invalid={!!errors.config?.chatId}
+                      aria-invalid={!!chatIdError}
                       disabled={disabled}
                       {...register("config.chatId")}
                     />
-                    <FieldError errors={[errors.config?.chatId]} />
+                    <FieldError errors={[chatIdError]} />
                   </Field>
                 </>
               ) : null}

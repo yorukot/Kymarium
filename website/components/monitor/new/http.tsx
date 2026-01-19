@@ -371,13 +371,13 @@ export default function HttpMonitorSettings() {
                         <Controller
                           name="http.acceptedStatusCodes"
                           control={control}
-                          render={({ field }) => (
+                              render={({ field }) => (
                             <MultiSelect
                               hideSelectAll
                               options={statusCodeGroups}
-                              defaultValue={(field.value ?? []).map(
-                                (value: string) => String(value),
-                              )}
+                              defaultValue={(
+                                (field.value ?? []) as Array<number | string>
+                              ).map((value: number | string) => String(value))}
                               resetOnDefaultValueChange={false}
                               onValueChange={(values) => {
                                 const nextGroupKeys = values

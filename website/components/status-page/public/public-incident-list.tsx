@@ -31,7 +31,9 @@ export function PublicIncidentList({
   slug,
 }: Props) {
   const grouped = useMemo(() => {
-    type Aggregated = PublicIncident & { monitorIds: Set<string> };
+    type Aggregated = Omit<PublicIncident, "monitorIds"> & {
+      monitorIds: Set<string>;
+    };
     const byKey = new Map<string, Aggregated>();
 
     incidents.forEach((incident) => {
