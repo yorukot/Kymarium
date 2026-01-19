@@ -9,13 +9,9 @@ import (
 )
 
 func buildFrontendInviteURL(result string, teamID int64, email string) string {
-	base := strings.TrimSpace(config.Env().FrontendDomain)
+	base := strings.TrimSpace(config.FrontendOrigin())
 	if base == "" {
 		return "/"
-	}
-
-	if !strings.HasPrefix(base, "http://") && !strings.HasPrefix(base, "https://") {
-		base = "http://" + base
 	}
 
 	base = strings.TrimRight(base, "/")

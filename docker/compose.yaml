@@ -76,12 +76,9 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.web
       args:
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://backend:8000}
-        NEXT_PUBLIC_WEBSITE: ${NEXT_PUBLIC_WEBSITE:-http://localhost:3000}
+        NEXT_PUBLIC_API_BASE_URL: ${BACKEND_URL:-http://backend:8000}
+        NEXT_PUBLIC_WEBSITE: ${FRONTEND_URL:-http://localhost:3000}
     container_name: kymarium-website
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://backend:8000}
-      NEXT_PUBLIC_WEBSITE: ${NEXT_PUBLIC_WEBSITE:-http://localhost:3000}
     depends_on:
       - backend
     ports:

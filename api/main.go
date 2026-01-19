@@ -26,9 +26,8 @@ func Run(db *pgxpool.Pool) {
 	e.Use(middleware.ZapLogger(zap.L()))
 	e.Use(echoMiddleware.Recover())
 
-	env := config.Env()
 	e.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
-		AllowOrigins:     frontendOrigins(env.FrontendDomain),
+		AllowOrigins:     frontendOrigins(config.FrontendDomain()),
 		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 		AllowCredentials: true,
@@ -37,6 +36,7 @@ func Run(db *pgxpool.Pool) {
 	// Setup routes
 	repo := repository.New(db)
 	routes(e, repo)
+	env := config.Env()
 	e.Logger.Infof("Starting server on port %s in %s mode", env.AppPort, env.AppEnv)
 	e.Logger.Fatal(e.Start(":8000"))
 }
