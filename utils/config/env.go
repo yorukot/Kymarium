@@ -27,9 +27,9 @@ type EnvConfig struct {
 	AppRegions   []string `env:"APP_REGIONS" envDefault:"TW-Taipei" envSeparator:","`
 
 	// Security Settings
-	JWTSecretKey   string `env:"JWT_SECRET_KEY,required" envDefault:"change_me_to_a_secure_key"`
-	FrontendDomain string `env:"FRONTEND_DOMAIN" envDefault:"localhost"`
-	CookieDomain   string `env:"COOKIE_DOMAIN" envDefault:""`
+	JWTSecretKey string `env:"JWT_SECRET_KEY,required" envDefault:"change_me_to_a_secure_key"`
+	CookieDomain string `env:"COOKIE_DOMAIN" envDefault:""`
+	FrontendURL  string `env:"FRONTEND_URL" envDefault:"http://localhost:3000"`
 
 	// PostgreSQL Settings
 	DBHost     string `env:"DB_HOST,required"`

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -228,5 +229,13 @@ func (h *Handler) OAuthCallback(c echo.Context) error {
 	c.SetCookie(&sessionCookie)
 
 	// Redirect to the redirect URI
-	return c.Redirect(http.StatusTemporaryRedirect, payload.RedirectURI)
+	redirectBase := strings.TrimRight(config.Env().FrontendURL, "/")
+	redirectPath := payload.RedirectURI
+	if redirectPath == "" {
+		redirectPath = "/"
+	}
+	if !strings.HasPrefix(redirectPath, "/") {
+		redirectPath = "/" + redirectPath
+	}
+	return c.Redirect(http.StatusTemporaryRedirect, redirectBase+redirectPath)
 }
