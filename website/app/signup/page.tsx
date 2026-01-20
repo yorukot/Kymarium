@@ -1,6 +1,11 @@
+import type { Metadata } from "next"
 import { GalleryVerticalEnd } from "lucide-react"
 
 import { SignupForm } from "@/components/auth/signup-form"
+
+export const metadata: Metadata = {
+  title: "Sign Up",
+}
 
 export default function SignupPage() {
   return (

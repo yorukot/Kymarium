@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Clock3, Flame, Shield, TimerReset } from "lucide-react";
 
@@ -16,6 +17,24 @@ import { humanizeIdentifier } from "@/lib/parsers/strings";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; incidentId: string }>;
+}): Promise<Metadata> {
+  const { slug, incidentId } = await params;
+  const data = await fetchPublicStatusPage(slug);
+  if (!data) {
+    return { title: "Incident" };
+  }
+
+  const incident = data.incidents.find((i) => i.id === incidentId);
+  const incidentTitle = incident?.title || `Incident ${incidentId}`;
+  return {
+    title: `${incidentTitle} | ${data.statusPage.title}`,
+  };
+}
 
 type ApiResponse = {
   message?: string;

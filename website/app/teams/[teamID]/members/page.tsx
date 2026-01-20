@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { buildCookieHeader } from "@/lib/api/cookies";
@@ -6,6 +7,10 @@ import { parseTeamInvites } from "@/lib/parsers/team-invites";
 import { parseTeamMembers } from "@/lib/parsers/team-members";
 import type { TeamInvite, TeamInviteRawData } from "@/lib/schemas/team-invite";
 import type { TeamMember, TeamMemberRawData, TeamRole } from "@/lib/schemas/team-member";
+
+export const metadata: Metadata = {
+  title: "Members",
+};
 
 type TeamResponse = {
   message?: string;
@@ -131,4 +136,3 @@ export default async function MembersPage({
     />
   );
 }
-

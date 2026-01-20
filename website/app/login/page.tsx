@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { GalleryVerticalEnd } from "lucide-react";
 
 import { LoginForm } from "@/components/auth/login-form";
+
+export const metadata: Metadata = {
+  title: "Log In",
+};
 
 type LoginPageProps = {
   searchParams?: Promise<{ next?: string | string[] }>;

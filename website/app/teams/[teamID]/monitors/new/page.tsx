@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { buildCookieHeader } from "@/lib/api/cookies";
@@ -6,6 +7,10 @@ import { parseRegions } from "@/lib/parsers/regions";
 import type { Notification, NotificationRawData } from "@/lib/schemas/notification";
 import { parseNotifications } from "@/lib/parsers/notifications";
 import NewMonitorForm from "@/components/monitor/new/new-monitor";
+
+export const metadata: Metadata = {
+  title: "New Monitor",
+};
 
 type RegionsResponse = {
   message?: string;

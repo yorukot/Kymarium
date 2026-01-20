@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import StatusPageEditor from "@/components/status-page/status-page-editor";
@@ -9,6 +10,10 @@ import type {
   StatusPageDetailItem,
   StatusPageRawData,
 } from "@/lib/schemas/status-page";
+
+export const metadata: Metadata = {
+  title: "Status Page Details",
+};
 
 type StatusPageResponse = {
   message?: string;

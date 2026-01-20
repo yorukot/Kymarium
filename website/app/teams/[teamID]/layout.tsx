@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { TeamEntitiesProvider } from "@/components/context/team-entities-context";
@@ -15,6 +16,13 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { TeamBreadcrumbs } from "./team-breadcrumbs";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Team",
+    template: "%s | Kymarium",
+  },
+};
 
 export default async function TeamLayout({
   children,

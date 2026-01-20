@@ -86,10 +86,10 @@ func (r *PGRepository) ListPublicEventTimelinesByIncidentIDs(ctx context.Context
 	}
 
 	const query = `
-		SELECT id, event_id, created_by, message, event_type, created_at, updated_at
+		SELECT id, event_id, message, event_type, is_public, created_at, updated_at
 		FROM event_timelines
 		WHERE event_id = ANY($1)
-		  AND created_by IS NOT NULL
+		  AND is_public = true
 		  AND message <> ''
 		ORDER BY created_at ASC, id ASC
 	`
@@ -168,7 +168,7 @@ func (r *PGRepository) MarkIncidentResolved(ctx context.Context, tx pgx.Tx, inci
 // CreateEventTimeline inserts an event timeline entry.
 func (r *PGRepository) CreateEventTimeline(ctx context.Context, tx pgx.Tx, timeline models.EventTimeline) error {
 	const query = `
-		INSERT INTO event_timelines (id, event_id, created_by, message, event_type, created_at, updated_at)
+		INSERT INTO event_timelines (id, event_id, message, event_type, is_public, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 
@@ -186,9 +186,9 @@ func (r *PGRepository) CreateEventTimeline(ctx context.Context, tx pgx.Tx, timel
 	_, err := tx.Exec(ctx, query,
 		timeline.ID,
 		timeline.IncidentID,
-		timeline.CreatedBy,
 		timeline.Message,
 		timeline.EventType,
+		timeline.IsPublic,
 		timeline.CreatedAt,
 		timeline.UpdatedAt,
 	)
@@ -198,7 +198,7 @@ func (r *PGRepository) CreateEventTimeline(ctx context.Context, tx pgx.Tx, timel
 // GetLastEventTimeline returns the most recent timeline entry for an incident.
 func (r *PGRepository) GetLastEventTimeline(ctx context.Context, tx pgx.Tx, incidentID int64) (*models.EventTimeline, error) {
 	const query = `
-		SELECT id, event_id, created_by, message, event_type, created_at, updated_at
+		SELECT id, event_id, message, event_type, is_public, created_at, updated_at
 		FROM event_timelines
 		WHERE event_id = $1
 		ORDER BY created_at DESC, id DESC
@@ -207,6 +207,25 @@ func (r *PGRepository) GetLastEventTimeline(ctx context.Context, tx pgx.Tx, inci
 
 	var event models.EventTimeline
 	if err := pgxscan.Get(ctx, tx, &event, query, incidentID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &event, nil
+}
+
+// GetEventTimelineByID fetches a specific event by id scoped to an incident.
+func (r *PGRepository) GetEventTimelineByID(ctx context.Context, tx pgx.Tx, incidentID, eventID int64) (*models.EventTimeline, error) {
+	const query = `
+		SELECT id, event_id, message, event_type, is_public, created_at, updated_at
+		FROM event_timelines
+		WHERE id = $1 AND event_id = $2
+	`
+
+	var event models.EventTimeline
+	if err := pgxscan.Get(ctx, tx, &event, query, eventID, incidentID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
@@ -296,7 +315,7 @@ func (r *PGRepository) GetIncidentByIDForTeam(ctx context.Context, tx pgx.Tx, te
 // ListEventTimelinesByIncidentID fetches all events for an incident in chronological order.
 func (r *PGRepository) ListEventTimelinesByIncidentID(ctx context.Context, tx pgx.Tx, incidentID int64) ([]models.EventTimeline, error) {
 	const query = `
-		SELECT id, event_id, created_by, message, event_type, created_at, updated_at
+		SELECT id, event_id, message, event_type, is_public, created_at, updated_at
 		FROM event_timelines
 		WHERE event_id = $1
 		ORDER BY created_at ASC, id ASC
@@ -308,6 +327,29 @@ func (r *PGRepository) ListEventTimelinesByIncidentID(ctx context.Context, tx pg
 	}
 
 	return events, nil
+}
+
+// UpdateEventTimeline updates selected fields (message and visibility) for an event and returns the updated row.
+func (r *PGRepository) UpdateEventTimeline(ctx context.Context, tx pgx.Tx, incidentID, eventID int64, message *string, isPublic *bool, updatedAt time.Time) (*models.EventTimeline, error) {
+	const query = `
+		UPDATE event_timelines
+		SET message   = COALESCE($3, message),
+		    is_public = COALESCE($4, is_public),
+		    updated_at = $5
+		WHERE id = $1
+		  AND event_id = $2
+		RETURNING id, event_id, message, event_type, is_public, created_at, updated_at
+	`
+
+	var event models.EventTimeline
+	if err := pgxscan.Get(ctx, tx, &event, query, eventID, incidentID, message, isPublic, updatedAt); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &event, nil
 }
 
 // UpdateIncidentStatus updates the status (and optional resolved time) for an incident and returns the updated row.

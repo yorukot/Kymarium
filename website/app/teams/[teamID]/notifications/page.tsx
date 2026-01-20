@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { buildCookieHeader } from "@/lib/api/cookies";
@@ -8,6 +9,10 @@ import NotificationsPageClient from "@/components/notification/notifications-pag
 type NotificationsResponse = {
   message?: string;
   data?: NotificationRawData[];
+};
+
+export const metadata: Metadata = {
+  title: "Notifications",
 };
 
 async function fetchNotifications(teamID: string): Promise<Notification[]> {
@@ -49,4 +54,3 @@ export default async function NotificationsPage({
 
   return <NotificationsPageClient teamID={teamID} notifications={notifications} />;
 }
-

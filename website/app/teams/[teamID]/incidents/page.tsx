@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import IncidentList from "@/components/incident/incident";
 import { Button } from "@/components/ui/button";
 import { buildCookieHeader } from "@/lib/api/cookies";
@@ -6,6 +7,10 @@ import type { IncidentListItem, IncidentRawData } from "@/lib/schemas/incident";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "Incidents",
+};
 
 export default async function IncidentsPage({
   params,

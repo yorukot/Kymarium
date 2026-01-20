@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Monitor from "@/components/monitor/monitor";
 import { Button } from "@/components/ui/button";
 import { buildCookieHeader } from "@/lib/api/cookies";
@@ -6,6 +7,10 @@ import type { MonitorListItem, MonitorRawData } from "@/lib/schemas/monitor";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "Monitors",
+};
 
 export default async function MonitorsPage({
   params,

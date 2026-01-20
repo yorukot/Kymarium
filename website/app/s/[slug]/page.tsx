@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StatusDot } from "@/components/monitor/status-dot";
 import { PublicIncidentList } from "@/components/status-page/public/public-incident-list";
@@ -12,6 +13,19 @@ import type {
 } from "@/lib/schemas/public-status-page";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const data = await fetchPublicStatusPage(slug);
+
+  return {
+    title: data?.statusPage.title ?? "Status Page",
+  };
+}
 
 type ApiResponse = {
   message?: string;
@@ -76,12 +90,15 @@ export default async function PublicStatusPage({
   }
 
   const status = overallStatus(data);
-  const monitorNames = data.elements
-    .flatMap((element) => element.monitors)
-    .reduce<Record<string, string>>((acc, monitor) => {
+  const monitorNames = data.elements.reduce<Record<string, string>>((acc, element) => {
+    if (element.monitorId) {
+      acc[element.monitorId] = element.name;
+    }
+    element.monitors.forEach((monitor) => {
       acc[monitor.monitorId] = monitor.name;
-      return acc;
-    }, {});
+    });
+    return acc;
+  }, {});
   const openIncidents = data.incidents.filter(
     (incident) => (incident.status ?? "").toLowerCase() !== "resolved",
   );

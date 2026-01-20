@@ -98,9 +98,9 @@ export type IncidentListItem = {
 export type IncidentEventRawData = {
   id: string;
   incident_id: string;
-  created_by?: string | null;
   message: string;
   event_type: string;
+  is_public: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -108,9 +108,9 @@ export type IncidentEventRawData = {
 export type IncidentEventItem = {
   id: string;
   incidentId: string;
-  createdBy?: string;
   message: string;
   eventType: string;
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -163,3 +163,22 @@ export type CreateIncidentEventPayload = {
   message: string;
   eventType?: IncidentEventType;
 };
+
+export const updateIncidentEventSchema = z
+  .object({
+    message: z
+      .string()
+      .trim()
+      .min(1, "Message is required")
+      .max(1000, "Message must be at most 1000 characters")
+      .optional(),
+    public: z.boolean().optional(),
+  })
+  .refine(
+    (val) => val.message !== undefined || val.public !== undefined,
+    "Provide message or visibility to update.",
+  );
+
+export type UpdateIncidentEventPayload = z.infer<
+  typeof updateIncidentEventSchema
+>;

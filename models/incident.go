@@ -74,9 +74,9 @@ type IncidentMonitor struct {
 type EventTimeline struct {
 	ID         int64     `json:"id,string" db:"id"`
 	IncidentID int64     `json:"incident_id,string" db:"event_id"`
-	CreatedBy  *int64    `json:"created_by,string,omitempty" db:"created_by"`
 	Message    string    `json:"message" db:"message"`
 	EventType  EventType `json:"event_type" db:"event_type"`
+	IsPublic   bool      `json:"is_public" db:"is_public"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
 }

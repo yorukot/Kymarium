@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Clock3, Ticket } from "lucide-react";
+import { Clock3 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import {
   Card,
@@ -105,6 +106,8 @@ function IncidentCard({
 }) {
   const isResolved =
     (incident.status ?? "").toLowerCase() === "resolved" || Boolean(incident.resolvedAt);
+  const incidentHref = slug ? `/s/${slug}/${incident.id}` : null;
+  const incidentTitle = incident.title || `Incident ${incident.id}`;
   const timeline = useMemo(
     () =>
       [...(incident.timeline ?? [])].sort((a, b) => {
@@ -122,24 +125,25 @@ function IncidentCard({
     const absoluteLabel = Number.isNaN(at.getTime())
       ? event.createdAt
       : at.toLocaleString();
+    const relativeLabel = formatRelativeTime(event.createdAt);
 
     return {
       id: event.id,
       title: (
         <div className="flex flex-wrap items-center gap-2">
           <span className="capitalize">{humanizeIdentifier(event.eventType)}</span>
-          <span className="text-xs text-muted-foreground">
-            {formatRelativeTime(event.createdAt)}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-xs text-muted-foreground">{relativeLabel}</span>
+            </TooltipTrigger>
+            <TooltipContent side="top" sideOffset={6}>
+              {absoluteLabel}
+            </TooltipContent>
+          </Tooltip>
         </div>
       ),
       description: (
         <p className="text-sm leading-relaxed text-foreground">{event.message}</p>
-      ),
-      children: (
-        <div className="text-xs text-muted-foreground" suppressHydrationWarning>
-          {absoluteLabel}
-        </div>
       ),
     };
   });
@@ -148,13 +152,19 @@ function IncidentCard({
   const resolvedLabel = incident.resolvedAt ? formatRelativeTime(incident.resolvedAt) : null;
 
   if (isResolved) {
-    const body = (
+    return (
       <Card className="border-border/80">
         <CardHeader className="gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <IncidentStatusDot status={incident.status} />
             <CardTitle className="text-lg font-semibold">
-              {incident.title || `Incident ${incident.id}`}
+              {incidentHref ? (
+                <Link href={incidentHref} className="hover:underline">
+                  {incidentTitle}
+                </Link>
+              ) : (
+                incidentTitle
+              )}
             </CardTitle>
           </div>
           <CardDescription className="flex flex-wrap items-center gap-3 text-sm">
@@ -190,16 +200,6 @@ function IncidentCard({
         </CardContent>
       </Card>
     );
-
-    if (slug) {
-      return (
-        <Link key={incident.id} href={`/s/${slug}/${incident.id}`} className="block">
-          {body}
-        </Link>
-      );
-    }
-
-    return body;
   }
 
   return (
@@ -208,7 +208,13 @@ function IncidentCard({
         <div className="flex flex-wrap items-center gap-2">
           <IncidentStatusDot status={incident.status} />
           <CardTitle className="text-lg font-semibold">
-            {incident.title || `Incident ${incident.id}`}
+            {incidentHref ? (
+              <Link href={incidentHref} className="hover:underline">
+                {incidentTitle}
+              </Link>
+            ) : (
+              incidentTitle
+            )}
           </CardTitle>
         </div>
         <CardDescription className="flex flex-wrap items-center gap-3 text-sm">

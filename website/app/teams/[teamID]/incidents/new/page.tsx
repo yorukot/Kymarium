@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import NewIncidentForm from "@/components/incident/new/new-incident";
 import { buildCookieHeader } from "@/lib/api/cookies";
 import { parseMonitors } from "@/lib/parsers/monitors";
 import type { MonitorListItem, MonitorRawData } from "@/lib/schemas/monitor";
+
+export const metadata: Metadata = {
+  title: "New Incident",
+};
 
 type MonitorsResponse = {
   message?: string;
@@ -49,4 +54,3 @@ export default async function NewIncidentPage({
 
   return <NewIncidentForm teamID={teamID} monitors={monitors} />;
 }
-

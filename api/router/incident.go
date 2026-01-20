@@ -20,6 +20,7 @@ func IncidentRouter(api *echo.Group, repo repository.Repository) {
 	r.GET("/:incidentID", incidentHandler.GetIncident)
 	r.GET("/:incidentID/events", incidentHandler.ListIncidentEvents)
 	r.POST("/:incidentID/events", incidentHandler.CreateIncidentEvent)
+	r.PATCH("/:incidentID/events/:eventID", incidentHandler.UpdateIncidentEvent)
 	r.POST("/:incidentID/status", incidentHandler.UpdateIncidentStatus)
 	r.PATCH("/:incidentID", incidentHandler.UpdateIncident)
 }

@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import type { ReactNode } from "react"
 import { redirect } from "next/navigation"
 
@@ -12,6 +13,13 @@ import {
 import { buildCookieHeader } from "@/lib/api/cookies"
 
 export const dynamic = "force-dynamic"
+
+export const metadata: Metadata = {
+  title: {
+    default: "Teams",
+    template: "%s | Kymarium",
+  },
+}
 
 type TeamsResponse = {
   message?: string

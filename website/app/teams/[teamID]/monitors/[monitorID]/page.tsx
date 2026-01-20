@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { buildCookieHeader } from "@/lib/api/cookies";
@@ -8,6 +9,10 @@ import type { Region, RegionRawData } from "@/lib/schemas/region";
 import { MonitorHydrator } from "./monitor-hydrator";
 import { MonitorDetail } from "@/components/monitor/detail/monitor-detail";
 import MonitorChartBar from "@/components/monitor/detail/monitor-chart";
+
+export const metadata: Metadata = {
+  title: "Monitor Details",
+};
 
 type MonitorAnalyticsResponse = {
   message?: string;

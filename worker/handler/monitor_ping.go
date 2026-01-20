@@ -265,6 +265,7 @@ func (h *Handler) handleIncidentFailure(ctx context.Context, tx pgx.Tx, monitor 
 				IncidentID: openIncident.ID,
 				Message:    message,
 				EventType:  models.IncidentEventTypeUpdate,
+				IsPublic:   false,
 				CreatedAt:  now,
 				UpdatedAt:  now,
 			}); err != nil {
@@ -324,6 +325,7 @@ func (h *Handler) handleIncidentRecovery(ctx context.Context, tx pgx.Tx, monitor
 		IncidentID: openIncident.ID,
 		Message:    message,
 		EventType:  models.IncidentEventTypeAutoResolved,
+		IsPublic:   false,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}); err != nil {
@@ -391,6 +393,7 @@ func (h *Handler) createIncidentIfAbsent(ctx context.Context, tx pgx.Tx, monitor
 		IncidentID: incident.ID,
 		Message:    message,
 		EventType:  models.IncidentEventTypeDetected,
+		IsPublic:   false,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}); err != nil {
@@ -401,6 +404,7 @@ func (h *Handler) createIncidentIfAbsent(ctx context.Context, tx pgx.Tx, monitor
 		IncidentID: incident.ID,
 		Message:    message,
 		EventType:  models.IncidentEventTypeNotificationSent,
+		IsPublic:   false,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}); err != nil {

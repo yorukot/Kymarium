@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import TeamSettingsPageClient from "@/components/team/team-settings-page";
 import { buildCookieHeader } from "@/lib/api/cookies";
 import type { TeamRole } from "@/lib/schemas/team-member";
+
+export const metadata: Metadata = {
+  title: "Team Settings",
+};
 
 type TeamResponse = {
   message?: string;
@@ -62,4 +67,3 @@ export default async function TeamSettingsPage({
     />
   );
 }
-

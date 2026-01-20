@@ -41,9 +41,9 @@ export function parseIncidentEvent(raw: IncidentEventRawData): IncidentEventItem
   return {
     id: raw.id,
     incidentId: raw.incident_id,
-    createdBy: raw.created_by ?? undefined,
     message: raw.message,
     eventType: raw.event_type,
+    isPublic: raw.is_public,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
   };

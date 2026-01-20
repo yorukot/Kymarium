@@ -502,6 +502,13 @@ func (m *MockRepository) GetLastEventTimeline(ctx context.Context, tx pgx.Tx, in
 	return event, args.Error(1)
 }
 
+// GetEventTimelineByID mocks Repository.GetEventTimelineByID.
+func (m *MockRepository) GetEventTimelineByID(ctx context.Context, tx pgx.Tx, incidentID, eventID int64) (*models.EventTimeline, error) {
+	args := m.Called(ctx, tx, incidentID, eventID)
+	event, _ := args.Get(0).(*models.EventTimeline)
+	return event, args.Error(1)
+}
+
 // ListIncidentsByMonitorID mocks Repository.ListIncidentsByMonitorID.
 func (m *MockRepository) ListIncidentsByMonitorID(ctx context.Context, tx pgx.Tx, monitorID int64) ([]models.Incident, error) {
 	args := m.Called(ctx, tx, monitorID)
@@ -549,6 +556,13 @@ func (m *MockRepository) ListEventTimelinesByIncidentID(ctx context.Context, tx 
 	args := m.Called(ctx, tx, incidentID)
 	events, _ := args.Get(0).([]models.EventTimeline)
 	return events, args.Error(1)
+}
+
+// UpdateEventTimeline mocks Repository.UpdateEventTimeline.
+func (m *MockRepository) UpdateEventTimeline(ctx context.Context, tx pgx.Tx, incidentID, eventID int64, message *string, isPublic *bool, updatedAt time.Time) (*models.EventTimeline, error) {
+	args := m.Called(ctx, tx, incidentID, eventID, message, isPublic, updatedAt)
+	event, _ := args.Get(0).(*models.EventTimeline)
+	return event, args.Error(1)
 }
 
 // UpdateIncidentStatus mocks Repository.UpdateIncidentStatus.

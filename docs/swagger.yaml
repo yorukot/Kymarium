@@ -61,6 +61,8 @@ definitions:
       message:
         minLength: 1
         type: string
+      public:
+        type: boolean
     required:
     - message
     type: object
@@ -104,6 +106,15 @@ definitions:
         type: string
     required:
     - monitor_ids
+    type: object
+  incident.updateIncidentEventRequest:
+    properties:
+      message:
+        maxLength: 1000
+        minLength: 1
+        type: string
+      public:
+        type: boolean
     type: object
   incident.updateIncidentRequest:
     properties:
@@ -1204,6 +1215,59 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: Create an incident event
+      tags:
+      - incidents
+  /teams/{teamID}/incidents/{incidentID}/events/{eventID}:
+    patch:
+      consumes:
+      - application/json
+      description: Updates an incident event's visibility between public and private
+      parameters:
+      - description: Team ID
+        in: path
+        name: teamID
+        required: true
+        type: string
+      - description: Incident ID
+        in: path
+        name: incidentID
+        required: true
+        type: string
+      - description: Event ID
+        in: path
+        name: eventID
+        required: true
+        type: string
+      - description: Incident event update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/incident.updateIncidentEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Incident event updated successfully
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Incident or event not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Update an incident event
       tags:
       - incidents
   /teams/{teamID}/incidents/{incidentID}/status:

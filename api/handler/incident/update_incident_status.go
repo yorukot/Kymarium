@@ -117,11 +117,16 @@ func (h *Handler) UpdateIncidentStatus(c echo.Context) error {
 		msg = string(req.Status)
 	}
 
+	isPublic := true
+	if req.Public != nil {
+		isPublic = *req.Public
+	}
+
 	event := models.EventTimeline{
 		IncidentID: updatedIncident.ID,
-		CreatedBy:  userID,
 		Message:    msg,
 		EventType:  eventType,
+		IsPublic:   isPublic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}

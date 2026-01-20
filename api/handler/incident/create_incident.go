@@ -188,11 +188,13 @@ func (h *Handler) CreateIncident(c echo.Context) error {
 		msg = string(status)
 	}
 
+	eventPublic := isPublic
+
 	event := models.EventTimeline{
 		IncidentID: incidentID,
-		CreatedBy:  userID,
 		Message:    msg,
 		EventType:  eventTypeFromStatus(status),
+		IsPublic:   eventPublic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}

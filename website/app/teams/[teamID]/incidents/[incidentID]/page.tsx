@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { buildCookieHeader } from "@/lib/api/cookies";
@@ -10,6 +11,10 @@ import type {
 } from "@/lib/schemas/incident";
 import { IncidentDetail } from "@/components/incident/detail/incident-detail";
 import { IncidentHydrator } from "./incident-hydrator";
+
+export const metadata: Metadata = {
+  title: "Incident Details",
+};
 
 type IncidentResponse = {
   message?: string;

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -7,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { buildCookieHeader } from "@/lib/api/cookies";
 import { parseStatusPages } from "@/lib/parsers/status-pages";
 import type { StatusPageListItem, StatusPageRawData } from "@/lib/schemas/status-page";
+
+export const metadata: Metadata = {
+  title: "Status Pages",
+};
 
 type StatusPagesResponse = {
   message?: string;
@@ -77,4 +82,3 @@ export default async function StatusPagesPage({
     </div>
   );
 }
-

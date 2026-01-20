@@ -5,6 +5,7 @@ import type {
   CreateIncidentResponse,
   IncidentEventRawData,
   IncidentRawData,
+  UpdateIncidentEventPayload,
   UpdateIncidentSettingsPayload,
   UpdateIncidentStatusPayload,
 } from "@/lib/schemas/incident";
@@ -71,6 +72,23 @@ export function updateIncidentSettings(
       method: "PATCH",
       body: payload,
       defaultError: "Update incident failed",
+      redirectOn401: true,
+    },
+  );
+}
+
+export function updateIncidentEvent(
+  teamID: string,
+  incidentID: string,
+  eventID: string,
+  payload: UpdateIncidentEventPayload,
+) {
+  return apiRequest<{ message?: string; data?: IncidentEventRawData }>(
+    `/api/teams/${teamID}/incidents/${incidentID}/events/${eventID}`,
+    {
+      method: "PATCH",
+      body: payload,
+      defaultError: "Update incident event failed",
       redirectOn401: true,
     },
   );

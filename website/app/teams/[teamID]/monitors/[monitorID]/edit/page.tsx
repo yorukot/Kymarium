@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import camelcaseKeys from "camelcase-keys";
 
@@ -12,6 +13,10 @@ import type {
 import type { MonitorFormValues, MonitorRawData } from "@/lib/schemas/monitor";
 import { DEFAULT_HTTP, DEFAULT_PING } from "@/lib/schemas/monitor";
 import NewMonitorForm from "@/components/monitor/new/new-monitor";
+
+export const metadata: Metadata = {
+  title: "Edit Monitor",
+};
 
 type HttpFormValues = Extract<MonitorFormValues, { type: "http" }>;
 type PingFormValues = Extract<MonitorFormValues, { type: "ping" }>;
