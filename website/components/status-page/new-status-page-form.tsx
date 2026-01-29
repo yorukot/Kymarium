@@ -96,7 +96,7 @@ export default function NewStatusPageForm({ teamID }: { teamID: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-1">
+      <div className="flex justify-between items-center">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold">Create new status page</h1>
           <p className="text-sm text-muted-foreground">
@@ -105,7 +105,7 @@ export default function NewStatusPageForm({ teamID }: { teamID: string }) {
           </p>
         </div>
         <Link href={`/teams/${teamID}/status-pages`}>
-          <Button variant="outline">Back to list</Button>
+          <Button variant="outline">Back</Button>
         </Link>
       </div>
 
