@@ -238,11 +238,6 @@ export function LoginForm({ className, nextPath, ...props }: LoginFormProps) {
           </form>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
-
       {process.env.NODE_ENV === "development" && (
         <FormDevTools control={form.control} />
       )}

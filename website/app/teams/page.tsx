@@ -59,7 +59,7 @@ export default function TeamsPage() {
                   teams.map((team) => (
                     <Field key={team.id}>
                       <Link href={`/teams/${team.id}`}>
-                        <div className="flex items-center justify-between p-2.5 bg-muted rounded">
+                        <div className="flex items-center justify-between p-2.5 bg-muted border rounded-lg">
                           <div className="flex items-center gap-2">
                             <Image
                               src={avatarFor(team.id)}

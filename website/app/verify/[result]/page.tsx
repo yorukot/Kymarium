@@ -95,7 +95,7 @@ export default function VerifyResultPage() {
               {shouldRedirect && (
                 <Field>
                   <FieldDescription>
-                    Redirecting to login in {countdown}s...
+                    Redirecting to log in {countdown}s...
                   </FieldDescription>
                 </Field>
               )}
