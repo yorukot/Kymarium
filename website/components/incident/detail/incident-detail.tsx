@@ -358,7 +358,7 @@ export function IncidentDetail({
 
     const validation = updateIncidentEventSchema.safeParse(payload);
     if (!validation.success) {
-      setEditError(validation.error.errors[0]?.message ?? "Invalid input");
+      setEditError(validation.error.issues[0]?.message ?? "Invalid input");
       return;
     }
 

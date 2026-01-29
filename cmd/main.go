@@ -59,12 +59,12 @@ func main() {
 		zap.L().Fatal("Error initializing Postgres", zap.Error(err))
 	}
 	defer pgsql.Close()
-	
+
 	_, err = config.InitRegionConfig(pgsql)
 	if err != nil {
 		zap.L().Fatal("Error initializing region config", zap.Error(err))
 	}
-	
+
 	err = config.InitSMTP()
 	if err != nil {
 		zap.L().Fatal("Error initializing SMTP", zap.Error(err))

@@ -55,8 +55,6 @@ func InitDatabase() (*pgxpool.Pool, error) {
 		}
 	}
 
-	
-	
 	return pool, nil
 }
 

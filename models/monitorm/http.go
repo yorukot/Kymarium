@@ -42,10 +42,10 @@ type HTTPMonitorConfig struct {
 	MaxRedirs int        `json:"max_redirects" validate:"gte=0,lte=1000"`
 
 	// Request options
-	RequestTimeout int               `json:"request_timeout" validate:"gte=0"`
-	Headers        []HTTPHeader      `json:"headers,omitempty" validate:"omitempty,dive"`
-	BodyEncoding   BodyEncoding      `json:"body_encoding,omitempty" validate:"omitempty,oneof=json xml"`
-	Body           string            `json:"body,omitempty" validate:"lte=1000000,omitempty"`
+	RequestTimeout int          `json:"request_timeout" validate:"gte=0"`
+	Headers        []HTTPHeader `json:"headers,omitempty" validate:"omitempty,dive"`
+	BodyEncoding   BodyEncoding `json:"body_encoding,omitempty" validate:"omitempty,oneof=json xml"`
+	Body           string       `json:"body,omitempty" validate:"lte=1000000,omitempty"`
 
 	// Response validation
 	UpSideDownMode                bool  `json:"upside_down_mode" validate:"boolean"`
